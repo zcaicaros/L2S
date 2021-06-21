@@ -29,6 +29,7 @@ eps = np.finfo(np.float32).eps.item()
 
 
 def finish_episode(rewards, log_probs):
+    # print(torch.nonzero(torch.stack(rewards)).shape[0])
     R = 0
     policy_loss = []
     returns = []
@@ -36,7 +37,7 @@ def finish_episode(rewards, log_probs):
         R = r + args.gamma * R
         returns.insert(0, R)
     returns = torch.tensor(returns)
-    returns = (returns - returns.mean()) / (returns.std() + eps)
+    returns = (returns - returns.mean()) / (torch.std(returns) + eps)
     for log_prob, R in zip(log_probs, returns):
         policy_loss.append(-log_prob * R)
     optimizer.zero_grad()
@@ -46,13 +47,13 @@ def finish_episode(rewards, log_probs):
 
 
 def main():
-    running_reward = 20
+    running_reward = 45
     log = []
-    np.random.seed(1)
+    np.random.seed(1)  # seed for instance
     instance = uni_instance_gen(args.j, args.m, args.l, args.h)
     np.save('./instance.npy', instance)
     for i_episode in range(1, args.episodes + 1):
-        np.random.seed(1)
+        np.random.seed(6)  # seed for priority list
         state, feasible_action, done = env.reset(instance=instance, fix_instance=True)
         ep_reward = 0
         rewards = []
@@ -68,7 +69,7 @@ def main():
         finish_episode(rewards, log_probs)
         log.append([env.current_objs, ep_reward, running_reward])
         if i_episode % 100 == 0:
-            np.save('./log.npy', np.array(log))
+            np.save('log/log1.npy', np.array(log))
         print('solution quality:', env.current_objs)
         print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(i_episode, ep_reward, running_reward))
         print()

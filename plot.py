@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 show = True
 plot_step_size = 100
-horizon = 6000
-log = np.load('./log1.npy')
+horizon = 10000
+log = np.load('log/log2.npy')
 
 
 obj = log[:horizon, 0].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)

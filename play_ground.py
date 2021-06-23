@@ -3,4 +3,4 @@ import numpy as np
 
 
 print(count(1))
-print(np.load('log/log1.npy'))
+print(np.load('log/log10000.npy'))

@@ -22,7 +22,6 @@ class JsspN5:
                  low,
                  high,
                  init='p_list',
-                 rule='spt',
                  min_max=False,
                  transition=100):
 
@@ -32,7 +31,6 @@ class JsspN5:
         self.low = low
         self.high = high
         self.init = init
-        self.rule = rule
         self.min_max = min_max
         self.itr = 0
         self.max_transition = transition
@@ -124,35 +122,8 @@ class JsspN5:
         init_state = Data(x=x, edge_index=edge_idx, y=np.amax(earliest_start))
         return init_state, G
 
-    def rules_solver(self, instance, plot=False):
-        dur_mat, mch_mat = instance[0], instance[1]
-        n_job, n_mch = dur_mat.shape[0], dur_mat.shape[1]
-        n_opr = n_job * n_mch
-        last_col = np.arange(start=0, stop=n_opr, step=1).reshape(n_job, -1)[:, -1]
-        first_col = np.arange(start=0, stop=n_opr, step=1).reshape(n_job, -1)[:, 0]
-        candidate_oprs = np.arange(start=0, stop=n_opr, step=1).reshape(n_job, -1)[:, 0]
-        mask = np.zeros(shape=n_job, dtype=bool)
-        # initialize adj matrix
-        conj_nei_up_stream = np.eye(n_opr, k=-1, dtype=np.single)
-        # first column does not have upper stream conj_nei
-        conj_nei_up_stream[first_col] = 0
-        self_as_nei = np.eye(n_opr, dtype=np.single)
-        adj = self_as_nei + conj_nei_up_stream
-        p_list = []
-        if self.rule == 'spt':
-            for _ in range(n_opr):
-                candidate_masked = candidate_oprs[np.where(~mask)]
-                dur_candidate = np.take(dur_mat, candidate_masked)
-                idx = np.random.choice(np.where(dur_candidate == np.min(dur_candidate))[0])
-                action = candidate_masked[idx]
-                if action not in last_col:
-                    candidate_oprs[action // n_mch] += 1
-                else:
-                    mask[action // n_mch] = 1
-                job_id = action // n_mch
-                p_list.append(job_id)
-        data, G = self._p_list_solver_single_instance(plot, args=[self.instance, p_list])
-        return data, G
+    def _other_solver(self, plot, iterables=None):
+        return
 
     def _transit_single(self, plot, args):
         """
@@ -200,11 +171,9 @@ class JsspN5:
             p_list = np.random.permutation(np.arange(self.n_job).repeat(self.n_mch))
             data, G = self._p_list_solver_single_instance(plot, args=[self.instance, p_list])
             return data, G
-        elif self.init == 'rule':
-            data, G = self.rules_solver(self.instance)
-            return data, G
         else:
-            print('env.init = "p_list" or "rule". ')
+            print('Other initial solver not implemented.')
+            self._other_solver(self.min_max, plot)
 
     def reset(self, instance=None, fix_instance=False, plot=False):
         if fix_instance:
@@ -282,7 +251,6 @@ def main():
     from torch_geometric.data.batch import Batch
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
     state, feasible_action, done = env.reset(plot=plt)
-    env.rules_solver(env.instance)
     # np.save('./instances{}x{}.npy'.format(str(n_j), str(n_m)), env.instance)
     returns = []
     t = 0
@@ -301,7 +269,7 @@ def main():
             feasible_action = new_feasible_actions
             t += 1
             # print()
-    print(torch.stack(returns).nonzero().shape)
+    # print(torch.stack(returns))
 
 
 def compute_idle(state,  machine_mat, dur_mat, n_machine, n_job):
@@ -349,7 +317,7 @@ if __name__ == '__main__':
     torch.manual_seed(1)
     np.random.seed(1)
 
-    env = JsspN5(n_job=n_j, n_mch=n_m, low=l, high=h, init='rule', rule='spt', transition=transit)
+    env = JsspN5(n_job=n_j, n_mch=n_m, low=l, high=h, transition=transit)
 
     '''import cProfile
     cProfile.run('main()', filename='./restats_{}x{}_{}'.format(str(n_j), str(n_m), str(env.max_transition)))'''

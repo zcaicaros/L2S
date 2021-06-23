@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 show = True
 plot_step_size = 50
 horizon = 10000
-log = np.load('log/log1.npy')
+log = np.load('log/log10000.npy')[:horizon]
 
 
-obj = log[:horizon, 0].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
+obj = log[:, 0].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
 # plot objective...
 plt.xlabel('iteration({})'.format(plot_step_size))
 plt.ylabel('make span')
@@ -20,7 +20,7 @@ if show:
 plt.close()
 
 
-returns = log[:horizon, 1].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
+returns = log[:, 1].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
 # plot objective...
 plt.xlabel('iteration({})'.format(plot_step_size))
 plt.ylabel('return')
@@ -32,7 +32,7 @@ if show:
 plt.close()
 
 
-running_returns = log[:horizon, 2].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
+running_returns = log[:, 2].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
 # plot objective...
 plt.xlabel('iteration({})'.format(plot_step_size))
 plt.ylabel('running return')

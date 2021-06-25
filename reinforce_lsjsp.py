@@ -70,7 +70,7 @@ def main():
         finish_episode(rewards, log_probs)
         log.append([env.current_objs, ep_reward, running_reward])
         if i_episode % 100 == 0:
-            np.save('log/log9999.npy', np.array(log))
+            np.save('log/log10000.npy', np.array(log))
         print('solution quality:', env.current_objs)
         print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(i_episode, ep_reward, running_reward))
         print()

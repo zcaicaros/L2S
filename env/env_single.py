@@ -102,7 +102,9 @@ class JsspN5:
 
     def _p_list_solver_single_instance(self, plot, args):
         instance = args[0]
+        # print(instance)
         priority_list = args[1]
+        # print(priority_list)
         make_span, earliest_start, latest_start, adj_aug, G = jsp.eval_priority_list(p_list=priority_list,
                                                                                      dur_mat=instance[0],
                                                                                      mch_mat=instance[1],

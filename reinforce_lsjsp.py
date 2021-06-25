@@ -12,17 +12,17 @@ torch.manual_seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 parser = argparse.ArgumentParser(description='PyTorch REINFORCE example')
 parser.add_argument('--gamma', type=float, default=1)
-parser.add_argument('--lr', type=float, default=2.4e-5)
+parser.add_argument('--lr', type=float, default=1e-5)
 parser.add_argument('--j', type=float, default=10)
 parser.add_argument('--m', type=float, default=10)
 parser.add_argument('--l', type=float, default=1)
 parser.add_argument('--h', type=float, default=99)
 parser.add_argument('--transit', type=int, default=32)
-parser.add_argument('--episodes', type=int, default=10000)
+parser.add_argument('--episodes', type=int, default=200000)
 args = parser.parse_args()
 
-env = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, transition=args.transit, init='rule', rule='spt')
-policy = Actor(3, 64, gin_l=3, policy_l=3).to(dev)
+env = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, transition=args.transit, init='p_list', rule='spt')
+policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)  # policy = Actor(3, 64, gin_l=3, policy_l=3).to(dev)
 
 optimizer = optim.Adam(policy.parameters(), lr=args.lr)
 eps = np.finfo(np.float32).eps.item()
@@ -47,12 +47,13 @@ def finish_episode(rewards, log_probs):
 
 
 def main():
-    running_reward = 175
+    running_reward = 55
     log = []
-    np.random.seed(3)  # seed for instance
-    instance = uni_instance_gen(args.j, args.m, args.l, args.h)
-    np.save('./instance.npy', instance)
+    np.random.seed(1)  # seed for instance
+    # instance = uni_instance_gen(args.j, args.m, args.l, args.h)
+    # np.save('./instance.npy', instance)
     for i_episode in range(1, args.episodes + 1):
+        instance = uni_instance_gen(args.j, args.m, args.l, args.h)
         np.random.seed(6)  # seed for priority list
         state, feasible_action, done = env.reset(instance=instance, fix_instance=True)
         ep_reward = 0
@@ -69,7 +70,7 @@ def main():
         finish_episode(rewards, log_probs)
         log.append([env.current_objs, ep_reward, running_reward])
         if i_episode % 100 == 0:
-            np.save('log/log10000.npy', np.array(log))
+            np.save('log/log9999.npy', np.array(log))
         print('solution quality:', env.current_objs)
         print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(i_episode, ep_reward, running_reward))
         print()

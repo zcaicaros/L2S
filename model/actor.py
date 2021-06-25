@@ -81,7 +81,7 @@ class Actor(nn.Module):
                  gin_l=4,
                  policy_l=3):
         super(Actor, self).__init__()
-        self.gin_l = gin_l
+        # self.gin_l = gin_l
         self.policy_l = policy_l
 
         self.embedding = GIN(in_dim=in_dim, hidden_dim=hidden_dim, layer_gin=gin_l)

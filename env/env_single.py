@@ -239,21 +239,21 @@ class JsspN5:
         new_state = self._transit_single(plot, args=[action, self.current_graph, self.instance])
 
         # makespan reward
-        # diff1 = torch.tensor(self.current_objs) - torch.tensor(new_state.y)
-        # reward1 = diff1
-        diff1 = torch.tensor(self.incumbent_obj) - torch.tensor(new_state.y)
-        reward1 = torch.where(diff1 > 0, diff1/10, torch.tensor(0, dtype=torch.float32))
+        diff1 = torch.tensor(self.current_objs) - torch.tensor(new_state.y)
+        reward1 = diff1
+        # diff1 = torch.tensor(self.incumbent_obj) - torch.tensor(new_state.y)
+        # reward1 = torch.where(diff1 > 0, diff1/10, torch.tensor(0, dtype=torch.float32))
         self.incumbent_obj = np.where(np.array(new_state.y) < self.incumbent_obj, new_state.y, self.incumbent_obj)
         self.current_objs = new_state.y
-        # idle time reward
+        '''# idle time reward
         new_idle = compute_idle(state=new_state, machine_mat=self.instance[1], dur_mat=self.instance[0], n_machine=self.n_mch, n_job=self.n_job)
         diff2 = self.incumbent_idle - new_idle
         reward2 = torch.where(diff2 > 0, diff2, torch.tensor(0, dtype=torch.float32))
         if self.incumbent_idle > new_idle:
-            self.incumbent_idle = new_idle
+            self.incumbent_idle = new_idle'''
         # total reward
-        reward = reward1 + reward2
-        # reward = reward1
+        # reward = reward1 + reward2
+        reward = reward1
 
         # print(reward1)
         # print(reward2)

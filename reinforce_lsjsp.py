@@ -47,7 +47,7 @@ def finish_episode(rewards, log_probs):
 
 
 def main():
-    running_reward = 55
+    running_reward = 0
     log = []
     np.random.seed(1)  # seed for instance
     # instance = uni_instance_gen(args.j, args.m, args.l, args.h)

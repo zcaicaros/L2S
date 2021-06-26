@@ -239,6 +239,8 @@ class JsspN5:
         new_state = self._transit_single(plot, args=[action, self.current_graph, self.instance])
 
         # makespan reward
+        # diff1 = torch.tensor(self.current_objs) - torch.tensor(new_state.y)
+        # reward1 = diff1
         diff1 = torch.tensor(self.incumbent_obj) - torch.tensor(new_state.y)
         reward1 = torch.where(diff1 > 0, diff1/10, torch.tensor(0, dtype=torch.float32))
         self.incumbent_obj = np.where(np.array(new_state.y) < self.incumbent_obj, new_state.y, self.incumbent_obj)

@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 
 show = True
 plot_step_size = 50
-horizon = 5500
-log = np.load('log/log9999.npy')[:horizon]
-# log = np.load('log/log9999.npy')
+log_index = 10000
+log = np.load('log/log{}.npy'.format(log_index))
+# horizon = 20000
+# log = np.load('log/log{}.npy'.format(log_index))[:horizon]
+
 
 
 obj = log[:, 0].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
@@ -22,7 +24,7 @@ plt.close()
 
 
 returns = log[:, 1].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
-# plot objective...
+# plot return...
 plt.xlabel('iteration({})'.format(plot_step_size))
 plt.ylabel('return')
 plt.plot([_ for _ in range(returns.shape[0])], returns, color='tab:blue')
@@ -33,8 +35,8 @@ if show:
 plt.close()
 
 
-running_returns = log[:, 2].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
-# plot objective...
+'''running_returns = log[:, 2].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
+# plot running return...
 plt.xlabel('iteration({})'.format(plot_step_size))
 plt.ylabel('running return')
 plt.plot([_ for _ in range(running_returns.shape[0])], running_returns, color='tab:blue')
@@ -42,4 +44,4 @@ plt.grid()
 plt.tight_layout()
 if show:
     plt.show()
-plt.close()
+plt.close()'''

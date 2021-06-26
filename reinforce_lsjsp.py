@@ -49,12 +49,11 @@ def finish_episode(rewards, log_probs):
 def main():
     running_reward = 0
     log = []
-    np.random.seed(1)  # seed for instance
+    np.random.seed(1)
     # instance = uni_instance_gen(args.j, args.m, args.l, args.h)
     # np.save('./instance.npy', instance)
     for i_episode in range(1, args.episodes + 1):
         instance = uni_instance_gen(args.j, args.m, args.l, args.h)
-        np.random.seed(6)  # seed for priority list
         state, feasible_action, done = env.reset(instance=instance, fix_instance=True)
         ep_reward = 0
         rewards = []

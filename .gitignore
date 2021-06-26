@@ -1,0 +1,4 @@
+.idea/
+__pycache__/
+./env/__pycache__/
+./model/__pycache__/

@@ -199,7 +199,11 @@ class JsspN5:
 
     def _init(self, plot=False):
         if self.init == 'p_list':
-            p_list = np.random.permutation(np.arange(self.n_job).repeat(self.n_mch))
+            # p_list = np.random.permutation(np.arange(self.n_job).repeat(self.n_mch))
+            p_list = np.array([3, 8, 9, 9, 0, 5, 8, 8, 4, 4, 8, 5, 5, 9, 4, 7, 8, 8, 9, 3, 6, 0, 0, 9, 7, 0, 1, 3, 1, 4,
+                               9, 5, 5, 8, 2, 3, 1, 2, 7, 3, 2, 6, 2, 7, 6, 1, 5, 0, 1, 5, 6, 9, 0, 4, 2, 1, 2, 0, 1, 9,
+                               5, 7, 7, 0, 1, 1, 0, 5, 4, 6, 5, 4, 2, 7, 4, 9, 2, 2, 3, 3, 8, 7, 6, 6, 6, 1, 3, 6, 7, 4,
+                               3, 8, 6, 7, 0, 4, 3, 9, 8, 2])
             data, G = self._p_list_solver_single_instance(plot, args=[self.instance, p_list])
             return data, G
         elif self.init == 'rule':

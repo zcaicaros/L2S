@@ -141,12 +141,14 @@ class JsspN5:
         self_as_nei = np.eye(n_opr, dtype=np.single)
         adj = self_as_nei + conj_nei_up_stream
         p_list = []
+        actions = []
         if self.rule == 'spt':
             for _ in range(n_opr):
                 candidate_masked = candidate_oprs[np.where(~mask)]
                 dur_candidate = np.take(dur_mat, candidate_masked)
                 idx = np.random.choice(np.where(dur_candidate == np.min(dur_candidate))[0])
                 action = candidate_masked[idx]
+                actions.append(action)
                 if action not in last_col:
                     candidate_oprs[action // n_mch] += 1
                 else:
@@ -154,6 +156,9 @@ class JsspN5:
                 job_id = action // n_mch
                 p_list.append(job_id)
         data, G = self._p_list_solver_single_instance(plot, args=[self.instance, p_list])
+        for i in range(100):
+            if i not in actions:
+                print('yes')
         return data, G
 
     def _transit_single(self, plot, args):

@@ -3,10 +3,13 @@ import matplotlib.pyplot as plt
 
 
 show = True
-plot_step_size = 1000
-# horizon = 4000
-# log = np.load('log/log_fixed_64.npy')[:horizon]
-log = np.load('log/log_sample_25.6w.npy')
+file = 'log/log_sample_25.6w.npy'
+plot_step_size = 100
+horizon = None
+if horizon is not None:
+    log = np.load(file)[:horizon]
+else:
+    log = np.load(file)
 
 
 obj = log[:, 0].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)

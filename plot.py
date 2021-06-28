@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 show = True
 file = 'log/log_sample_25.6w.npy'
-plot_step_size = 100
-horizon = 236000
+plot_step_size = 1000
+horizon = None
 if horizon is not None:
     log = np.load(file)[:horizon]
 else:

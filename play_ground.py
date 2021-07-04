@@ -2,5 +2,4 @@ from itertools import count
 import numpy as np
 
 
-print(count(1))
-print(np.load('log/log1.npy'))
+print(np.max(np.array([1, 2])))

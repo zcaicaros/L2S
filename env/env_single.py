@@ -1,5 +1,4 @@
 import os
-import random
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -13,6 +12,11 @@ from sklearn.preprocessing import MinMaxScaler
 from env.utils import plot_sol, dag2pyg
 from torch_geometric.data import Data
 from model.actor import Actor
+from env.permissible_LS import permissibleLeftShift
+from env.end_time_LB import calEndTimeLB
+from env.update_adjMat import getActionNbghs
+from parameters import args as parameters
+from env.jsp_problem import forward_and_backward_pass, mat2graph, backward_pass
 
 
 class JsspN5:
@@ -127,21 +131,28 @@ class JsspN5:
         return init_state, G
 
     def rules_solver(self, instance, plot=False):
-        dur_mat, mch_mat = instance[0], instance[1]
+        dur_mat, dur_cp, mch_mat = instance[0], np.copy(instance[0]), instance[1]
         n_job, n_mch = dur_mat.shape[0], dur_mat.shape[1]
         n_opr = n_job * n_mch
         last_col = np.arange(start=0, stop=n_opr, step=1).reshape(n_job, -1)[:, -1]
         first_col = np.arange(start=0, stop=n_opr, step=1).reshape(n_job, -1)[:, 0]
+        # initialize action space: [n_job, 1], the first column
         candidate_oprs = np.arange(start=0, stop=n_opr, step=1).reshape(n_job, -1)[:, 0]
+        # initialize the mask: [n_job, 1]
         mask = np.zeros(shape=n_job, dtype=bool)
         # initialize adj matrix
         conj_nei_up_stream = np.eye(n_opr, k=-1, dtype=np.single)
         # first column does not have upper stream conj_nei
         conj_nei_up_stream[first_col] = 0
-        self_as_nei = np.eye(n_opr, dtype=np.single)
-        adj = self_as_nei + conj_nei_up_stream
-        p_list = []
+        # self_as_nei = np.eye(n_opr, dtype=np.single)
+        adj = conj_nei_up_stream
+
+        gant_chart = -parameters.h * np.ones_like(dur_mat.transpose(), dtype=np.int32)
+        opIDsOnMchs = -n_job * np.ones_like(dur_mat.transpose(), dtype=np.int32)
+        temp = np.zeros_like(dur_mat, dtype=np.single)
+
         actions = []
+        LBs = None
         if self.rule == 'spt':
             for _ in range(n_opr):
                 candidate_masked = candidate_oprs[np.where(~mask)]
@@ -149,17 +160,57 @@ class JsspN5:
                 idx = np.random.choice(np.where(dur_candidate == np.min(dur_candidate))[0])
                 action = candidate_masked[idx]
                 actions.append(action)
+                row = action // n_mch
+                col = action % n_mch
+                dur_a = dur_mat[row, col]
+
+                startTime_a, _ = permissibleLeftShift(a=action,
+                                                      durMat=dur_mat,
+                                                      mchMat=mch_mat,
+                                                      mchsStartTimes=gant_chart,
+                                                      opIDsOnMchs=opIDsOnMchs)
+                # update action space or mask
                 if action not in last_col:
                     candidate_oprs[action // n_mch] += 1
                 else:
                     mask[action // n_mch] = 1
-                job_id = action // n_mch
-                p_list.append(job_id)
-        data, G = self._p_list_solver_single_instance(plot, args=[self.instance, p_list])
-        for i in range(100):
-            if i not in actions:
-                print('yes')
-        return data, G
+
+                temp[row, col] = startTime_a + dur_a
+                LBs = calEndTimeLB(temp, dur_cp)
+
+                # update adj matrix
+                precd, succd = getActionNbghs(action, opIDsOnMchs)
+                adj[action] = 0
+                adj[action, action] = 1
+                if action not in first_col:
+                    adj[action, action - 1] = 1
+                adj[action, precd] = 1
+                adj[succd, action] = 1
+        adj = adj - np.eye(n_opr)  # remove self-connection of each operation
+
+        G, adj_augmented = mat2graph(adj_mat=adj, dur_mat=dur_mat, plot_G=plot)
+        # backward pass
+        earliest_st = np.pad((LBs-dur_mat).reshape(-1), (1, 1), 'constant', constant_values=(0, LBs.max()))
+        topological_order = list(nx.topological_sort(G))
+        latest_st = np.fromiter(backward_pass(graph=G, topological_order=topological_order, makespan=LBs.max()).values(), dtype=float)
+
+        earliest_start = earliest_st.astype(np.float32)
+        latest_start = latest_st.astype(np.float32)
+        f1 = torch.from_numpy(
+            np.pad(np.float32((instance[0].reshape(-1, 1)) / self.high), ((1, 1), (0, 0)), 'constant',
+                   constant_values=0))
+        if self.min_max:
+            self.normalizer.fit(earliest_start.reshape(-1, 1))
+            f2 = torch.from_numpy(self.normalizer.transform(earliest_start.reshape(-1, 1)))
+            self.normalizer.fit(latest_start.reshape(-1, 1))
+            f3 = torch.from_numpy(self.normalizer.transform(latest_start.reshape(-1, 1)))
+        else:
+            f2 = torch.from_numpy(earliest_start.reshape(-1, 1) / 1000)
+            f3 = torch.from_numpy(latest_start.reshape(-1, 1) / 1000)
+        x = torch.cat([f1, f2, f3], dim=-1)
+        edge_idx = torch.nonzero(torch.from_numpy(adj_augmented)).t().contiguous()
+        init_state = Data(x=x, edge_index=edge_idx, y=np.amax(earliest_start))
+        return init_state, G
 
     def _transit_single(self, plot, args):
         """
@@ -205,10 +256,7 @@ class JsspN5:
     def _init(self, plot=False):
         if self.init == 'p_list':
             # p_list = np.random.permutation(np.arange(self.n_job).repeat(self.n_mch))
-            p_list = np.array([3, 8, 9, 9, 0, 5, 8, 8, 4, 4, 8, 5, 5, 9, 4, 7, 8, 8, 9, 3, 6, 0, 0, 9, 7, 0, 1, 3, 1, 4,
-                               9, 5, 5, 8, 2, 3, 1, 2, 7, 3, 2, 6, 2, 7, 6, 1, 5, 0, 1, 5, 6, 9, 0, 4, 2, 1, 2, 0, 1, 9,
-                               5, 7, 7, 0, 1, 1, 0, 5, 4, 6, 5, 4, 2, 7, 4, 9, 2, 2, 3, 3, 8, 7, 6, 6, 6, 1, 3, 6, 7, 4,
-                               3, 8, 6, 7, 0, 4, 3, 9, 8, 2])
+            p_list = np.arange(self.n_job).repeat(self.n_mch)  # fixed priority list: [0, 0, 0, ..., n-1, n-1, n-1]
             data, G = self._p_list_solver_single_instance(plot, args=[self.instance, p_list])
             return data, G
         elif self.init == 'rule':
@@ -226,11 +274,6 @@ class JsspN5:
         self.current_graph = init_graph
         self.current_objs = init_state.y
         self.incumbent_obj = init_state.y
-        self.incumbent_idle = compute_idle(state=init_state,
-                                           machine_mat=self.instance[1],
-                                           dur_mat=self.instance[0],
-                                           n_machine=self.n_mch,
-                                           n_job=self.n_job)
         self.itr = 0
         self.tabu_list = []
         feasible_actions = self.feasible_action()
@@ -249,23 +292,9 @@ class JsspN5:
 
         # makespan reward
         diff1 = torch.tensor(self.current_objs) - torch.tensor(new_state.y)
-        reward1 = diff1
-        # diff1 = torch.tensor(self.incumbent_obj) - torch.tensor(new_state.y)
-        # reward1 = torch.where(diff1 > 0, diff1/10, torch.tensor(0, dtype=torch.float32))
+        reward = diff1
         self.incumbent_obj = np.where(np.array(new_state.y) < self.incumbent_obj, new_state.y, self.incumbent_obj)
         self.current_objs = new_state.y
-        '''# idle time reward
-        new_idle = compute_idle(state=new_state, machine_mat=self.instance[1], dur_mat=self.instance[0], n_machine=self.n_mch, n_job=self.n_job)
-        diff2 = self.incumbent_idle - new_idle
-        reward2 = torch.where(diff2 > 0, diff2, torch.tensor(0, dtype=torch.float32))
-        if self.incumbent_idle > new_idle:
-            self.incumbent_idle = new_idle'''
-        # total reward
-        # reward = reward1 + reward2
-        reward = reward1
-
-        # print(reward1)
-        # print(reward2)
 
         # sequential version of update tabu list, different tabu list can have different length
         if self.tabu_size != 0:
@@ -291,13 +320,14 @@ class JsspN5:
 
 
 def main():
-    import random
     from torch_geometric.data.batch import Batch
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
-    state, feasible_action, done = env.reset(plot=plt)
-    env.rules_solver(env.instance)
+    inst = np.load('./tai15x15.npy')[1]
+    state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
+    # state, feasible_action, done = env.reset()
     # np.save('./instances{}x{}.npy'.format(str(n_j), str(n_m)), env.instance)
-    returns = []
+    print(state.y, env.current_objs)
+    '''returns = []
     t = 0
     with torch.no_grad():
         while not done:
@@ -313,60 +343,32 @@ def main():
             state = state_prime
             feasible_action = new_feasible_actions
             t += 1
-            # print()
-    print(torch.stack(returns).nonzero().shape)
-
-
-def compute_idle(state,  machine_mat, dur_mat, n_machine, n_job):
-    start_time_reshape = state.x[1:-1, 1].reshape(n_job, n_machine) * 1000
-    end_time_reshape = start_time_reshape + torch.tensor(dur_mat, dtype=torch.float)
-    gant_start_time, _ = torch.sort(torch.stack([start_time_reshape[np.where(machine_mat == i + 1)] for i in range(n_machine)]), dim=-1)
-    gant_end_time, _ = torch.sort(torch.stack([end_time_reshape[np.where(machine_mat == i + 1)] for i in range(n_machine)]), dim=-1)
-    mean_idle = (gant_start_time[:, 1:] - gant_end_time[:, :-1]).mean()
-    return mean_idle
-
-
-def new_reward(state, state_prime, machine_mat, dur_mat, n_machine, n_job, incumb_idle):
-    start_time_reshape = state.x[1:-1, 1].reshape(n_job, n_machine) * 1000
-    end_time_reshape = start_time_reshape + torch.tensor(dur_mat, dtype=torch.float)
-    gant_start_time, _ = torch.sort(torch.stack([start_time_reshape[np.where(machine_mat == i + 1)] for i in range(n_machine)]), dim=-1)
-    gant_end_time, _ = torch.sort(torch.stack([end_time_reshape[np.where(machine_mat == i + 1)] for i in range(n_machine)]), dim=-1)
-    idle = (gant_start_time[:, 1:] - gant_end_time[:, :-1]).mean()
-
-    '''start_time_reshape_prime = state_prime.x[1:-1, 1].reshape(n_job, n_machine) * 1000
-    end_time_reshape_prime = start_time_reshape_prime + torch.tensor(dur_mat, dtype=torch.float)
-    gant_start_time_prime, _ = torch.sort(torch.stack([start_time_reshape_prime[np.where(machine_mat == i + 1)] for i in range(n_machine)]), dim=-1)
-    gant_end_time_prime, _ = torch.sort(torch.stack([end_time_reshape_prime[np.where(machine_mat == i + 1)] for i in range(n_machine)]), dim=-1)
-    idle_prime = (gant_start_time_prime[:, 1:] - gant_end_time_prime[:, :-1]).mean()'''
-
-    if idle < incumb_idle:
-        # print('idle reward:', incumb_idle - idle)
-        return idle
-    else:
-        # print('idle reward:', torch.tensor(0))
-        return incumb_idle
+            # print()'''
 
 
 if __name__ == '__main__':
     ###### WHEN COMPUTE USING PARALLEL, env.current_graphs WILL NOT TRANSIT, BUG!!!
     import time
 
-    n_j = 10
-    n_m = 10
-    l = 1
-    h = 99
     transit = 100
     par = False
     plt = False
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(1)
-    np.random.seed(1)
+    np.random.seed(123456324)
 
-    env = JsspN5(n_job=n_j, n_mch=n_m, low=l, high=h, init='rule', rule='spt', transition=transit)
+    env = JsspN5(n_job=parameters.j,
+                 n_mch=parameters.m,
+                 low=parameters.l,
+                 high=parameters.h,
+                 init='rule', rule='spt', transition=transit)
+
+    for inst in np.load('./tai15x15.npy'):
+        state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
 
     '''import cProfile
-    cProfile.run('main()', filename='./restats_{}x{}_{}'.format(str(n_j), str(n_m), str(env.max_transition)))'''
+    cProfile.run('main()', filename='./restats_{}x{}_{}'.format(str(parameters.j), str(parameters.m), str(env.max_transition)))'''
 
-    t1 = time.time()
+    '''t1 = time.time()
     main()
-    print(time.time() - t1)
+    print(time.time() - t1)'''

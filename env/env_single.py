@@ -174,7 +174,6 @@ class JsspN5:
 
         # forward and backward pass
         earliest_st, latest_st, adj_mat_aug, G = forward_and_backward_pass(adj, dur_mat, plot_G=plot)
-        print(adj_mat_aug.sum())
 
         earliest_start = earliest_st.astype(np.float32)
         latest_start = latest_st.astype(np.float32)

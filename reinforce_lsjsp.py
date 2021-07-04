@@ -27,8 +27,9 @@ def finish_episode(rewards, log_probs):
         R = r + args.gamma * R
         returns.insert(0, R)
     returns = torch.tensor(returns)
-    print(returns.shape.item())
-    returns = (returns - returns.mean()) / (torch.std(returns) + eps)
+    if returns.shape[0] > 1:  # normalization should be over >=2 elements otherwise it will get Nan and causing error.
+        returns = (returns - returns.mean()) / (torch.std(returns) + eps)
+
     for log_prob, R in zip(log_probs, returns):
         policy_loss.append(-log_prob * R)
         # print(log_prob)
@@ -56,19 +57,19 @@ def main():
         ep_reward = 0
         rewards = []
         log_probs = []
-        while not done:
-            action, log_p = policy(Batch.from_data_list([state]).to(dev), [feasible_action])
-            state, reward, feasible_action, done = env.step_single(action[0])
-            rewards.append(reward)
-            log_probs.append(log_p)
-            ep_reward += reward
+        if not done:  # if init state is done then do nothing
+            while not done:
+                action, log_p = policy(Batch.from_data_list([state]).to(dev), [feasible_action])
+                state, reward, feasible_action, done = env.step_single(action[0])
+                rewards.append(reward)
+                log_probs.append(log_p)
+                ep_reward += reward
+            running_reward = 0.05 * ep_reward + (1 - 0.05) * running_reward
+            finish_episode(rewards, log_probs)
 
-
-        running_reward = 0.05 * ep_reward + (1 - 0.05) * running_reward
-        finish_episode(rewards, log_probs)
         log.append([env.current_objs, ep_reward, running_reward])
         if i_episode % 100 == 0:
-            np.save('log/log_sample_25.6w_spt.npy', np.array(log))
+            np.save('log/log_10x10_sample_25.6w_spt.npy', np.array(log))
         print('solution quality:', env.current_objs)
         print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(i_episode, ep_reward, running_reward))
         if running_reward > incumbent_reward:

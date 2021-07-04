@@ -149,10 +149,8 @@ class JsspN5:
 
         gant_chart = -parameters.h * np.ones_like(dur_mat.transpose(), dtype=np.int32)
         opIDsOnMchs = -n_job * np.ones_like(dur_mat.transpose(), dtype=np.int32)
-        temp = np.zeros_like(dur_mat, dtype=np.single)
 
         actions = []
-        LBs = None
         if self.rule == 'spt':
             for _ in range(n_opr):
                 candidate_masked = candidate_oprs[np.where(~mask)]
@@ -160,54 +158,23 @@ class JsspN5:
                 idx = np.random.choice(np.where(dur_candidate == np.min(dur_candidate))[0])
                 action = candidate_masked[idx]
                 actions.append(action)
-                row = action // n_mch
-                col = action % n_mch
-                dur_a = dur_mat[row, col]
 
-                startTime_a, _ = permissibleLeftShift(a=action,
-                                                      durMat=dur_mat,
-                                                      mchMat=mch_mat,
-                                                      mchsStartTimes=gant_chart,
-                                                      opIDsOnMchs=opIDsOnMchs)
+                permissibleLeftShift(a=action,
+                                     durMat=dur_mat,
+                                     mchMat=mch_mat,
+                                     mchsStartTimes=gant_chart,
+                                     opIDsOnMchs=opIDsOnMchs)
                 # update action space or mask
                 if action not in last_col:
                     candidate_oprs[action // n_mch] += 1
                 else:
                     mask[action // n_mch] = 1
+        for i in range(opIDsOnMchs.shape[1] - 1):
+            adj[opIDsOnMchs[:, i+1], opIDsOnMchs[:, i]] = 1
 
-                temp[row, col] = startTime_a + dur_a
-                LBs = calEndTimeLB(temp, dur_cp)
-
-                # update adj matrix
-                # print(opIDsOnMchs)
-                # D2_idx = opIDsOnMchs[np.where(opIDsOnMchs != -n_job)]
-                # print(D2_idx)
-                # print(np.ravel_multi_index(D2_idx, (n_opr, n_opr)))
-
-
-                pre, suc = getActionNbghs(action, opIDsOnMchs)
-                # pre_pre, _ = getActionNbghs(pre, opIDsOnMchs)
-                # _, suc_suc = getActionNbghs(suc, opIDsOnMchs)
-                # print(opIDsOnMchs)
-                # print(action, pre, suc)
-                adj[suc, pre] = 0
-                adj[action] = 0
-                adj[action, action] = 1
-                if action not in first_col:
-                    adj[action, action - 1] = 1
-                adj[action, pre] = 1
-                adj[suc, action] = 1
-                # connect pre
-                # print(adj)
-        adj = adj - np.eye(n_opr)  # remove self-connection of each operation
-        # print(mch_mat)
-        # print(adj)
-
-        G, adj_augmented = mat2graph(adj_mat=adj, dur_mat=dur_mat, plot_G=plot)
-        # backward pass
-        earliest_st = np.pad((LBs-dur_mat).reshape(-1), (1, 1), 'constant', constant_values=(0, LBs.max()))
-        topological_order = list(nx.topological_sort(G))
-        latest_st = np.fromiter(backward_pass(graph=G, topological_order=topological_order, makespan=LBs.max()).values(), dtype=float)
+        # forward and backward pass
+        earliest_st, latest_st, adj_mat_aug, G = forward_and_backward_pass(adj, dur_mat, plot_G=plot)
+        print(adj_mat_aug.sum())
 
         earliest_start = earliest_st.astype(np.float32)
         latest_start = latest_st.astype(np.float32)
@@ -223,7 +190,7 @@ class JsspN5:
             f2 = torch.from_numpy(earliest_start.reshape(-1, 1) / 1000)
             f3 = torch.from_numpy(latest_start.reshape(-1, 1) / 1000)
         x = torch.cat([f1, f2, f3], dim=-1)
-        edge_idx = torch.nonzero(torch.from_numpy(adj_augmented)).t().contiguous()
+        edge_idx = torch.nonzero(torch.from_numpy(adj_mat_aug)).t().contiguous()
         init_state = Data(x=x, edge_index=edge_idx, y=np.amax(earliest_start))
         return init_state, G
 
@@ -337,28 +304,30 @@ class JsspN5:
 def main():
     from torch_geometric.data.batch import Batch
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
-    inst = np.load('./tai15x15.npy')[1]
-    state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
-    # state, feasible_action, done = env.reset()
+    # inst = np.load('./tai15x15.npy')[2]
+    # state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
+    state, feasible_action, done = env.reset()
     # np.save('./instances{}x{}.npy'.format(str(n_j), str(n_m)), env.instance)
-    print(state.y, env.current_objs)
-    '''returns = []
+    # print(env.current_objs)
+    returns = []
     t = 0
     with torch.no_grad():
         while not done:
+            print(env.itr)
+            # print([param for param in actor.parameters()])
             action, _ = actor(Batch.from_data_list([state]).to(device), [feasible_action])
             # action = random.choice(feasible_action)
 
             state_prime, reward, new_feasible_actions, done = env.step_single(action=action[0], plot=plt)
+            print(state_prime.edge_index.shape)
             # print('make span reward:', reward)
             if torch.equal(state.x.cpu(), state_prime.x) and torch.equal(state.edge_index.cpu(), state_prime.edge_index):
                 print('In absorbing state at', env.itr - 1)
-
             returns.append(reward)
             state = state_prime
             feasible_action = new_feasible_actions
             t += 1
-            # print()'''
+            print()
 
 
 if __name__ == '__main__':
@@ -384,6 +353,6 @@ if __name__ == '__main__':
     '''import cProfile
     cProfile.run('main()', filename='./restats_{}x{}_{}'.format(str(parameters.j), str(parameters.m), str(env.max_transition)))'''
 
-    '''t1 = time.time()
+    t1 = time.time()
     main()
-    print(time.time() - t1)'''
+    print(time.time() - t1)

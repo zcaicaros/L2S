@@ -19,7 +19,6 @@ eps = np.finfo(np.float32).eps.item()
 
 
 def finish_episode(rewards, log_probs):
-    # print(torch.nonzero(torch.stack(rewards)).shape[0])
     R = 0
     policy_loss = []
     returns = []
@@ -32,11 +31,8 @@ def finish_episode(rewards, log_probs):
 
     for log_prob, R in zip(log_probs, returns):
         policy_loss.append(-log_prob * R)
-        # print(log_prob)
-        # print(R)
     optimizer.zero_grad()
     policy_loss = torch.cat(policy_loss).sum()
-    # print(policy_loss)
     policy_loss.backward()
     optimizer.step()
 
@@ -49,9 +45,6 @@ def main():
     # instance = uni_instance_gen(args.j, args.m, args.l, args.h)
     # np.save('./instance.npy', instance)
     for i_episode in range(1, args.episodes + 1):
-        # for name, param in policy.named_parameters():
-        #     if param.requires_grad:
-        #         print(name, param.data)
         instance = uni_instance_gen(args.j, args.m, args.l, args.h)
         state, feasible_action, done = env.reset(instance=instance, fix_instance=True)
         ep_reward = 0

@@ -43,6 +43,10 @@ class GIN(torch.nn.Module):
 
         x, edge_index, batch = batch_states.x, batch_states.edge_index, batch_states.batch
 
+        # print(x)
+        # print(edge_index)
+        # print(batch)
+
         # init projection
         # h = self.mlp1(x)
         # hidden_rep = [h]
@@ -52,6 +56,9 @@ class GIN(torch.nn.Module):
         node_pool_over_layer = 0
         # initial layer forward
         h = self.batch_norms[0](F.relu(self.GIN_layers[0](x, edge_index)))
+        # print(x)
+        # print(edge_index)
+        # print(self.GIN_layers[0](x, edge_index).shape)
         node_pool_over_layer += h
         hidden_rep.append(h)
         for layer in range(1, self.layer_gin):

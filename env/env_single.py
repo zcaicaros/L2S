@@ -179,14 +179,29 @@ class JsspN5:
                 LBs = calEndTimeLB(temp, dur_cp)
 
                 # update adj matrix
-                precd, succd = getActionNbghs(action, opIDsOnMchs)
+                # print(opIDsOnMchs)
+                # D2_idx = opIDsOnMchs[np.where(opIDsOnMchs != -n_job)]
+                # print(D2_idx)
+                # print(np.ravel_multi_index(D2_idx, (n_opr, n_opr)))
+
+
+                pre, suc = getActionNbghs(action, opIDsOnMchs)
+                # pre_pre, _ = getActionNbghs(pre, opIDsOnMchs)
+                # _, suc_suc = getActionNbghs(suc, opIDsOnMchs)
+                # print(opIDsOnMchs)
+                # print(action, pre, suc)
+                adj[suc, pre] = 0
                 adj[action] = 0
                 adj[action, action] = 1
                 if action not in first_col:
                     adj[action, action - 1] = 1
-                adj[action, precd] = 1
-                adj[succd, action] = 1
+                adj[action, pre] = 1
+                adj[suc, action] = 1
+                # connect pre
+                # print(adj)
         adj = adj - np.eye(n_opr)  # remove self-connection of each operation
+        # print(mch_mat)
+        # print(adj)
 
         G, adj_augmented = mat2graph(adj_mat=adj, dur_mat=dur_mat, plot_G=plot)
         # backward pass

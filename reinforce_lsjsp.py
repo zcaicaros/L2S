@@ -11,7 +11,9 @@ from torch_geometric.data.batch import Batch
 torch.manual_seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-env = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, transition=args.transit, init='rule', rule='spt')
+init = 'rule'  # 'rule', 'p_list'
+rule = 'spt'
+env = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, transition=args.transit, init=init, rule=rule)
 policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)  # policy = Actor(3, 64, gin_l=3, policy_l=3).to(dev)
 
 optimizer = optim.Adam(policy.parameters(), lr=args.lr)
@@ -61,7 +63,10 @@ def main():
             # finish_episode(rewards, log_probs)
         log.append([env.current_objs, ep_reward, running_reward])
         if i_episode % 100 == 0:
-            np.save('log/log_10x10_sample_25.6w_spt_no-learn.npy', np.array(log))
+            if init == 'p_list':
+                np.save('log/log_{}x{}_sample_{}w_plist.npy'.format(args.j, args.m, args.episodes/10000), np.array(log))
+            else:
+                np.save('log/log_{}x{}_sample_{}w_{}.npy'.format(args.j, args.m, args.episodes/10000, rule), np.array(log))
         print('solution quality:', env.current_objs)
         print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(i_episode, ep_reward, running_reward))
         if running_reward > incumbent_reward:

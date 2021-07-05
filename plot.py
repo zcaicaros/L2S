@@ -1,13 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from parameters import args
 
 
 show = True
 j = 15
 m = 15
+episode = 384000
 init = 'spt'  # 'plist', 'spt', ...
-episode = '38.4w'  # '25.6w', '38.4w', ...
-file = 'log/log_{}x{}_sample_{}_{}.npy'.format(j, m, episode, init)
+file = 'log/log_{}x{}_sample_{}_{}.npy'.format(j, m, str(episode/10000) + 'w', init)
 plot_step_size = 200
 horizon = None
 if horizon is not None:

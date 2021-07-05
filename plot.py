@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 
 
 show = True
-j = 15
-m = 15
+j = 10
+m = 10
 init = 'spt'  # 'plist', 'spt', ...
 episode = '38.4w'  # '25.6w', '38.4w', ...
 file = 'log/log_{}x{}_sample_{}_{}.npy'.format(j, m, episode, init)
-plot_step_size = 50
-horizon = 10000
+plot_step_size = 1000
+horizon = 127000
 if horizon is not None:
     log = np.load(file)[:horizon]
 else:

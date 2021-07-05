@@ -44,8 +44,11 @@ def main():
     running_reward = 0
     incumbent_validation_result = np.inf
     log = []
-    np.random.seed(1)
-    validation_data = np.array([uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(100)])
+    validation_log = []
+    # np.random.seed(1)
+    # validation_data = np.array([uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(100)])
+    # np.save('./validation_instance.npy', validation_data)
+    validation_data = np.load('./validation_instance.npy')
     np.random.seed(2)
 
     # instance = uni_instance_gen(args.j, args.m, args.l, args.h)  # fixed instance
@@ -67,14 +70,9 @@ def main():
             finish_episode(rewards, log_probs)
         log.append([env.current_objs, ep_reward, running_reward])
 
-        # logging...
+        # logging and validation...
         if i_episode % 100 == 0:
-            if init == 'p_list':
-                np.save('./log/log_{}x{}_{}w_plist.npy'.format(args.j, args.m, args.episodes/10000), np.array(log))
-            else:
-                np.save('./log/log_{}x{}_{}w_{}.npy'.format(args.j, args.m, args.episodes/10000, rule), np.array(log))
-
-            # validation...
+            # validating...
             current_validation_result = []
             for i, vali_data in enumerate(validation_data):
                 state, feasible_action, done = env_validation.reset(instance=vali_data, fix_instance=True)
@@ -86,6 +84,7 @@ def main():
                         returns.append(reward)
                 current_validation_result.append(env_validation.incumbent_obj)
             current_validation_result = np.array(current_validation_result).mean()
+            validation_log.append(current_validation_result)
             # if better validation save model
             if current_validation_result < incumbent_validation_result:
                 if init == 'p_list':
@@ -94,6 +93,14 @@ def main():
                     torch.save(policy.state_dict(), './saved_model/{}x{}_{}.pth'.format(str(args.j), str(args.m), rule))
                 incumbent_validation_result = current_validation_result
                 print('We have found better validation result, so saving network...', 'validation result:', current_validation_result)
+
+            # logging...
+            if init == 'p_list':
+                np.save('./log/log_{}x{}_{}w_plist.npy'.format(args.j, args.m, args.episodes/10000), np.array(log))
+                np.save('./log/validation_log_{}x{}_{}w_plist.npy'.format(args.j, args.m, args.episodes / 10000), np.array(validation_log))
+            else:
+                np.save('./log/log_{}x{}_{}w_{}.npy'.format(args.j, args.m, args.episodes/10000, rule), np.array(log))
+                np.save('./log/validation_log_{}x{}_{}w_{}.npy'.format(args.j, args.m, args.episodes / 10000, rule), np.array(validation_log))
 
         print('solution quality:', env.current_objs)
         print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(i_episode, ep_reward, running_reward))

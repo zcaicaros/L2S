@@ -39,3 +39,5 @@ output4 = layer4(output3, edge_index)
 print(output4)
 
 print(torch.std(torch.tensor([1.])))
+
+print(np.load('./log/validation_log_10x10_6.4w_spt.npy'))

@@ -46,7 +46,7 @@ def main():
     log = []
     validation_log = []
     np.random.seed(1)
-    # remember to generate validation data if size is not in {10x10, 15x15}
+    # remember to generate validation data if size is not in {10x10, 15x15, 20x20, 30x20}
     # validation_data = np.array([uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(100)])
     # np.save('./validation_data/validation_instance_{}x{}.npy'.format(args.j, args.m), validation_data)
     validation_data = np.load('./validation_data/validation_instance_{}x{}.npy'.format(args.j, args.m))

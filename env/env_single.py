@@ -251,6 +251,7 @@ class JsspN5:
             self.instance = instance
         else:
             self.instance = self._instances_gen()
+        print(self.instance)
         init_state, init_graph = self._init(plot)
         self.current_graph = init_graph
         self.current_objs = init_state.y

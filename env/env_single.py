@@ -316,8 +316,8 @@ def main():
                  init='rule', rule='spt', transition=transit)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
-    inst = np.load('./tai15x15.npy')
-    # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(100)])
+    # inst = np.load('./tai15x15.npy')
+    inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(1000)])
     for i, data in enumerate(inst):
         state, feasible_action, done = env.reset(instance=data, fix_instance=True)
         # print(env.current_objs)

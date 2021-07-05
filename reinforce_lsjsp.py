@@ -72,9 +72,9 @@ def main():
         if running_reward > incumbent_reward:
             print('better running reward, saving network...')
             if init == 'p_list':
-                torch.save(policy.state_dict(), './{}x{}_plist.pth'.format(str(args.j), str(args.m)))
+                torch.save(policy.state_dict(), './saved_model/{}x{}_plist.pth'.format(str(args.j), str(args.m)))
             else:
-                torch.save(policy.state_dict(), './{}x{}_{}.pth'.format(str(args.j), str(args.m), rule))
+                torch.save(policy.state_dict(), './saved_model/{}x{}_{}.pth'.format(str(args.j), str(args.m), rule))
             incumbent_reward = running_reward
         print()
 

@@ -9,8 +9,8 @@ m = 15
 episode = 384000
 init = 'spt'  # 'plist', 'spt', ...
 file = 'log/log_{}x{}_{}_{}.npy'.format(j, m, str(episode/10000) + 'w', init)
-plot_step_size = 200
-horizon = None
+plot_step_size = 50
+horizon = 15000
 if horizon is not None:
     log = np.load(file)[:horizon]
 else:

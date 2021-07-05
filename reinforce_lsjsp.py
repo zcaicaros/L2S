@@ -42,11 +42,11 @@ def finish_episode(rewards, log_probs):
 
 def main():
     running_reward = 0
-    incumbent_reward = -100000
     incumbent_validation_result = np.inf
     log = []
-    np.random.seed(2)
+    np.random.seed(1)
     validation_data = np.array([uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(100)])
+    np.random.seed(2)
 
     # instance = uni_instance_gen(args.j, args.m, args.l, args.h)  # fixed instance
     # np.save('./instance.npy', instance)

@@ -75,7 +75,7 @@ def main():
         print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(i_episode, ep_reward, running_reward))
 
         # logging and validation...
-        if i_episode % 1 == 0:
+        if i_episode % 100 == 0:
             # validating...
             current_validation_result = []
             for i, vali_data in enumerate(validation_data):

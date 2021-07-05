@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 
 
 show = True
-j = 15
-m = 15
-episode = 384000
+j = 10
+m = 10
+episode = 64000
 init = 'spt'  # 'plist', 'spt', ...
-file = 'log/log_{}x{}_{}_{}.npy'.format(j, m, str(episode/10000) + 'w', init)
-plot_step_size = 1000
-horizon = 128000
+file = './log/log_{}x{}_{}_{}.npy'.format(j, m, str(episode/10000) + 'w', init)
+plot_step_size = 50
+horizon = 1000
 if horizon is not None:
     log = np.load(file)[:horizon]
 else:
@@ -30,6 +30,7 @@ plt.close()
 
 returns = log[:, 1].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
 # plot return...
+print(returns)
 plt.xlabel('iteration({})'.format(plot_step_size))
 plt.ylabel('return')
 plt.plot([_ for _ in range(returns.shape[0])], returns, color='tab:blue')

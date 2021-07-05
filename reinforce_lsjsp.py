@@ -45,10 +45,11 @@ def main():
     incumbent_validation_result = np.inf
     log = []
     validation_log = []
-    # np.random.seed(1)
+    np.random.seed(1)
+    # remember to generate validation data if size is not in {10x10, 15x15}
     # validation_data = np.array([uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(100)])
-    # np.save('./validation_instance.npy', validation_data)
-    validation_data = np.load('./validation_instance.npy')
+    # np.save('./validation_data/validation_instance_{}x{}.npy'.format(args.j, args.m), validation_data)
+    validation_data = np.load('./validation_data/validation_instance_{}x{}.npy'.format(args.j, args.m))
     np.random.seed(2)
 
     # instance = uni_instance_gen(args.j, args.m, args.l, args.h)  # fixed instance
@@ -75,14 +76,14 @@ def main():
             # validating...
             current_validation_result = []
             for i, vali_data in enumerate(validation_data):
-                state, feasible_action, done = env_validation.reset(instance=vali_data, fix_instance=True)
-                returns = []
+                state_v, feasible_action_v, done_v = env_validation.reset(instance=vali_data, fix_instance=True)
+                returns_v = []
                 with torch.no_grad():
-                    while not done:
-                        action, _ = policy(Batch.from_data_list([state]).to(dev), [feasible_action])
-                        state, reward, feasible_action, done = env_validation.step_single(action=action[0])
-                        returns.append(reward)
-                current_validation_result.append(env_validation.incumbent_obj)
+                    while not done_v:
+                        action_v, _ = policy(Batch.from_data_list([state_v]).to(dev), [feasible_action_v])
+                        state_v, reward_v, feasible_action_v, done_v = env_validation.step_single(action=action_v[0])
+                        returns_v.append(reward_v)
+                current_validation_result.append(env_validation.current_objs)
             current_validation_result = np.array(current_validation_result).mean()
             validation_log.append(current_validation_result)
             # if better validation save model

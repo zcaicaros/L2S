@@ -64,14 +64,17 @@ def main():
         log.append([env.current_objs, ep_reward, running_reward])
         if i_episode % 100 == 0:
             if init == 'p_list':
-                np.save('log/log_{}x{}_sample_{}w_plist.npy'.format(args.j, args.m, args.episodes/10000), np.array(log))
+                np.save('log/log_{}x{}_{}w_plist.npy'.format(args.j, args.m, args.episodes/10000), np.array(log))
             else:
-                np.save('log/log_{}x{}_sample_{}w_{}.npy'.format(args.j, args.m, args.episodes/10000, rule), np.array(log))
+                np.save('log/log_{}x{}_{}w_{}.npy'.format(args.j, args.m, args.episodes/10000, rule), np.array(log))
         print('solution quality:', env.current_objs)
         print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(i_episode, ep_reward, running_reward))
         if running_reward > incumbent_reward:
             print('better running reward, saving network...')
-            torch.save(policy.state_dict(), './{}.pth'.format(str(args.j) + '_' + str(args.m)))
+            if init == 'p_list':
+                torch.save(policy.state_dict(), './{}x{}_plist.pth'.format(str(args.j), str(args.m)))
+            else:
+                torch.save(policy.state_dict(), './{}x{}_{}.pth'.format(str(args.j), str(args.m), rule))
             incumbent_reward = running_reward
         print()
 

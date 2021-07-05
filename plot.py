@@ -8,7 +8,7 @@ j = 15
 m = 15
 episode = 384000
 init = 'spt'  # 'plist', 'spt', ...
-file = 'log/log_{}x{}_sample_{}_{}.npy'.format(j, m, str(episode/10000) + 'w', init)
+file = 'log/log_{}x{}_{}_{}.npy'.format(j, m, str(episode/10000) + 'w', init)
 plot_step_size = 200
 horizon = None
 if horizon is not None:

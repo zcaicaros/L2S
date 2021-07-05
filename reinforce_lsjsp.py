@@ -62,7 +62,7 @@ def main():
             running_reward = 0.05 * ep_reward + (1 - 0.05) * running_reward
             # finish_episode(rewards, log_probs)
         log.append([env.current_objs, ep_reward, running_reward])
-        if i_episode % 100 == 0:
+        if i_episode % 1 == 0:
             if init == 'p_list':
                 np.save('log/log_{}x{}_{}w_plist.npy'.format(args.j, args.m, args.episodes/10000), np.array(log))
             else:

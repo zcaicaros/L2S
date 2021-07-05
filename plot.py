@@ -4,13 +4,13 @@ from parameters import args
 
 
 show = True
-j = 15
-m = 15
+j = 10
+m = 10
 episode = 384000
-init = 'spt'  # 'plist', 'spt', ...
-file = 'log/log_{}x{}_{}_{}.npy'.format(j, m, str(episode/10000) + 'w', init)
-plot_step_size = 50
-horizon = 15000
+init = 'plist'  # 'plist', 'spt', ...
+file = 'log/log_{}x{}_sample_{}_{}.npy'.format(j, m, str(episode/10000) + 'w', init)
+plot_step_size = 1000
+horizon = 150000
 if horizon is not None:
     log = np.load(file)[:horizon]
 else:

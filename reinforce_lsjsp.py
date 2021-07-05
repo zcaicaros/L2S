@@ -71,8 +71,11 @@ def main():
             finish_episode(rewards, log_probs)
         log.append([env.current_objs, ep_reward, running_reward])
 
+        print('solution quality:', env.current_objs)
+        print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(i_episode, ep_reward, running_reward))
+
         # logging and validation...
-        if i_episode % 100 == 0:
+        if i_episode % 1 == 0:
             # validating...
             current_validation_result = []
             for i, vali_data in enumerate(validation_data):
@@ -89,22 +92,19 @@ def main():
             # if better validation save model
             if current_validation_result < incumbent_validation_result:
                 if init == 'p_list':
-                    torch.save(policy.state_dict(), './saved_model/{}x{}_plist.pth'.format(str(args.j), str(args.m)))
+                    torch.save(policy.state_dict(), './saved_model/{}x{}_plist_{}.pth'.format(str(args.j), str(args.m), str(args.transit)))
                 else:
-                    torch.save(policy.state_dict(), './saved_model/{}x{}_{}.pth'.format(str(args.j), str(args.m), rule))
+                    torch.save(policy.state_dict(), './saved_model/{}x{}_{}_{}.pth'.format(str(args.j), str(args.m), rule, str(args.transit)))
                 incumbent_validation_result = current_validation_result
                 print('We have found better validation result, so saving network...', 'validation result:', current_validation_result)
 
             # logging...
             if init == 'p_list':
-                np.save('./log/log_{}x{}_{}w_plist.npy'.format(args.j, args.m, args.episodes/10000), np.array(log))
-                np.save('./log/validation_log_{}x{}_{}w_plist.npy'.format(args.j, args.m, args.episodes / 10000), np.array(validation_log))
+                np.save('./log/log_{}x{}_{}w_plist_{}.npy'.format(args.j, args.m, args.episodes/10000, str(args.transit)), np.array(log))
+                np.save('./log/validation_log_{}x{}_{}w_plist_{}.npy'.format(args.j, args.m, args.episodes / 10000, str(args.transit)), np.array(validation_log))
             else:
-                np.save('./log/log_{}x{}_{}w_{}.npy'.format(args.j, args.m, args.episodes/10000, rule), np.array(log))
-                np.save('./log/validation_log_{}x{}_{}w_{}.npy'.format(args.j, args.m, args.episodes / 10000, rule), np.array(validation_log))
-
-        print('solution quality:', env.current_objs)
-        print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(i_episode, ep_reward, running_reward))
+                np.save('./log/log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes/10000, rule, str(args.transit)), np.array(log))
+                np.save('./log/validation_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, rule, str(args.transit)), np.array(validation_log))
         print()
 
 

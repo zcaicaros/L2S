@@ -13,7 +13,7 @@ m = 10
 l = 1
 h = 99
 n_generated_instances = 100
-transit = 1000
+transit = 2000
 init = 'rule'  # 'plist', 'spt', ...
 rule = 'spt'
 
@@ -45,7 +45,7 @@ def main():
                 action, _ = policy(Batch.from_data_list([state]).to(dev), [feasible_action])
                 state, reward, feasible_action, done = env.step_single(action=action[0])
                 returns.append(reward)
-        print('Instance-' + str(i + 1) + ' DRL makespan:', env.incumbent_obj)
+        print('Instance-' + str(i + 1) + ' DRL makespan:', env.incumbent_obj, ' used transition:', env.itr)
         results_drl.append(env.incumbent_obj)
     results_drl = np.array(results_drl)
 
@@ -61,7 +61,7 @@ def main():
                 action = random.choice(feasible_action)
                 state, reward, feasible_action, done = env.step_single(action=action)
                 returns.append(reward)
-        print('Instance-' + str(i + 1) + ' Random policy makespan:', env.incumbent_obj)
+        print('Instance-' + str(i + 1) + ' Random policy makespan:', env.incumbent_obj, ' used transition:', env.itr)
         results_random.append(env.incumbent_obj)
     results_random = np.array(results_random)
 

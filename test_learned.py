@@ -13,7 +13,7 @@ m = 10
 l = 1
 h = 99
 n_generated_instances = 100
-transit = 500
+transit = 1000
 init = 'rule'  # 'plist', 'spt', ...
 rule = 'spt'
 

@@ -3,9 +3,12 @@ import matplotlib.pyplot as plt
 
 
 show = True
-file = 'log/log_sample_25.6w.npy'
-plot_step_size = 1000
-horizon = None
+j = 15
+m = 15
+init = 'spt'
+file = 'log/log_{}x{}_sample_38.4w_{}.npy'.format(j, m, init)
+plot_step_size = 50
+horizon = 10000
 if horizon is not None:
     log = np.load(file)[:horizon]
 else:

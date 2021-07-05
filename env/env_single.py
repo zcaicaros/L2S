@@ -13,10 +13,8 @@ from env.utils import plot_sol, dag2pyg
 from torch_geometric.data import Data
 from model.actor import Actor
 from env.permissible_LS import permissibleLeftShift
-from env.end_time_LB import calEndTimeLB
-from env.update_adjMat import getActionNbghs
 from parameters import args as parameters
-from env.jsp_problem import forward_and_backward_pass, mat2graph, backward_pass
+from env.jsp_problem import forward_and_backward_pass
 
 
 class JsspN5:
@@ -303,30 +301,41 @@ class JsspN5:
 def main():
     from torch_geometric.data.batch import Batch
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
-    # inst = np.load('./tai15x15.npy')[2]
-    # state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
-    state, feasible_action, done = env.reset()
-    # np.save('./instances{}x{}.npy'.format(str(n_j), str(n_m)), env.instance)
-    # print(env.current_objs)
-    returns = []
-    t = 0
-    with torch.no_grad():
-        while not done:
-            print(env.itr)
-            # print([param for param in actor.parameters()])
-            action, _ = actor(Batch.from_data_list([state]).to(device), [feasible_action])
-            # action = random.choice(feasible_action)
 
-            state_prime, reward, new_feasible_actions, done = env.step_single(action=action[0], plot=plt)
-            print(state_prime.edge_index.shape)
-            # print('make span reward:', reward)
-            if torch.equal(state.x.cpu(), state_prime.x) and torch.equal(state.edge_index.cpu(), state_prime.edge_index):
-                print('In absorbing state at', env.itr - 1)
-            returns.append(reward)
-            state = state_prime
-            feasible_action = new_feasible_actions
-            t += 1
-            print()
+    j = 15
+    m = 15
+    h = 99
+    l = 1
+    env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
+                 init='rule', rule='spt', transition=transit)
+
+    inst = np.load('./tai15x15.npy')
+    # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(100)])
+    for i, data in enumerate(inst):
+        state, feasible_action, done = env.reset(instance=data, fix_instance=True)
+        # state, feasible_action, done = env.reset()
+        # np.save('./instances{}x{}.npy'.format(str(n_j), str(n_m)), env.instance)
+        # print(env.current_objs)
+        returns = []
+        t = 0
+        with torch.no_grad():
+            while not done:
+                if state.edge_index.shape[1] != (j-1)*m + (m-1)*j + (j*m+2) + j + j:
+                    print('not equal {} at:'.format((j-1)*m + (m-1)*j + (j*m+2) + j + j), env.itr)
+                    np.save('./mal_func_instance.npy', env.instance)
+                # print(env.itr)
+                # print([param for param in actor.parameters()])
+                action, _ = actor(Batch.from_data_list([state]).to(device), [feasible_action])
+                # action = random.choice(feasible_action)
+                state_prime, reward, new_feasible_actions, done = env.step_single(action=action[0], plot=plt)
+                # print('make span reward:', reward)
+                if torch.equal(state.x.cpu(), state_prime.x) and torch.equal(state.edge_index.cpu(), state_prime.edge_index):
+                    print('In absorbing state at', env.itr - 1)
+                returns.append(reward)
+                state = state_prime
+                feasible_action = new_feasible_actions
+                t += 1
+                # print()
 
 
 if __name__ == '__main__':
@@ -338,20 +347,12 @@ if __name__ == '__main__':
     plt = False
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(1)
-    np.random.seed(123456324)
-
-    env = JsspN5(n_job=parameters.j,
-                 n_mch=parameters.m,
-                 low=parameters.l,
-                 high=parameters.h,
-                 init='rule', rule='spt', transition=transit)
-
-    for inst in np.load('./tai15x15.npy'):
-        state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
-
-    '''import cProfile
-    cProfile.run('main()', filename='./restats_{}x{}_{}'.format(str(parameters.j), str(parameters.m), str(env.max_transition)))'''
+    np.random.seed(1)  # 123456324
 
     t1 = time.time()
     main()
     print(time.time() - t1)
+
+    '''for inst in np.load('./tai15x15.npy'):
+        state, feasible_action, done = env.reset(instance=inst, fix_instance=True)'''
+

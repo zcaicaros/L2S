@@ -12,6 +12,7 @@ j = 10
 m = 10
 l = 1
 h = 99
+episode_length = 64
 n_generated_instances = 100
 transit = 2000
 init = 'rule'  # 'plist', 'spt', ...
@@ -24,9 +25,9 @@ dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def main():
     if init == 'p_list':
-        saved_model_path = './saved_model/{}x{}_plist.pth'.format(j, m)
+        saved_model_path = './saved_model/{}x{}_plist_{}.pth'.format(j, m, episode_length)
     else:
-        saved_model_path = './saved_model/{}x{}_{}.pth'.format(j, m, rule)
+        saved_model_path = './saved_model/{}x{}_{}_{}.pth'.format(j, m, rule, episode_length)
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, transition=transit, init=init, rule=rule)
     policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)

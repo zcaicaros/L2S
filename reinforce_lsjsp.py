@@ -58,11 +58,10 @@ def main():
                 log_probs.append(log_p)
                 ep_reward += reward
             running_reward = 0.05 * ep_reward + (1 - 0.05) * running_reward
-            finish_episode(rewards, log_probs)
-
+            # finish_episode(rewards, log_probs)
         log.append([env.current_objs, ep_reward, running_reward])
         if i_episode % 100 == 0:
-            np.save('log/log_10x10_sample_25.6w_spt.npy', np.array(log))
+            np.save('log/log_10x10_sample_25.6w_spt_no-learn.npy', np.array(log))
         print('solution quality:', env.current_objs)
         print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(i_episode, ep_reward, running_reward))
         if running_reward > incumbent_reward:

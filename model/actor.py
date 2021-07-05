@@ -138,11 +138,9 @@ class Actor(nn.Module):
         pi = F.softmax(action_score_flat, dim=-1)
         dist = Categorical(probs=pi)
         actions_id = dist.sample()
+        # actions_id = torch.argmax(pi, dim=-1)  # greedy action
         sampled_actions = [[actions_id[i].item()//n_nodes_per_state, actions_id[i].item()%n_nodes_per_state] for i in range(len(feasible_actions))]
         log_prob = dist.log_prob(actions_id)
-        # print(sampled_actions)
-        # print(log_prob)
-        # mean_entropy = dist.entropy().mean()
         return sampled_actions, log_prob
 
 
@@ -169,8 +167,8 @@ if __name__ == '__main__':
 
     scores = embedding(Batch.from_data_list([init_s,init_s]).to(dev))
     # actor(Batch.from_data_list([init_s,init_s]).to(dev), [feasible_a,feasible_a])
-    _, log_prob = actor(Batch.from_data_list([init_s]).to(dev), [feasible_a])
-    grad = torch.autograd.grad(log_prob.mean(), [param for param in actor.parameters()])
+    _, log_p = actor(Batch.from_data_list([init_s]).to(dev), [feasible_a])
+    grad = torch.autograd.grad(log_p.mean(), [param for param in actor.parameters()])
     print(grad)
 
 

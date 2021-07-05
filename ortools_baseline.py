@@ -2,6 +2,7 @@ from __future__ import print_function
 import collections
 # Import Python wrapper for or-tools CP-SAT solver.
 from ortools.sat.python import cp_model
+from env.generateJSP import uni_instance_gen
 
 
 def MinimalJobshopSat(data):
@@ -76,7 +77,7 @@ def MinimalJobshopSat(data):
 if __name__ == '__main__':
 
     import numpy as np
-    datas = [np.load('./instance.npy')]
+    datas = np.array([uni_instance_gen(n_j=10, n_m=10, low=1, high=99) for _ in range(10)])
     results = []
     for i, data in enumerate(datas):
         times_rearrange = np.expand_dims(data[0], axis=-1)

@@ -30,7 +30,7 @@ def main():
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, transition=transit, init=init, rule=rule)
     policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)
-    # policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
+    policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
 
     # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(n_generated_instances)])
     # np.save('./test_data/syn_test_instance_{}x{}.npy'.format(j, m), inst)

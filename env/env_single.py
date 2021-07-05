@@ -300,21 +300,26 @@ class JsspN5:
 
 def main():
     from torch_geometric.data.batch import Batch
-    actor = Actor(in_dim=3, hidden_dim=64).to(device)
+
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    torch.manual_seed(1)
+    np.random.seed(1)  # 123456324
 
     j = 15
     m = 15
     h = 99
     l = 1
+    transit = 1000
+
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
                  init='rule', rule='spt', transition=transit)
+    actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
     inst = np.load('./tai15x15.npy')
     # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(100)])
     for i, data in enumerate(inst):
         state, feasible_action, done = env.reset(instance=data, fix_instance=True)
-        # state, feasible_action, done = env.reset()
-        # np.save('./instances{}x{}.npy'.format(str(n_j), str(n_m)), env.instance)
         # print(env.current_objs)
         returns = []
         t = 0
@@ -327,7 +332,7 @@ def main():
                 # print([param for param in actor.parameters()])
                 action, _ = actor(Batch.from_data_list([state]).to(device), [feasible_action])
                 # action = random.choice(feasible_action)
-                state_prime, reward, new_feasible_actions, done = env.step_single(action=action[0], plot=plt)
+                state_prime, reward, new_feasible_actions, done = env.step_single(action=action[0])
                 # print('make span reward:', reward)
                 if torch.equal(state.x.cpu(), state_prime.x) and torch.equal(state.edge_index.cpu(), state_prime.edge_index):
                     print('In absorbing state at', env.itr - 1)
@@ -339,20 +344,10 @@ def main():
 
 
 if __name__ == '__main__':
-    ###### WHEN COMPUTE USING PARALLEL, env.current_graphs WILL NOT TRANSIT, BUG!!!
     import time
-
-    transit = 100
-    par = False
-    plt = False
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    torch.manual_seed(1)
-    np.random.seed(1)  # 123456324
 
     t1 = time.time()
     main()
     print(time.time() - t1)
 
-    '''for inst in np.load('./tai15x15.npy'):
-        state, feasible_action, done = env.reset(instance=inst, fix_instance=True)'''
 

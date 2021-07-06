@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 
 show = True
-j = 15
-m = 15
+j = 10
+m = 10
 episode = 64000
 transit = 64
 init = 'spt'  # 'plist', 'spt', ...

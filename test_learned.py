@@ -52,21 +52,25 @@ def main():
         results_drl.append(env.incumbent_obj)
     results_drl = np.array(results_drl)
 
-    # rollout random policy
-    import random
-    random.seed(1)
-    results_random = []
+    # rollout network
+    results_drl = []
     for i, data in enumerate(inst):
         state, feasible_action, done = env.reset(instance=data, fix_instance=True)
         returns = []
+        incumbent_y = state.y
+        stop_improve_itr = None
         with torch.no_grad():
             while not done:
-                action = random.choice(feasible_action)
-                state, reward, feasible_action, done = env.step_single(action=action)
+                action, _ = policy(Batch.from_data_list([state]).to(dev), [feasible_action])
+                state, reward, feasible_action, done = env.step_single(action=action[0])
+                if state.y < incumbent_y:
+                    stop_improve_itr = env.itr
+                    incumbent_y = state.y
                 returns.append(reward)
-        print('Instance-' + str(i + 1) + ' Random policy makespan:', env.incumbent_obj, ' used transition:', env.itr)
-        results_random.append(env.incumbent_obj)
-    results_random = np.array(results_random)
+        print('Instance-' + str(i + 1) + ' DRL makespan:', env.incumbent_obj, ' used transition:', env.itr,
+              ' stop improve itr:', stop_improve_itr)
+        results_drl.append(env.incumbent_obj)
+    results_drl = np.array(results_drl)
 
     # ortools solver
     results_ortools = []

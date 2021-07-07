@@ -14,7 +14,7 @@ l = 1
 h = 99
 episode_length = 64
 n_generated_instances = 100
-transit = 64
+transit = 128
 init = 'rule'  # 'plist', 'spt', ...
 rule = 'spt'
 

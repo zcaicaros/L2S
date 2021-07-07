@@ -86,7 +86,7 @@ def main():
                         action_v, _ = policy(Batch.from_data_list([state_v]).to(dev), [feasible_action_v])
                         state_v, reward_v, feasible_action_v, done_v = env_validation.step_single(action=action_v[0])
                         returns_v.append(reward_v)
-                current_validation_result.append(env_validation.current_objs)
+                current_validation_result.append(env_validation.incumbent_obj)
             current_validation_result = np.array(current_validation_result).mean()
             validation_log.append(current_validation_result)
             # if better validation save model

@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 
 
 show = True
-j = 10
-m = 10
+j = 15
+m = 15
 episode = 64000
 transit = 64
 init = 'spt'  # 'plist', 'spt', ...
 file = './log/log_{}x{}_{}w_{}_{}.npy'.format(j, m, str(episode/10000), init, transit)
 plot_step_size = 200
-horizon = 59000
+horizon = None
 if horizon is not None:
     log = np.load(file)[:horizon]
 else:

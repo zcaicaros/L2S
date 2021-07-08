@@ -310,27 +310,31 @@ class JsspN5:
 
 def main():
     from torch_geometric.data.batch import Batch
-
+    from ortools_baseline import MinimalJobshopSat
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(1)
     np.random.seed(123456324)  # 123456324
 
-    j = 15
-    m = 15
+    j = 10
+    m = 10
     h = 99
     l = 1
-    transit = 0
+    transit = 128
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
                  init='rule', rule='fdd/mwkr', transition=transit)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
-    inst = np.load('./tai15x15.npy')[:]
-    # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(1000)])
+    # inst = np.load('./tai15x15.npy')[:]
+    inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(10)])
+
+    initial_gap = []
+    simulate_result = []
     for i, data in enumerate(inst):
         state, feasible_action, done = env.reset(instance=data, fix_instance=True)
-        print(env.current_objs)
+        initial_gap.append(env.current_objs)
+        print('Initial sol:', env.current_objs)
         returns = []
         t = 0
         with torch.no_grad():
@@ -351,6 +355,25 @@ def main():
                 feasible_action = new_feasible_actions
                 t += 1
                 # print()
+        simulate_result.append(env.incumbent_obj)
+        print('Incumbent sol:', env.incumbent_obj)
+        print()
+    simulate_result = np.array(simulate_result)
+    initial_gap = np.array(initial_gap)
+
+    # ortools solver
+    results_ortools = []
+    for i, data in enumerate(inst):
+        times_rearrange = np.expand_dims(data[0], axis=-1)
+        machines_rearrange = np.expand_dims(data[1], axis=-1)
+        data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
+        result = MinimalJobshopSat(data.tolist())
+        print('Instance-' + str(i + 1) + ' Ortools makespan:', result)
+        results_ortools.append(result[1])
+    results_ortools = np.array(results_ortools)
+
+    print('Initial Gap:', ((initial_gap - results_ortools) / results_ortools).mean())
+    print('Simulation Gap:', ((simulate_result - results_ortools) / results_ortools).mean())
 
 
 if __name__ == '__main__':

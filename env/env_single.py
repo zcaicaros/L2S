@@ -381,6 +381,6 @@ if __name__ == '__main__':
 
     t1 = time.time()
     main()
-    print(time.time() - t1)
+    print('main function running time:', time.time() - t1)
 
 

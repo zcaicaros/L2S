@@ -167,12 +167,9 @@ class JsspN5:
                 assert print('select "spt" or "fdd/mwkr".')
                 action = None
             actions.append(action)
-            # print(action)
 
             permissibleLeftShift(a=action, durMat=dur_mat, mchMat=mch_mat, mchsStartTimes=gant_chart, opIDsOnMchs=opIDsOnMchs)
-            # print(dur_mat)
-            # print(mch_mat)
-            # print(opIDsOnMchs)
+
             # update action space or mask
             if action not in last_col:
                 candidate_oprs[action // n_mch] += 1
@@ -185,8 +182,6 @@ class JsspN5:
 
         # forward and backward pass
         earliest_st, latest_st, adj_mat_aug, G = forward_and_backward_pass(adj, dur_mat, plot_G=plot)
-        # print(earliest_st)
-        # print(latest_st)
 
         earliest_start = earliest_st.astype(np.float32)
         latest_start = latest_st.astype(np.float32)

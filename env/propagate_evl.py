@@ -14,7 +14,9 @@ class EVL(MessagePassing):
         kwargs.setdefault('aggr', 'max')
         super(EVL, self).__init__(**kwargs)
 
-    def forward(self, x: Union[Tensor, OptPairTensor], edge_index: Adj,
+    def forward(self,
+                x: Union[Tensor, OptPairTensor],
+                edge_index: Adj,
                 size: Size = None) -> Tensor:
         """"""
         if isinstance(x, Tensor):
@@ -22,7 +24,6 @@ class EVL(MessagePassing):
 
         # propagate_type: (x: OptPairTensor)
         out = self.propagate(edge_index, x=x, size=size)
-
         return out
 
 
@@ -38,11 +39,18 @@ if __name__ == "__main__":
                          6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 10],
                         [0, 1, 4, 7, 1, 2, 9, 2, 3, 6, 3, 10, 1, 4, 5, 5, 6, 8,
                          6, 10, 2, 7, 8, 3, 8, 9, 9, 10, 10]])
+    mark = torch.zeros(size=[j*m+2, 1])
+    mark[0] = 1
     print(st.shape)
     print(dur.shape)
     print(adj.shape)
 
-    for _ in range(j*m+2):
+    '''for _ in range(j*m+2):
         x = dur.reshape(j*m+2, 1) + st.reshape(j*m+2, 1)
         st = evaluator(x=x, edge_index=adj)
-    print(st)
+    print(st)'''
+
+    out1 = evaluator(x=mark, edge_index=adj)
+    print(out1)
+    out2 = evaluator(x=out1, edge_index=adj)
+    print(out2)

@@ -142,36 +142,51 @@ class JsspN5:
         conj_nei_up_stream = np.eye(n_opr, k=-1, dtype=np.single)
         # first column does not have upper stream conj_nei
         conj_nei_up_stream[first_col] = 0
-        # self_as_nei = np.eye(n_opr, dtype=np.single)
         adj = conj_nei_up_stream
 
         gant_chart = -parameters.h * np.ones_like(dur_mat.transpose(), dtype=np.int32)
         opIDsOnMchs = -n_job * np.ones_like(dur_mat.transpose(), dtype=np.int32)
+        finished_mark = np.zeros_like(mch_mat, dtype=np.int32)
 
         actions = []
-        if self.rule == 'spt':
-            for _ in range(n_opr):
+        for _ in range(n_opr):
+
+            if self.rule == 'spt':
                 candidate_masked = candidate_oprs[np.where(~mask)]
                 dur_candidate = np.take(dur_mat, candidate_masked)
                 idx = np.random.choice(np.where(dur_candidate == np.min(dur_candidate))[0])
                 action = candidate_masked[idx]
-                actions.append(action)
+            elif self.rule == 'fdd/mwkr':
+                candidate_masked = candidate_oprs[np.where(~mask)]
+                fdd = np.take(np.cumsum(dur_mat, axis=1), candidate_masked)
+                wkr = np.take(np.cumsum(np.multiply(dur_mat, 1 - finished_mark), axis=1), last_col[np.where(~mask)])
+                priority = fdd / wkr
+                idx = np.random.choice(np.where(priority == np.min(priority))[0])
+                action = candidate_masked[idx]
+            else:
+                assert print('select "spt" or "fdd/mwkr".')
+                action = None
+            actions.append(action)
+            # print(action)
 
-                permissibleLeftShift(a=action,
-                                     durMat=dur_mat,
-                                     mchMat=mch_mat,
-                                     mchsStartTimes=gant_chart,
-                                     opIDsOnMchs=opIDsOnMchs)
-                # update action space or mask
-                if action not in last_col:
-                    candidate_oprs[action // n_mch] += 1
-                else:
-                    mask[action // n_mch] = 1
+            permissibleLeftShift(a=action, durMat=dur_mat, mchMat=mch_mat, mchsStartTimes=gant_chart, opIDsOnMchs=opIDsOnMchs)
+            # print(dur_mat)
+            # print(mch_mat)
+            # print(opIDsOnMchs)
+            # update action space or mask
+            if action not in last_col:
+                candidate_oprs[action // n_mch] += 1
+            else:
+                mask[action // n_mch] = 1
+            # update finished_mark:
+            finished_mark[action // n_mch, action % n_mch] = 1
         for i in range(opIDsOnMchs.shape[1] - 1):
             adj[opIDsOnMchs[:, i+1], opIDsOnMchs[:, i]] = 1
 
         # forward and backward pass
         earliest_st, latest_st, adj_mat_aug, G = forward_and_backward_pass(adj, dur_mat, plot_G=plot)
+        # print(earliest_st)
+        # print(latest_st)
 
         earliest_start = earliest_st.astype(np.float32)
         latest_start = latest_st.astype(np.float32)
@@ -304,23 +319,23 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(1)
-    np.random.seed(1)  # 123456324
+    np.random.seed(123456324)  # 123456324
 
     j = 15
     m = 15
     h = 99
     l = 1
-    transit = 1000
+    transit = 0
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
-                 init='rule', rule='spt', transition=transit)
+                 init='rule', rule='fdd/mwkr', transition=transit)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
-    # inst = np.load('./tai15x15.npy')
-    inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(1000)])
+    inst = np.load('./tai15x15.npy')[:]
+    # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(1000)])
     for i, data in enumerate(inst):
         state, feasible_action, done = env.reset(instance=data, fix_instance=True)
-        # print(env.current_objs)
+        print(env.current_objs)
         returns = []
         t = 0
         with torch.no_grad():

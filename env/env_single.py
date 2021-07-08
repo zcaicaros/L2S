@@ -316,18 +316,18 @@ def main():
     torch.manual_seed(1)
     np.random.seed(123456324)  # 123456324
 
-    j = 10
-    m = 10
+    j = 100
+    m = 20
     h = 99
     l = 1
-    transit = 128
+    transit = 2048
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
                  init='rule', rule='fdd/mwkr', transition=transit)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
-    # inst = np.load('./tai15x15.npy')[:]
-    inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(10)])
+    inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:]
+    # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(10)])
 
     initial_gap = []
     simulate_result = []
@@ -381,6 +381,6 @@ if __name__ == '__main__':
 
     t1 = time.time()
     main()
-    print('main function running time:', time.time() - t1)
+    print('main() function running time:', time.time() - t1)
 
 

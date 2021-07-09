@@ -326,15 +326,15 @@ def main():
                  init='rule', rule='fdd/mwkr', transition=transit)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
-    # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:]
-    inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(10)])
+    inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
+    # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(10)])
 
     initial_gap = []
     simulate_result = []
     for i, data in enumerate(inst):
         state, feasible_action, done = env.reset(instance=data, fix_instance=True)
-        print(state.edge_index)
-        print(state.x.shape)
+        # print(state.edge_index)
+        # print(state.x.shape)
         initial_gap.append(env.current_objs)
         print('Initial sol:', env.current_objs)
         returns = []

@@ -40,4 +40,6 @@ print(output4)
 
 print(torch.std(torch.tensor([1.])))
 
-print(np.load('./log/validation_log_10x10_6.4w_spt.npy'))
+# print(np.load('./log/validation_log_10x10_6.4w_spt.npy'))
+
+print(np.random.randint(low=1, high=4))

@@ -48,8 +48,8 @@ if __name__ == "__main__":
     from env.env_single import JsspN5
     import time
 
-    j = 100
-    m = 20
+    j = 3
+    m = 3
     l = 1
     h = 99
     np.random.seed(3)
@@ -87,20 +87,23 @@ if __name__ == "__main__":
     dur_latest_st = torch.from_numpy(np.pad(inst[0].reshape(-1), (1, 1), 'constant', constant_values=0)).reshape(-1, 1)
     backward_pass = BackwardPass(aggr='max', flow="source_to_target")
     latest_st = torch.zeros(size=[j * m + 2, 1], dtype=torch.float32)
-    latest_st[0] = - float(state.y)
+    latest_st[-1] = float(state.y)
+    print(latest_st)
     adj_latest_st = torch.flip(state.edge_index[:, state.edge_index[0] != state.edge_index[1]], dims=[0, 1])
+    print(adj_latest_st)
     ma_latest_st = torch.ones(size=[j * m + 2, 1], dtype=torch.int8)
-    ma_latest_st[0] = 0
+    ma_latest_st[-1] = 0
     t3 = time.time()
-    for _ in range(j * m + 2):
+    for _ in range(j * m + 2):  #
         if ma_latest_st.sum() == 0:
             print('finish backward pass at step:', _)
             break
-        x = dur_latest_st + latest_st.masked_fill(ma_latest_st, 0)
+        x = latest_st.masked_fill(ma_latest_st, 0) - dur_latest_st
+        print(x)
         latest_st = backward_pass(x=x, edge_index=adj_latest_st)
+        print(latest_st)
         ma_latest_st = backward_pass(x=ma_latest_st, edge_index=adj_latest_st)
     t4 = time.time()
+    print(latest_st)
     if torch.equal(latest_st.squeeze() / 1000, state.x[:, 2]):
-        print('yes')
-    print(t2 - t1)
-    print(t4 - t3)
+        print('backward pass is OK! It takes:', t4 - t3, 'networkx version forward pass and backward pass take:', t2 - t1)

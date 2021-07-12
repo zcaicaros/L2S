@@ -1,6 +1,8 @@
 import os
 import sys
 
+import torch_geometric.utils
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import torch
 import numpy as np
@@ -264,8 +266,7 @@ class JsspN5:
         # prepare batch
         batch = torch.from_numpy(
             np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
-
-        return (x, edge_indices, batch), current_graphs, make_span
+        return (x, torch_geometric.utils.add_self_loops(edge_indices)[0], batch), current_graphs, make_span
 
     def _rules_solver(self, args, plot=False):
         instances, device, rule_type = args[0], args[1], args[2]
@@ -354,7 +355,7 @@ class JsspN5:
         batch = torch.from_numpy(
             np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
 
-        return (x, edge_indices, batch), current_graphs, make_span
+        return (x, torch_geometric.utils.add_self_loops(edge_indices)[0], batch), current_graphs, make_span
 
     def dag2pyg(self, G, instance):
         n_job, n_mch = instance[0].shape[0], instance[0].shape[1]
@@ -472,7 +473,7 @@ def main():
     h = 99
     l = 1
     transit = 1
-    batch_size = 3
+    batch_size = 2
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
     insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])

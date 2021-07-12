@@ -26,7 +26,6 @@ class JsspN5:
                  high,
                  init='p_list',
                  rule='spt',
-                 min_max=False,
                  transition=100):
 
         self.n_job = n_job
@@ -36,13 +35,11 @@ class JsspN5:
         self.high = high
         self.init = init
         self.rule = rule
-        self.min_max = min_max
         self.itr = 0
         self.max_transition = transition
         self.instances = None
         self.current_graphs = None
         self.current_objs = None
-        self.normalizer = MinMaxScaler()
         self.tabu_size = 1
         self.tabu_lists = None
         self.incumbent_objs = None
@@ -119,16 +116,78 @@ class JsspN5:
         f1 = torch.from_numpy(
             np.pad(np.float32((instance[0].reshape(-1, 1)) / self.high), ((1, 1), (0, 0)), 'constant',
                    constant_values=0))
-        if self.min_max:
-            self.normalizer.fit(earliest_start.reshape(-1, 1))
-            f2 = torch.from_numpy(self.normalizer.transform(earliest_start.reshape(-1, 1)))
-            self.normalizer.fit(latest_start.reshape(-1, 1))
-            f3 = torch.from_numpy(self.normalizer.transform(latest_start.reshape(-1, 1)))
-        else:
-            f2 = torch.from_numpy(earliest_start.reshape(-1, 1) / 1000)
-            f3 = torch.from_numpy(latest_start.reshape(-1, 1) / 1000)
+        f2 = torch.from_numpy(earliest_start.reshape(-1, 1) / 1000)
+        f3 = torch.from_numpy(latest_start.reshape(-1, 1) / 1000)
         x = torch.cat([f1, f2, f3], dim=-1)
         edge_idx = torch.nonzero(torch.from_numpy(adj_aug)).t().contiguous()
+        init_state = Data(x=x, edge_index=edge_idx, y=np.amax(earliest_start))
+        return init_state, G'''
+
+    '''def rules_solver(self, instance, plot=False):
+        dur_mat, dur_cp, mch_mat = instance[0], np.copy(instance[0]), instance[1]
+        n_job, n_mch = dur_mat.shape[0], dur_mat.shape[1]
+        n_opr = n_job * n_mch
+        last_col = np.arange(start=0, stop=n_opr, step=1).reshape(n_job, -1)[:, -1]
+        first_col = np.arange(start=0, stop=n_opr, step=1).reshape(n_job, -1)[:, 0]
+        # initialize action space: [n_job, 1], the first column
+        candidate_oprs = np.arange(start=0, stop=n_opr, step=1).reshape(n_job, -1)[:, 0]
+        # initialize the mask: [n_job, 1]
+        mask = np.zeros(shape=n_job, dtype=bool)
+        # initialize adj matrix
+        conj_nei_up_stream = np.eye(n_opr, k=-1, dtype=np.single)
+        # first column does not have upper stream conj_nei
+        conj_nei_up_stream[first_col] = 0
+        adj = conj_nei_up_stream
+
+        gant_chart = -self.high * np.ones_like(dur_mat.transpose(), dtype=np.int32)
+        opIDsOnMchs = -n_job * np.ones_like(dur_mat.transpose(), dtype=np.int32)
+        finished_mark = np.zeros_like(mch_mat, dtype=np.int32)
+
+        actions = []
+        for _ in range(n_opr):
+
+            if self.rule == 'spt':
+                candidate_masked = candidate_oprs[np.where(~mask)]
+                dur_candidate = np.take(dur_mat, candidate_masked)
+                idx = np.random.choice(np.where(dur_candidate == np.min(dur_candidate))[0])
+                action = candidate_masked[idx]
+            elif self.rule == 'fdd-divide-mwkr':
+                candidate_masked = candidate_oprs[np.where(~mask)]
+                fdd = np.take(np.cumsum(dur_mat, axis=1), candidate_masked)
+                wkr = np.take(np.cumsum(np.multiply(dur_mat, 1 - finished_mark), axis=1), last_col[np.where(~mask)])
+                priority = fdd / wkr
+                idx = np.random.choice(np.where(priority == np.min(priority))[0])
+                action = candidate_masked[idx]
+            else:
+                assert print('select "spt" or "fdd-divide-mwkr".')
+                action = None
+            actions.append(action)
+
+            permissibleLeftShift(a=action, durMat=dur_mat, mchMat=mch_mat, mchsStartTimes=gant_chart,
+                                 opIDsOnMchs=opIDsOnMchs)
+
+            # update action space or mask
+            if action not in last_col:
+                candidate_oprs[action // n_mch] += 1
+            else:
+                mask[action // n_mch] = 1
+            # update finished_mark:
+            finished_mark[action // n_mch, action % n_mch] = 1
+        for i in range(opIDsOnMchs.shape[1] - 1):
+            adj[opIDsOnMchs[:, i + 1], opIDsOnMchs[:, i]] = 1
+
+        # forward and backward pass
+        earliest_st, latest_st, adj_mat_aug, G = forward_and_backward_pass(adj, dur_mat, plot_G=plot)
+
+        earliest_start = earliest_st.astype(np.float32)
+        latest_start = latest_st.astype(np.float32)
+        f1 = torch.from_numpy(
+            np.pad(np.float32((instance[0].reshape(-1, 1)) / self.high), ((1, 1), (0, 0)), 'constant',
+                   constant_values=0))
+        f2 = torch.from_numpy(earliest_start.reshape(-1, 1) / 1000)
+        f3 = torch.from_numpy(latest_start.reshape(-1, 1) / 1000)
+        x = torch.cat([f1, f2, f3], dim=-1)
+        edge_idx = torch.nonzero(torch.from_numpy(adj_mat_aug)).t().contiguous()
         init_state = Data(x=x, edge_index=edge_idx, y=np.amax(earliest_start))
         return init_state, G'''
 
@@ -239,7 +298,7 @@ class JsspN5:
                     dur_candidate = np.take(dur_mat, candidate_masked)
                     idx = np.random.choice(np.where(dur_candidate == np.min(dur_candidate))[0])
                     action = candidate_masked[idx]
-                elif rule_type == 'fdd/mwkr':
+                elif rule_type == 'fdd-divide-mwkr':
                     candidate_masked = candidate_oprs[np.where(~mask)]
                     fdd = np.take(np.cumsum(dur_mat, axis=1), candidate_masked)
                     wkr = np.take(np.cumsum(np.multiply(dur_mat, 1 - finished_mark), axis=1), last_col[np.where(~mask)])
@@ -297,79 +356,7 @@ class JsspN5:
 
         return (x, edge_indices, batch), current_graphs, make_span
 
-    '''def rules_solver(self, instance, plot=False):
-        dur_mat, dur_cp, mch_mat = instance[0], np.copy(instance[0]), instance[1]
-        n_job, n_mch = dur_mat.shape[0], dur_mat.shape[1]
-        n_opr = n_job * n_mch
-        last_col = np.arange(start=0, stop=n_opr, step=1).reshape(n_job, -1)[:, -1]
-        first_col = np.arange(start=0, stop=n_opr, step=1).reshape(n_job, -1)[:, 0]
-        # initialize action space: [n_job, 1], the first column
-        candidate_oprs = np.arange(start=0, stop=n_opr, step=1).reshape(n_job, -1)[:, 0]
-        # initialize the mask: [n_job, 1]
-        mask = np.zeros(shape=n_job, dtype=bool)
-        # initialize adj matrix
-        conj_nei_up_stream = np.eye(n_opr, k=-1, dtype=np.single)
-        # first column does not have upper stream conj_nei
-        conj_nei_up_stream[first_col] = 0
-        adj = conj_nei_up_stream
 
-        gant_chart = -self.high * np.ones_like(dur_mat.transpose(), dtype=np.int32)
-        opIDsOnMchs = -n_job * np.ones_like(dur_mat.transpose(), dtype=np.int32)
-        finished_mark = np.zeros_like(mch_mat, dtype=np.int32)
-
-        actions = []
-        for _ in range(n_opr):
-
-            if self.rule == 'spt':
-                candidate_masked = candidate_oprs[np.where(~mask)]
-                dur_candidate = np.take(dur_mat, candidate_masked)
-                idx = np.random.choice(np.where(dur_candidate == np.min(dur_candidate))[0])
-                action = candidate_masked[idx]
-            elif self.rule == 'fdd/mwkr':
-                candidate_masked = candidate_oprs[np.where(~mask)]
-                fdd = np.take(np.cumsum(dur_mat, axis=1), candidate_masked)
-                wkr = np.take(np.cumsum(np.multiply(dur_mat, 1 - finished_mark), axis=1), last_col[np.where(~mask)])
-                priority = fdd / wkr
-                idx = np.random.choice(np.where(priority == np.min(priority))[0])
-                action = candidate_masked[idx]
-            else:
-                assert print('select "spt" or "fdd/mwkr".')
-                action = None
-            actions.append(action)
-
-            permissibleLeftShift(a=action, durMat=dur_mat, mchMat=mch_mat, mchsStartTimes=gant_chart,
-                                 opIDsOnMchs=opIDsOnMchs)
-
-            # update action space or mask
-            if action not in last_col:
-                candidate_oprs[action // n_mch] += 1
-            else:
-                mask[action // n_mch] = 1
-            # update finished_mark:
-            finished_mark[action // n_mch, action % n_mch] = 1
-        for i in range(opIDsOnMchs.shape[1] - 1):
-            adj[opIDsOnMchs[:, i + 1], opIDsOnMchs[:, i]] = 1
-
-        # forward and backward pass
-        earliest_st, latest_st, adj_mat_aug, G = forward_and_backward_pass(adj, dur_mat, plot_G=plot)
-
-        earliest_start = earliest_st.astype(np.float32)
-        latest_start = latest_st.astype(np.float32)
-        f1 = torch.from_numpy(
-            np.pad(np.float32((instance[0].reshape(-1, 1)) / self.high), ((1, 1), (0, 0)), 'constant',
-                   constant_values=0))
-        if self.min_max:
-            self.normalizer.fit(earliest_start.reshape(-1, 1))
-            f2 = torch.from_numpy(self.normalizer.transform(earliest_start.reshape(-1, 1)))
-            self.normalizer.fit(latest_start.reshape(-1, 1))
-            f3 = torch.from_numpy(self.normalizer.transform(latest_start.reshape(-1, 1)))
-        else:
-            f2 = torch.from_numpy(earliest_start.reshape(-1, 1) / 1000)
-            f3 = torch.from_numpy(latest_start.reshape(-1, 1) / 1000)
-        x = torch.cat([f1, f2, f3], dim=-1)
-        edge_idx = torch.nonzero(torch.from_numpy(adj_mat_aug)).t().contiguous()
-        init_state = Data(x=x, edge_index=edge_idx, y=np.amax(earliest_start))
-        return init_state, G'''
 
     def _transit_single(self, plot, args):
         """
@@ -418,71 +405,41 @@ class JsspN5:
             (x, edge_indices, batch), current_graphs, make_span = self._p_list_solver(args=[self.instances, random_plist, device], plot=plot)
         elif init_type == 'spt':
             (x, edge_indices, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'spt'], plot=plot)
-        elif init_type == 'fdd/mwkr':
-            (x, edge_indices, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'fdd/mwkr'], plot=plot)
+        elif init_type == 'fdd-divide-mwkr':
+            (x, edge_indices, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'fdd-divide-mwkr'], plot=plot)
         else:
-            assert False, 'Initial solution type = "p_list", "spt", "fdd/mwkr".'
+            assert False, 'Initial solution type = "p_list", "spt", "fdd-divide-mwkr".'
 
-        print(x)
-        print(edge_indices)
-        print(batch)
+        # print(x)
+        # print(edge_indices)
+        # print(batch)
 
         self.current_graphs = current_graphs
         self.current_objs = make_span
         self.incumbent_objs = make_span
         self.itr = 0
         self.tabu_lists = [[] for _ in range(instances.shape[0])]
-
-
-
-
-        feasible_actions = self.feasible_action()
-        if self.itr == self.max_transition or len(feasible_actions) == 0:
+        feasible_actions, flag = self.feasible_actions()
+        if self.itr == self.max_transition:
             done = True
         else:
             done = False
 
+        return (x, edge_indices, batch), feasible_actions, done
 
+    def feasible_actions(self):
+        actions = []
+        feasible_actions_flag = []  # 0 for no feasible operation pairs
+        for current_graph, instance, tabu_list in zip(self.current_graphs, self.instances, self.tabu_lists):
+            action = self._gen_moves(solution=current_graph, mch_mat=instance[1], tabu_list=tabu_list)
+            if len(action) != 0:
+                actions.append(action)
+                feasible_actions_flag.append(1)
+            else:  # if no feasible actions available append dummy actions [0, 0], this is the sign for local search terminate
+                actions.append([[0, 0]])
+                feasible_actions_flag.append(0)
+        return actions, np.array(feasible_actions_flag)
 
-        # return init_state, feasible_actions, done
-
-        # return (x, edge_indices, batch), done
-
-
-    def feasible_action(self):
-        action = self._gen_moves(solution=self.current_graphs, mch_mat=self.instances[1], tabu_list=self.tabu_lists)
-        return action
-
-    def step_single(self, action, plot=False):
-        new_state = self._transit_single(plot, args=[action, self.current_graphs, self.instances])
-
-        # makespan reward
-        diff1 = torch.tensor(self.current_objs) - torch.tensor(new_state.y)
-        reward = diff1
-        self.incumbent_objs = np.where(np.array(new_state.y) < self.incumbent_objs, new_state.y, self.incumbent_objs)
-        self.current_objs = new_state.y
-
-        # sequential version of update tabu list, different tabu list can have different length
-        if self.tabu_size != 0:
-            action_reversed = action[::-1]
-            if action_reversed == [0, 0]:  # if dummy action, don't update tabu list
-                pass
-            else:
-                if len(self.tabu_lists) == self.tabu_size:
-                    self.tabu_lists.pop(0)
-                    self.tabu_lists.append(action_reversed)
-                else:
-                    self.tabu_lists.append(action_reversed)
-
-        self.itr = self.itr + 1
-
-        feasible_actions = self.feasible_action()
-        if self.itr == self.max_transition or len(feasible_actions) == 0:
-            done = True
-        else:
-            done = False
-
-        return new_state, reward, feasible_actions, done
 
 
 def main():
@@ -503,7 +460,7 @@ def main():
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
     insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
-    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, init='p_list', rule='fdd/mwkr', transition=transit)
+    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, init='p_list', rule='fdd-divide-mwkr', transition=transit)
     env.reset(instances=insts, init_type='spt', device=device)
 
 

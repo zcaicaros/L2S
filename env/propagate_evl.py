@@ -102,7 +102,7 @@ if __name__ == "__main__":
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     np.random.seed(1)
 
-    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, init='rule', rule='fdd/mwkr', transition=0)
+    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, init='rule', rule='fdd-divide-mwkr', transition=0)
     insts = [np.concatenate([uni_instance_gen(n_j=j, n_m=m, low=l, high=h)]) for _ in range(batch_size)]
 
     t1 = time.time()

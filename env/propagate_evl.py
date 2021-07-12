@@ -94,7 +94,7 @@ if __name__ == "__main__":
     l = 1
     h = 99
     batch_size = 100
-    dev = 'cpu'
+    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     np.random.seed(3)
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, init='rule', rule='fdd/mwkr', transition=0)

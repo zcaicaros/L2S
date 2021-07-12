@@ -63,7 +63,8 @@ class JsspN5:
         return pairs
 
     @staticmethod
-    def _get_pairs(cb, cb_op, tabu_list=None):  # first 2 operations of first block and last 2 operations of last block is also included
+    def _get_pairs(cb, cb_op,
+                   tabu_list=None):  # first 2 operations of first block and last 2 operations of last block is also included
         pairs = []
         rg = cb[:-1].shape[0]  # sliding window of 2
         for i in range(rg):
@@ -106,7 +107,7 @@ class JsspN5:
                     pass
         return pairs
 
-    def _p_list_solver_single_instance(self, plot, args):
+    def _p_list_solver_single_instance(self, args, plot=False):
         instance = args[0]
         # print(instance)
         priority_list = args[1]
@@ -118,15 +119,16 @@ class JsspN5:
         earliest_start = earliest_start.astype(np.float32)
         latest_start = latest_start.astype(np.float32)
         f1 = torch.from_numpy(
-            np.pad(np.float32((instance[0].reshape(-1, 1)) / self.high), ((1, 1), (0, 0)), 'constant', constant_values=0))
+            np.pad(np.float32((instance[0].reshape(-1, 1)) / self.high), ((1, 1), (0, 0)), 'constant',
+                   constant_values=0))
         if self.min_max:
             self.normalizer.fit(earliest_start.reshape(-1, 1))
             f2 = torch.from_numpy(self.normalizer.transform(earliest_start.reshape(-1, 1)))
             self.normalizer.fit(latest_start.reshape(-1, 1))
             f3 = torch.from_numpy(self.normalizer.transform(latest_start.reshape(-1, 1)))
         else:
-            f2 = torch.from_numpy(earliest_start.reshape(-1, 1)/1000)
-            f3 = torch.from_numpy(latest_start.reshape(-1, 1)/1000)
+            f2 = torch.from_numpy(earliest_start.reshape(-1, 1) / 1000)
+            f3 = torch.from_numpy(latest_start.reshape(-1, 1) / 1000)
         x = torch.cat([f1, f2, f3], dim=-1)
         edge_idx = torch.nonzero(torch.from_numpy(adj_aug)).t().contiguous()
         init_state = Data(x=x, edge_index=edge_idx, y=np.amax(earliest_start))
@@ -164,7 +166,8 @@ class JsspN5:
             ops_mat = np.arange(0, n_operations).reshape(mch_mat.shape).tolist()  # Init operations mat
             list_for_latest_task_onMachine = [None] * n_machines  # Init list_for_latest_task_onMachine
             adj_mat = np.eye(n_operations, k=-1, dtype=int)  # Create adjacent matrix for the corresponding action list
-            adj_mat[np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:, 0]] = 0  # first column does not have upper stream conj_nei
+            adj_mat[np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:,
+                    0]] = 0  # first column does not have upper stream conj_nei
             # Construct NIPS adjacent matrix
             for job_id in priority_list:
                 op_id = ops_mat[job_id][0]
@@ -176,17 +179,113 @@ class JsspN5:
 
             # prepare augmented adj, augmented dur, and G
             adj_mat = np.pad(adj_mat, 1, 'constant', constant_values=0)  # pad dummy S and T nodes
-            adj_mat[[i for i in range(1, n_jobs * n_machines + 2 - 1, n_machines)], 0] = 1  # connect S with 1st operation of each job
-            adj_mat[-1, [i for i in range(n_machines, n_jobs * n_machines + 2 - 1, n_machines)]] = 1  # connect last operation of each job to T
+            adj_mat[[i for i in range(1, n_jobs * n_machines + 2 - 1,
+                                      n_machines)], 0] = 1  # connect S with 1st operation of each job
+            adj_mat[-1, [i for i in range(n_machines, n_jobs * n_machines + 2 - 1,
+                                          n_machines)]] = 1  # connect last operation of each job to T
             adj_mat = np.transpose(adj_mat)  # convert input adj from column pointing to row, to, row pointing to column
-            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(n_jobs * n_machines + 2, axis=1)
+            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(
+                n_jobs * n_machines + 2, axis=1)
             edge_weight = np.multiply(adj_mat, dur_mat)
             G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
-            G.add_weighted_edges_from([(0, i, 0) for i in range(1, n_jobs * n_machines + 2 - 1, n_machines)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
+            G.add_weighted_edges_from([(0, i, 0) for i in range(1, n_jobs * n_machines + 2 - 1,
+                                                                n_machines)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
             if plot:
                 self.show_state(G)
 
-            edge_indices.append(torch.nonzero(torch.from_numpy(adj_mat)).t().contiguous().to(device) + (n_operations+2) * i)
+            edge_indices.append(
+                torch.nonzero(torch.from_numpy(adj_mat)).t().contiguous().to(device) + (n_operations + 2) * i)
+            durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
+            current_graphs.append(G)
+
+        edge_indices = torch.cat(edge_indices, dim=-1)
+        durations = torch.cat(durations, dim=0).reshape(-1, 1)
+        print(durations.reshape(instances.shape[0], -1).t())
+        est, lst = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=self.n_job, n_m=self.n_mch)
+
+        # prepare x
+        x = torch.cat([durations / self.high, est / self.fea_norm_const, lst / self.fea_norm_const], dim=-1)
+        # prepare batch
+        batch = torch.from_numpy(
+            np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
+
+        return x, edge_indices, batch, current_graphs
+
+    def _rules_solver(self, args, plot=False):
+        instances, device, rule_type = args[0], args[1], args[2]
+
+        edge_indices = []
+        durations = []
+        current_graphs = []
+        for i, instance in enumerate(instances):
+            dur_mat, dur_cp, mch_mat = instance[0], np.copy(instance[0]), instance[1]
+            n_jobs, n_machines = dur_mat.shape[0], dur_mat.shape[1]
+            n_operations = n_jobs * n_machines
+            last_col = np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:, -1]
+            first_col = np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:, 0]
+            candidate_oprs = np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:,
+                             0]  # initialize action space: [n_jobs, 1], the first column
+            mask = np.zeros(shape=n_jobs, dtype=bool)  # initialize the mask: [n_jobs, 1]
+            conj_nei_up_stream = np.eye(n_operations, k=-1, dtype=np.single)  # initialize adj matrix
+            conj_nei_up_stream[first_col] = 0  # first column does not have upper stream conj_nei
+            adj_mat = conj_nei_up_stream
+
+            gant_chart = -self.high * np.ones_like(dur_mat.transpose(), dtype=np.int32)
+            opIDsOnMchs = -n_jobs * np.ones_like(dur_mat.transpose(), dtype=np.int32)
+            finished_mark = np.zeros_like(mch_mat, dtype=np.int32)
+
+            actions = []
+            for _ in range(n_operations):
+
+                if rule_type == 'spt':
+                    candidate_masked = candidate_oprs[np.where(~mask)]
+                    dur_candidate = np.take(dur_mat, candidate_masked)
+                    idx = np.random.choice(np.where(dur_candidate == np.min(dur_candidate))[0])
+                    action = candidate_masked[idx]
+                elif rule_type == 'fdd/mwkr':
+                    candidate_masked = candidate_oprs[np.where(~mask)]
+                    fdd = np.take(np.cumsum(dur_mat, axis=1), candidate_masked)
+                    wkr = np.take(np.cumsum(np.multiply(dur_mat, 1 - finished_mark), axis=1), last_col[np.where(~mask)])
+                    priority = fdd / wkr
+                    idx = np.random.choice(np.where(priority == np.min(priority))[0])
+                    action = candidate_masked[idx]
+                else:
+                    assert print('select "spt" or "fdd/mwkr".')
+                    action = None
+                actions.append(action)
+
+                permissibleLeftShift(a=action, durMat=dur_mat, mchMat=mch_mat, mchsStartTimes=gant_chart,
+                                     opIDsOnMchs=opIDsOnMchs)
+
+                # update action space or mask
+                if action not in last_col:
+                    candidate_oprs[action // n_machines] += 1
+                else:
+                    mask[action // n_machines] = 1
+                # update finished_mark:
+                finished_mark[action // n_machines, action % n_machines] = 1
+
+            for _ in range(opIDsOnMchs.shape[1] - 1):
+                adj_mat[opIDsOnMchs[:, _ + 1], opIDsOnMchs[:, _]] = 1
+
+            # prepare augmented adj, augmented dur, and G
+            adj_mat = np.pad(adj_mat, 1, 'constant', constant_values=0)  # pad dummy S and T nodes
+            adj_mat[[i for i in range(1, n_jobs * n_machines + 2 - 1,
+                                      n_machines)], 0] = 1  # connect S with 1st operation of each job
+            adj_mat[-1, [i for i in range(n_machines, n_jobs * n_machines + 2 - 1,
+                                          n_machines)]] = 1  # connect last operation of each job to T
+            adj_mat = np.transpose(adj_mat)  # convert input adj from column pointing to row, to, row pointing to column
+            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(
+                n_jobs * n_machines + 2, axis=1)
+            edge_weight = np.multiply(adj_mat, dur_mat)
+            G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
+            G.add_weighted_edges_from([(0, i, 0) for i in range(1, n_jobs * n_machines + 2 - 1,
+                                                                n_machines)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
+            if plot:
+                self.show_state(G)
+
+            edge_indices.append(
+                torch.nonzero(torch.from_numpy(adj_mat)).t().contiguous().to(device) + (n_operations + 2) * i)
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
             current_graphs.append(G)
 
@@ -195,21 +294,12 @@ class JsspN5:
         est, lst = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=self.n_job, n_m=self.n_mch)
 
         # prepare x
-        x = torch.cat([durations/self.high, est/self.fea_norm_const, lst/self.fea_norm_const], dim=-1)
+        x = torch.cat([durations / self.high, est / self.fea_norm_const, lst / self.fea_norm_const], dim=-1)
         # prepare batch
-        batch = torch.from_numpy(np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job*self.n_mch+2)).to(device)
+        batch = torch.from_numpy(
+            np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
 
-        return x, edge_indices, batch
-
-
-
-
-
-
-
-
-
-
+        return x, edge_indices, batch, current_graphs
 
     def rules_solver(self, instance, plot=False):
         dur_mat, dur_cp, mch_mat = instance[0], np.copy(instance[0]), instance[1]
@@ -227,7 +317,7 @@ class JsspN5:
         conj_nei_up_stream[first_col] = 0
         adj = conj_nei_up_stream
 
-        gant_chart = -parameters.h * np.ones_like(dur_mat.transpose(), dtype=np.int32)
+        gant_chart = -self.high * np.ones_like(dur_mat.transpose(), dtype=np.int32)
         opIDsOnMchs = -n_job * np.ones_like(dur_mat.transpose(), dtype=np.int32)
         finished_mark = np.zeros_like(mch_mat, dtype=np.int32)
 
@@ -251,7 +341,8 @@ class JsspN5:
                 action = None
             actions.append(action)
 
-            permissibleLeftShift(a=action, durMat=dur_mat, mchMat=mch_mat, mchsStartTimes=gant_chart, opIDsOnMchs=opIDsOnMchs)
+            permissibleLeftShift(a=action, durMat=dur_mat, mchMat=mch_mat, mchsStartTimes=gant_chart,
+                                 opIDsOnMchs=opIDsOnMchs)
 
             # update action space or mask
             if action not in last_col:
@@ -261,7 +352,7 @@ class JsspN5:
             # update finished_mark:
             finished_mark[action // n_mch, action % n_mch] = 1
         for i in range(opIDsOnMchs.shape[1] - 1):
-            adj[opIDsOnMchs[:, i+1], opIDsOnMchs[:, i]] = 1
+            adj[opIDsOnMchs[:, i + 1], opIDsOnMchs[:, i]] = 1
 
         # forward and backward pass
         earliest_st, latest_st, adj_mat_aug, G = forward_and_backward_pass(adj, dur_mat, plot_G=plot)
@@ -293,8 +384,10 @@ class JsspN5:
         if action == [0, 0]:  # if dummy action then do not transit
             return dag2pyg(G=sol, instance=instance, high=self.high, min_max=self.min_max, normalizer=self.normalizer)
         else:
-            S = [s for s in sol.predecessors(action[0]) if int((s-1)//self.n_mch) != int((action[0]-1)//self.n_mch) and s != 0]
-            T = [t for t in sol.successors(action[1]) if int((t-1)//self.n_mch) != int((action[1]-1)//self.n_mch) and t != self.n_oprs+1]
+            S = [s for s in sol.predecessors(action[0]) if
+                 int((s - 1) // self.n_mch) != int((action[0] - 1) // self.n_mch) and s != 0]
+            T = [t for t in sol.successors(action[1]) if
+                 int((t - 1) // self.n_mch) != int((action[1] - 1) // self.n_mch) and t != self.n_oprs + 1]
             s = S[0] if len(S) != 0 else None
             t = T[0] if len(T) != 0 else None
 
@@ -400,13 +493,12 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 30
-    m = 20
+    j = 3
+    m = 3
     h = 99
     l = 1
-    batch_size = 128
+    batch_size = 2
     transit = 1
-
 
     # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
     inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
@@ -419,15 +511,38 @@ def main():
 
     # print(inst)
     # print(np.repeat(np.arange(j).repeat(m).reshape(1, -1), repeats=inst.shape[0], axis=0))
+    p_list = np.repeat(np.arange(j).repeat(m).reshape(1, -1), repeats=inst.shape[0], axis=0)
     t1 = time.time()
-    env._p_list_solver(args=[inst, np.repeat(np.arange(j).repeat(m).reshape(1, -1), repeats=inst.shape[0], axis=0), device])
+    x_pl, edge_indices_pl, batch, current_graphs = env._p_list_solver(args=[inst, p_list, device])
     t2 = time.time()
-    print(t2 - t1)
+    # print(t2 - t1)
 
+    t3 = time.time()
+    x_rl, edge_indices_rl, batch, current_graphs = env._rules_solver(args=[inst, device, 'fdd/mwkr'])
+    t4 = time.time()
+    # print(t4 - t3)
 
+    states_pl = []
+    states_rl = []
+    for instance, pl in zip(inst, p_list):
+        state_pl, _ = env._p_list_solver_single_instance([instance, pl])
+        states_pl.append(state_pl)
+        state_rl, _ = env.rules_solver(instance)
+        states_rl.append(state_rl)
+    b_pl = Batch.from_data_list(states_pl)
+    b_rl = Batch.from_data_list(states_rl)
 
+    # print(b_pl.x)
+    # print(b_rl.x)
+    # print(x_pl)
+    # print(x_rl)
+    # print(edge_indices_pl)
+    if torch.equal(b_pl.edge_index[:, b_pl.edge_index[0] != b_pl.edge_index[1]], edge_indices_pl) and torch.equal(
+            b_rl.edge_index[:, b_rl.edge_index[0] != b_rl.edge_index[1]], edge_indices_rl):
+        print('edge index is same')
 
-
+    if torch.equal(b_pl.x, x_pl) and torch.equal(b_rl.x, x_rl):
+        print('yes')
 
     '''actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
@@ -486,5 +601,3 @@ if __name__ == '__main__':
     t1 = time.time()
     main()
     print('main() function running time:', time.time() - t1)
-
-

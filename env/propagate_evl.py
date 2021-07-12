@@ -55,9 +55,13 @@ class Evaluator:
         device = edge_index.device
 
         # forward pass...
+        index_S = np.cumsum(np.arange(n_nodes // n_nodes_each_graph, dtype=int)) * n_nodes_each_graph
         earliest_start_time = torch.zeros_like(duration, dtype=torch.float32, device=device)
         mask_earliest_start_time = torch.ones_like(duration, dtype=torch.int8, device=device)
-        mask_earliest_start_time[0] = 0
+        mask_earliest_start_time[index_S] = 0
+        # print(index_S)
+        # print(mask_earliest_start_time)
+        # print(edge_index)
         for _ in range(n_nodes):
             if mask_earliest_start_time.sum() == 0:
                 break
@@ -65,13 +69,15 @@ class Evaluator:
             earliest_start_time = self.forward_pass(x=x_forward, edge_index=edge_index)
             mask_earliest_start_time = self.forward_pass(x=mask_earliest_start_time, edge_index=edge_index)
 
+        print(earliest_start_time)
+
         # backward pass...
         index_T = np.cumsum(np.ones(shape=[n_nodes // n_nodes_each_graph], dtype=int) * n_nodes_each_graph) - 1
-        make_span = torch.max(earliest_start_time)
+        make_span = earliest_start_time[index_T]
         latest_start_time = torch.zeros_like(duration, dtype=torch.float32, device=device)
         latest_start_time[index_T] = - make_span
         mask_latest_start_time = torch.ones_like(duration, dtype=torch.int8, device=device)
-        mask_latest_start_time[-1] = 0
+        mask_latest_start_time[index_T] = 0
         for _ in range(n_nodes):
             if mask_latest_start_time.sum() == 0:
                 break
@@ -80,6 +86,8 @@ class Evaluator:
             latest_start_time[index_T] = - make_span
             mask_latest_start_time = self.backward_pass(x=mask_latest_start_time, edge_index=edge_index)
 
+        # print(earliest_start_time.reshape(n_nodes // n_nodes_each_graph, -1).t())
+        # print(torch.abs(latest_start_time).reshape(n_nodes // n_nodes_each_graph, -1).t())
         return earliest_start_time, torch.abs(latest_start_time)
 
 
@@ -93,20 +101,22 @@ if __name__ == "__main__":
     m = 3
     l = 1
     h = 99
-    batch_size = 3
+    batch_size = 2
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-    np.random.seed(3)
+    np.random.seed(1)
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, init='rule', rule='fdd/mwkr', transition=0)
-    inst = np.concatenate([uni_instance_gen(n_j=j, n_m=m, low=l, high=h)])
+    insts = [np.concatenate([uni_instance_gen(n_j=j, n_m=m, low=l, high=h)]) for _ in range(batch_size)]
 
     t1 = time.time()
-    state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
-    for _ in range(batch_size - 1):
-        state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
+    state, feasible_action, done = env.reset(instance=insts[0], fix_instance=True)
+    for _ in range(1, batch_size):
+        state, feasible_action, done = env.reset(instance=insts[_], fix_instance=True)
     t2 = time.time()
 
-    # testing forward pass
+    # testing forward pass for first instance
+    inst = insts[-1]
+    state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
     dur_earliest_st = torch.from_numpy(np.pad(inst[0].reshape(-1), (1, 1), 'constant', constant_values=0)).reshape(-1, 1).to(dev)
     forward_pass = ForwardPass(aggr='max', flow="source_to_target")
     earliest_st = torch.zeros(size=[j * m + 2, 1], dtype=torch.float32, device=dev)
@@ -132,7 +142,9 @@ if __name__ == "__main__":
 
     print()
 
-    # testing backward pass
+    # testing backward pass for first instance
+    inst = insts[-1]
+    state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
     dur_latest_st = torch.from_numpy(np.pad(inst[0].reshape(-1), (1, 1), 'constant', constant_values=0)).reshape(-1, 1).to(dev)
     backward_pass = BackwardPass(aggr='max', flow="target_to_source")
     latest_st = torch.zeros(size=[j * m + 2, 1], dtype=torch.float32, device=dev)
@@ -157,14 +169,24 @@ if __name__ == "__main__":
     print()
 
     # test hybrid evaluator
-    batch_data = Batch.from_data_list([state for _ in range(batch_size)])
+    state_list = []
+    dur_list = []
+    for _ in range(batch_size):
+        state, feasible_action, done = env.reset(instance=insts[_], fix_instance=True)
+        state_list.append(state)
+        dur_list.append(np.pad(insts[_][0].reshape(-1), (1, 1), 'constant', constant_values=0))
+    batch_data = Batch.from_data_list(state_list)
     edge_idx = batch_data.edge_index[:, batch_data.edge_index[0] != batch_data.edge_index[1]].to(dev)
-    dur = np.tile(np.pad(inst[0].reshape(-1), (1, 1), 'constant', constant_values=0), reps=batch_size)
+    dur = np.concatenate(dur_list)
     dur = torch.from_numpy(dur).reshape(-1, 1).to(dev)
     eva = Evaluator()
     t5 = time.time()
     est, lst = eva.forward(edge_index=edge_idx, duration=dur, n_j=j, n_m=m)
     t6 = time.time()
+    # print(est.cpu().squeeze() / 1000)
+    # print(batch_data.x[:, 1])
+    # print(lst.squeeze().cpu() / 1000)
+    # print(batch_data.x[:, 2])
     if torch.equal(est.cpu().squeeze() / 1000, batch_data.x[:, 1]) and torch.equal(lst.squeeze().cpu() / 1000, batch_data.x[:, 2]):
         print('forward pass and backward pass are all OK! It takes:', t6 - t5, 'networkx version forward pass and backward pass take:', t2 - t1)
 

@@ -156,7 +156,7 @@ class JsspN5:
                 dur_candidate = np.take(dur_mat, candidate_masked)
                 idx = np.random.choice(np.where(dur_candidate == np.min(dur_candidate))[0])
                 action = candidate_masked[idx]
-            elif self.rule == 'fdd-devide-mwkr':
+            elif self.rule == 'fdd-divide-mwkr':
                 candidate_masked = candidate_oprs[np.where(~mask)]
                 fdd = np.take(np.cumsum(dur_mat, axis=1), candidate_masked)
                 wkr = np.take(np.cumsum(np.multiply(dur_mat, 1 - finished_mark), axis=1), last_col[np.where(~mask)])
@@ -164,7 +164,7 @@ class JsspN5:
                 idx = np.random.choice(np.where(priority == np.min(priority))[0])
                 action = candidate_masked[idx]
             else:
-                assert print('select "spt" or "fdd-devide-mwkr".')
+                assert print('select "spt" or "fdd-divide-mwkr".')
                 action = None
             actions.append(action)
 
@@ -324,7 +324,7 @@ def main():
     batch_size = 1
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
-                 init='rule', rule='fdd-devide-mwkr', transition=transit)
+                 init='rule', rule='fdd-divide-mwkr', transition=transit)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
     # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]

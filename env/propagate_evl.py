@@ -89,11 +89,11 @@ if __name__ == "__main__":
     import time
     from torch_geometric.data.batch import Batch
 
-    j = 100
+    j = 30
     m = 20
     l = 1
     h = 99
-    batch_size = 100
+    batch_size = 128
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     np.random.seed(3)
 

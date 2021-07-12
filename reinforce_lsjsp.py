@@ -12,7 +12,7 @@ torch.manual_seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 init = 'rule'  # 'rule', 'p_list'
-rule = 'spt'
+rule = 'fdd-devide-mwkr'
 env = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, transition=args.transit, init=init, rule=rule)
 env_validation = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, transition=args.transit, init=init, rule=rule)
 policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)  # policy = Actor(3, 64, gin_l=3, policy_l=3).to(dev)

@@ -81,7 +81,7 @@ class Evaluator:
             latest_start_time[index_T] = - make_span
             mask_latest_start_time = self.backward_pass(x=mask_latest_start_time, edge_index=edge_index)
 
-        return earliest_start_time, torch.abs(latest_start_time)
+        return earliest_start_time, torch.abs(latest_start_time), make_span
 
 
 if __name__ == "__main__":
@@ -90,11 +90,11 @@ if __name__ == "__main__":
     import time
     from torch_geometric.data.batch import Batch
 
-    j = 3
-    m = 3
+    j = 30
+    m = 20
     l = 1
     h = 99
-    batch_size = 2
+    batch_size = 64
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     np.random.seed(1)
 
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     dur = torch.from_numpy(dur).reshape(-1, 1).to(dev)
     eva = Evaluator()
     t5 = time.time()
-    est, lst = eva.forward(edge_index=edge_idx, duration=dur, n_j=j, n_m=m)
+    est, lst, _ = eva.forward(edge_index=edge_idx, duration=dur, n_j=j, n_m=m)
     t6 = time.time()
     if torch.equal(est.cpu().squeeze() / 1000, batch_data.x[:, 1]) and torch.equal(lst.squeeze().cpu() / 1000, batch_data.x[:, 2]):
         print('forward pass and backward pass are all OK! It takes:', t6 - t5, 'networkx version forward pass and backward pass take:', t2 - t1)

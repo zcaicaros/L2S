@@ -2,7 +2,6 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import numpy
 import torch
 import numpy as np
 import networkx as nx
@@ -40,13 +39,13 @@ class JsspN5:
         self.min_max = min_max
         self.itr = 0
         self.max_transition = transition
-        self.instance = None
-        self.current_graph = None
+        self.instances = None
+        self.current_graphs = None
         self.current_objs = None
         self.normalizer = MinMaxScaler()
         self.tabu_size = 1
-        self.tabu_list = []
-        self.incumbent_obj = None
+        self.tabu_lists = None
+        self.incumbent_objs = None
         self.incumbent_idle = None
         self.fea_norm_const = 1000
         self.eva = Evaluator()
@@ -58,13 +57,12 @@ class JsspN5:
         """
         critical_path = nx.dag_longest_path(solution)[1:-1]
         critical_blocks_opr = np.array(critical_path)
-        critical_blocks = mch_mat.take(critical_blocks_opr - 1)  # -1: ops id starting from 1
+        critical_blocks = mch_mat.take(critical_blocks_opr - 1)  # -1: ops id starting from 0
         pairs = self._get_pairs(critical_blocks, critical_blocks_opr, tabu_list)
         return pairs
 
     @staticmethod
-    def _get_pairs(cb, cb_op,
-                   tabu_list=None):  # first 2 operations of first block and last 2 operations of last block is also included
+    def _get_pairs(cb, cb_op, tabu_list=None):
         pairs = []
         rg = cb[:-1].shape[0]  # sliding window of 2
         for i in range(rg):
@@ -107,7 +105,7 @@ class JsspN5:
                     pass
         return pairs
 
-    def _p_list_solver_single_instance(self, args, plot=False):
+    '''def _p_list_solver_single_instance(self, args, plot=False):
         instance = args[0]
         # print(instance)
         priority_list = args[1]
@@ -132,7 +130,7 @@ class JsspN5:
         x = torch.cat([f1, f2, f3], dim=-1)
         edge_idx = torch.nonzero(torch.from_numpy(adj_aug)).t().contiguous()
         init_state = Data(x=x, edge_index=edge_idx, y=np.amax(earliest_start))
-        return init_state, G
+        return init_state, G'''
 
     def show_state(self, G):
         x_axis = np.pad(np.tile(np.arange(1, self.n_mch + 1, 1), self.n_job), (1, 1), 'constant',
@@ -200,7 +198,7 @@ class JsspN5:
 
         edge_indices = torch.cat(edge_indices, dim=-1)
         durations = torch.cat(durations, dim=0).reshape(-1, 1)
-        est, lst = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=self.n_job, n_m=self.n_mch)
+        est, lst, make_span = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=self.n_job, n_m=self.n_mch)
 
         # prepare x
         x = torch.cat([durations / self.high, est / self.fea_norm_const, lst / self.fea_norm_const], dim=-1)
@@ -208,7 +206,7 @@ class JsspN5:
         batch = torch.from_numpy(
             np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
 
-        return x, edge_indices, batch, current_graphs
+        return (x, edge_indices, batch), current_graphs, make_span
 
     def _rules_solver(self, args, plot=False):
         instances, device, rule_type = args[0], args[1], args[2]
@@ -249,7 +247,6 @@ class JsspN5:
                     idx = np.random.choice(np.where(priority == np.min(priority))[0])
                     action = candidate_masked[idx]
                 else:
-                    assert print('select "spt" or "fdd/mwkr".')
                     action = None
                 actions.append(action)
 
@@ -290,7 +287,7 @@ class JsspN5:
 
         edge_indices = torch.cat(edge_indices, dim=-1)
         durations = torch.cat(durations, dim=0).reshape(-1, 1)
-        est, lst = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=self.n_job, n_m=self.n_mch)
+        est, lst, make_span = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=self.n_job, n_m=self.n_mch)
 
         # prepare x
         x = torch.cat([durations / self.high, est / self.fea_norm_const, lst / self.fea_norm_const], dim=-1)
@@ -298,9 +295,9 @@ class JsspN5:
         batch = torch.from_numpy(
             np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
 
-        return x, edge_indices, batch, current_graphs
+        return (x, edge_indices, batch), current_graphs, make_span
 
-    def rules_solver(self, instance, plot=False):
+    '''def rules_solver(self, instance, plot=False):
         dur_mat, dur_cp, mch_mat = instance[0], np.copy(instance[0]), instance[1]
         n_job, n_mch = dur_mat.shape[0], dur_mat.shape[1]
         n_opr = n_job * n_mch
@@ -372,7 +369,7 @@ class JsspN5:
         x = torch.cat([f1, f2, f3], dim=-1)
         edge_idx = torch.nonzero(torch.from_numpy(adj_mat_aug)).t().contiguous()
         init_state = Data(x=x, edge_index=edge_idx, y=np.amax(earliest_start))
-        return init_state, G
+        return init_state, G'''
 
     def _transit_single(self, plot, args):
         """
@@ -414,50 +411,55 @@ class JsspN5:
 
             return new_state
 
-    def _instances_gen(self):
-        return numpy.stack(uni_instance_gen(self.n_job, self.n_mch, self.low, self.high))
-
-    def _init(self, plot=False):
-        if self.init == 'p_list':
-            # p_list = np.random.permutation(np.arange(self.n_job).repeat(self.n_mch))
-            p_list = np.arange(self.n_job).repeat(self.n_mch)  # fixed priority list: [0, 0, 0, ..., n-1, n-1, n-1]
-            data, G = self._p_list_solver_single_instance(args=[self.instance, p_list])
-            return data, G
-        elif self.init == 'rule':
-            data, G = self.rules_solver(self.instance)
-            return data, G
+    def reset(self, instances, init_type, device, plot=False):
+        self.instances = instances
+        if init_type == 'plist':
+            random_plist = np.repeat(np.arange(self.n_job).repeat(self.n_mch).reshape(1, -1), repeats=self.instances.shape[0], axis=0)  # fixed priority list: [0, 0, 0, ..., n-1, n-1, n-1]
+            (x, edge_indices, batch), current_graphs, make_span = self._p_list_solver(args=[self.instances, random_plist, device], plot=plot)
+        elif init_type == 'spt':
+            (x, edge_indices, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'spt'], plot=plot)
+        elif init_type == 'fdd/mwkr':
+            (x, edge_indices, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'fdd/mwkr'], plot=plot)
         else:
-            print('env.init = "p_list" or "rule". ')
+            assert False, 'Initial solution type = "p_list", "spt", "fdd/mwkr".'
 
-    def reset(self, instance=None, fix_instance=False, plot=False):
-        if fix_instance:
-            self.instance = instance
-        else:
-            self.instance = self._instances_gen()
-        init_state, init_graph = self._init(plot)
-        self.current_graph = init_graph
-        self.current_objs = init_state.y
-        self.incumbent_obj = init_state.y
+        print(x)
+        print(edge_indices)
+        print(batch)
+
+        self.current_graphs = current_graphs
+        self.current_objs = make_span
+        self.incumbent_objs = make_span
         self.itr = 0
-        self.tabu_list = []
+        self.tabu_lists = [[] for _ in range(instances.shape[0])]
+
+
+
+
         feasible_actions = self.feasible_action()
         if self.itr == self.max_transition or len(feasible_actions) == 0:
             done = True
         else:
             done = False
-        return init_state, feasible_actions, done
+
+
+
+        # return init_state, feasible_actions, done
+
+        # return (x, edge_indices, batch), done
+
 
     def feasible_action(self):
-        action = self._gen_moves(solution=self.current_graph, mch_mat=self.instance[1], tabu_list=self.tabu_list)
+        action = self._gen_moves(solution=self.current_graphs, mch_mat=self.instances[1], tabu_list=self.tabu_lists)
         return action
 
     def step_single(self, action, plot=False):
-        new_state = self._transit_single(plot, args=[action, self.current_graph, self.instance])
+        new_state = self._transit_single(plot, args=[action, self.current_graphs, self.instances])
 
         # makespan reward
         diff1 = torch.tensor(self.current_objs) - torch.tensor(new_state.y)
         reward = diff1
-        self.incumbent_obj = np.where(np.array(new_state.y) < self.incumbent_obj, new_state.y, self.incumbent_obj)
+        self.incumbent_objs = np.where(np.array(new_state.y) < self.incumbent_objs, new_state.y, self.incumbent_objs)
         self.current_objs = new_state.y
 
         # sequential version of update tabu list, different tabu list can have different length
@@ -466,11 +468,11 @@ class JsspN5:
             if action_reversed == [0, 0]:  # if dummy action, don't update tabu list
                 pass
             else:
-                if len(self.tabu_list) == self.tabu_size:
-                    self.tabu_list.pop(0)
-                    self.tabu_list.append(action_reversed)
+                if len(self.tabu_lists) == self.tabu_size:
+                    self.tabu_lists.pop(0)
+                    self.tabu_lists.append(action_reversed)
                 else:
-                    self.tabu_list.append(action_reversed)
+                    self.tabu_lists.append(action_reversed)
 
         self.itr = self.itr + 1
 
@@ -492,106 +494,17 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 30
-    m = 20
+    j = 3
+    m = 3
     h = 99
     l = 1
-    batch_size = 128
     transit = 1
+    batch_size = 3
 
-    # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
-    inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
-
-    # env = JsspN5(n_job=j, n_mch=m, low=l, high=h, init='p_list', rule='fdd/mwkr', transition=transit)
-    # state, feasible_action, done = env.reset(instance=inst[0], fix_instance=True)
-
+    # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
+    insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, init='p_list', rule='fdd/mwkr', transition=transit)
-    # state, feasible_action, done = env.reset(instance=inst[0], fix_instance=True)
-
-    # print(inst)
-    # print(np.repeat(np.arange(j).repeat(m).reshape(1, -1), repeats=inst.shape[0], axis=0))
-    p_list = np.repeat(np.arange(j).repeat(m).reshape(1, -1), repeats=inst.shape[0], axis=0)
-    t1 = time.time()
-    x_pl, edge_indices_pl, batch, current_graphs = env._p_list_solver(args=[inst, p_list, device])
-    t2 = time.time()
-    # print(t2 - t1)
-
-    t3 = time.time()
-    x_rl, edge_indices_rl, batch, current_graphs = env._rules_solver(args=[inst, device, 'fdd/mwkr'])
-    t4 = time.time()
-    # print(t4 - t3)
-
-    states_pl = []
-    states_rl = []
-    for instance, pl in zip(inst, p_list):
-        state_pl, _ = env._p_list_solver_single_instance([instance, pl])
-        states_pl.append(state_pl)
-        state_rl, _ = env.rules_solver(instance)
-        states_rl.append(state_rl)
-    b_pl = Batch.from_data_list(states_pl)
-    b_rl = Batch.from_data_list(states_rl)
-
-    # print(b_pl.x)
-    # print(b_rl.x)
-    # print(x_pl)
-    # print(x_rl)
-    # print(edge_indices_pl)
-    if torch.equal(b_pl.edge_index[:, b_pl.edge_index[0] != b_pl.edge_index[1]], edge_indices_pl.cpu()) and torch.equal(
-            b_rl.edge_index[:, b_rl.edge_index[0] != b_rl.edge_index[1]], edge_indices_rl.cpu()):
-        print('edge index is same')
-
-    if torch.equal(b_pl.x, x_pl.cpu()) and torch.equal(b_rl.x, x_rl.cpu()):
-        print('yes')
-
-    '''actor = Actor(in_dim=3, hidden_dim=64).to(device)
-
-    initial_gap = []
-    simulate_result = []
-    for i, data in enumerate(inst):
-        state, feasible_action, done = env.reset(instance=data, fix_instance=True)
-        # print(state.edge_index)
-        # print(state.x.shape)
-        initial_gap.append(env.current_objs)
-        print('Initial sol:', env.current_objs)
-        returns = []
-        t = 0
-        with torch.no_grad():
-            while not done:
-                if state.edge_index.shape[1] != (j-1)*m + (m-1)*j + (j*m+2) + j + j:
-                    print('not equal {} at:'.format((j-1)*m + (m-1)*j + (j*m+2) + j + j), env.itr)
-                    np.save('./mal_func_instance.npy', env.instance)
-                # print(env.itr)
-                # print([param for param in actor.parameters()])
-                action, _ = actor(Batch.from_data_list([state]).to(device), [feasible_action])
-                # action = random.choice(feasible_action)
-                state_prime, reward, new_feasible_actions, done = env.step_single(action=action[0])
-                # print('make span reward:', reward)
-                if torch.equal(state.x.cpu(), state_prime.x) and torch.equal(state.edge_index.cpu(), state_prime.edge_index):
-                    print('In absorbing state at', env.itr - 1)
-                returns.append(reward)
-                state = state_prime
-                feasible_action = new_feasible_actions
-                t += 1
-                # print()
-        simulate_result.append(env.incumbent_obj)
-        print('Incumbent sol:', env.incumbent_obj)
-        print()
-    simulate_result = np.array(simulate_result)
-    initial_gap = np.array(initial_gap)
-
-    # ortools solver
-    results_ortools = []
-    for i, data in enumerate(inst):
-        times_rearrange = np.expand_dims(data[0], axis=-1)
-        machines_rearrange = np.expand_dims(data[1], axis=-1)
-        data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
-        result = MinimalJobshopSat(data.tolist())
-        print('Instance-' + str(i + 1) + ' Ortools makespan:', result)
-        results_ortools.append(result[1])
-    results_ortools = np.array(results_ortools)
-
-    print('Initial Gap:', ((initial_gap - results_ortools) / results_ortools).mean())
-    print('Simulation Gap:', ((simulate_result - results_ortools) / results_ortools).mean())'''
+    env.reset(instances=insts, init_type='spt', device=device)
 
 
 if __name__ == '__main__':

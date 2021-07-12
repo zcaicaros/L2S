@@ -59,7 +59,7 @@ class JsspN5:
         return pairs
 
     @staticmethod
-    def _get_pairs(cb, cb_op, tabu_list=None):  # first 2 operations of first block and last 2 operations of last block is also included
+    def _get_pairs(cb, cb_op, tabu_list=None):
         pairs = []
         rg = cb[:-1].shape[0]  # sliding window of 2
         for i in range(rg):
@@ -156,7 +156,7 @@ class JsspN5:
                 dur_candidate = np.take(dur_mat, candidate_masked)
                 idx = np.random.choice(np.where(dur_candidate == np.min(dur_candidate))[0])
                 action = candidate_masked[idx]
-            elif self.rule == 'fdd/mwkr':
+            elif self.rule == 'fdd-devide-mwkr':
                 candidate_masked = candidate_oprs[np.where(~mask)]
                 fdd = np.take(np.cumsum(dur_mat, axis=1), candidate_masked)
                 wkr = np.take(np.cumsum(np.multiply(dur_mat, 1 - finished_mark), axis=1), last_col[np.where(~mask)])
@@ -164,7 +164,7 @@ class JsspN5:
                 idx = np.random.choice(np.where(priority == np.min(priority))[0])
                 action = candidate_masked[idx]
             else:
-                assert print('select "spt" or "fdd/mwkr".')
+                assert print('select "spt" or "fdd-devide-mwkr".')
                 action = None
             actions.append(action)
 
@@ -316,18 +316,19 @@ def main():
     torch.manual_seed(1)
     np.random.seed(123456324)  # 123456324
 
-    j = 3
-    m = 3
+    j = 10
+    m = 10
     h = 99
     l = 1
-    transit = 2048
+    transit = 0
+    batch_size = 1
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
-                 init='rule', rule='fdd/mwkr', transition=transit)
+                 init='rule', rule='fdd-devide-mwkr', transition=transit)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
     # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
-    inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(10)])[:1]
+    inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
 
     initial_gap = []
     simulate_result = []
@@ -359,6 +360,7 @@ def main():
                 # print()
         simulate_result.append(env.incumbent_obj)
         print('Incumbent sol:', env.incumbent_obj)
+        print('Instance-' + str(i + 1) + ' ends after ' + str(env.itr) + ' transitions')
         print()
     simulate_result = np.array(simulate_result)
     initial_gap = np.array(initial_gap)
@@ -383,6 +385,6 @@ if __name__ == '__main__':
 
     t1 = time.time()
     main()
-    print('main() function running time:', time.time() - t1)
+    print('\nmain() function running time:', time.time() - t1)
 
 

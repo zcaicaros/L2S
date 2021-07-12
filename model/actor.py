@@ -165,11 +165,11 @@ if __name__ == '__main__':
     # t1 = time.time()
     init_s, feasible_a, _ = env.reset()
 
-    scores = embedding(Batch.from_data_list([init_s,init_s]).to(dev))
+    scores = embedding(Batch.from_data_list([init_s, init_s]).to(dev))
     # actor(Batch.from_data_list([init_s,init_s]).to(dev), [feasible_a,feasible_a])
     _, log_p = actor(Batch.from_data_list([init_s]).to(dev), [feasible_a])
     grad = torch.autograd.grad(log_p.mean(), [param for param in actor.parameters()])
-    print(grad)
+    # print(grad)
 
 
 

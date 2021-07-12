@@ -1,7 +1,7 @@
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy
 import torch
 import numpy as np
@@ -16,6 +16,7 @@ from env.permissible_LS import permissibleLeftShift
 from parameters import args as parameters
 from env.jsp_problem import forward_and_backward_pass
 from propagate_evl import Evaluator
+import matplotlib.pyplot as plt
 
 
 class JsspN5:
@@ -47,6 +48,8 @@ class JsspN5:
         self.tabu_list = []
         self.incumbent_obj = None
         self.incumbent_idle = None
+        self.fea_norm_const = 1000
+        self.eva = Evaluator()
 
     def _gen_moves(self, solution, mch_mat, tabu_list=None):
         """
@@ -128,6 +131,85 @@ class JsspN5:
         edge_idx = torch.nonzero(torch.from_numpy(adj_aug)).t().contiguous()
         init_state = Data(x=x, edge_index=edge_idx, y=np.amax(earliest_start))
         return init_state, G
+
+    def show_state(self, G):
+        x_axis = np.pad(np.tile(np.arange(1, self.n_mch + 1, 1), self.n_job), (1, 1), 'constant',
+                        constant_values=[0, self.n_mch + 1])
+        y_axis = np.pad(np.arange(self.n_job, 0, -1).repeat(self.n_mch), (1, 1), 'constant',
+                        constant_values=np.median(np.arange(self.n_job, 0, -1)))
+        pos = dict((n, (x, y)) for n, x, y in zip(G.nodes(), x_axis, y_axis))
+        plt.figure(figsize=(15, 10))
+        plt.tight_layout()
+        nx.draw_networkx_edge_labels(G, pos=pos)  # show edge weight
+        nx.draw(
+            G, pos=pos, with_labels=True, arrows=True, connectionstyle='arc3, rad = 0.1'
+            # <-- tune curvature and style ref:https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.patches.ConnectionStyle.html
+        )
+        plt.show()
+
+    def _p_list_solver(self, args, plot=False):
+        instances, priority_lists, device = args[0], args[1], args[2]
+
+        edge_indices = []
+        durations = []
+        current_graphs = []
+        for i, item in enumerate(zip(instances, priority_lists)):
+            instance, priority_list = item[0], item[1]
+            dur_mat, mch_mat = instance[0], instance[1]
+            n_jobs = mch_mat.shape[0]
+            n_machines = mch_mat.shape[1]
+            n_operations = n_jobs * n_machines
+
+            # prepare NIPS adj
+            ops_mat = np.arange(0, n_operations).reshape(mch_mat.shape).tolist()  # Init operations mat
+            list_for_latest_task_onMachine = [None] * n_machines  # Init list_for_latest_task_onMachine
+            adj_mat = np.eye(n_operations, k=-1, dtype=int)  # Create adjacent matrix for the corresponding action list
+            adj_mat[np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:, 0]] = 0  # first column does not have upper stream conj_nei
+            # Construct NIPS adjacent matrix
+            for job_id in priority_list:
+                op_id = ops_mat[job_id][0]
+                m_id_for_action = mch_mat[op_id // n_machines, op_id % n_machines] - 1
+                if list_for_latest_task_onMachine[m_id_for_action] is not None:
+                    adj_mat[op_id, list_for_latest_task_onMachine[m_id_for_action]] = 1
+                list_for_latest_task_onMachine[m_id_for_action] = op_id
+                ops_mat[job_id].pop(0)
+
+            # prepare augmented adj, augmented dur, and G
+            adj_mat = np.pad(adj_mat, 1, 'constant', constant_values=0)  # pad dummy S and T nodes
+            adj_mat[[i for i in range(1, n_jobs * n_machines + 2 - 1, n_machines)], 0] = 1  # connect S with 1st operation of each job
+            adj_mat[-1, [i for i in range(n_machines, n_jobs * n_machines + 2 - 1, n_machines)]] = 1  # connect last operation of each job to T
+            adj_mat = np.transpose(adj_mat)  # convert input adj from column pointing to row, to, row pointing to column
+            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(n_jobs * n_machines + 2, axis=1)
+            edge_weight = np.multiply(adj_mat, dur_mat)
+            G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
+            G.add_weighted_edges_from([(0, i, 0) for i in range(1, n_jobs * n_machines + 2 - 1, n_machines)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
+            if plot:
+                self.show_state(G)
+
+            edge_indices.append(torch.nonzero(torch.from_numpy(adj_mat)).t().contiguous().to(device) + (n_operations+2) * i)
+            durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
+            current_graphs.append(G)
+
+        edge_indices = torch.cat(edge_indices, dim=-1)
+        durations = torch.cat(durations, dim=0).reshape(-1, 1)
+        est, lst = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=self.n_job, n_m=self.n_mch)
+
+        # prepare x
+        x = torch.cat([durations/self.high, est/self.fea_norm_const, lst/self.fea_norm_const], dim=-1)
+        # prepare batch
+        batch = torch.from_numpy(np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job*self.n_mch+2)).to(device)
+
+        return x, edge_indices, batch
+
+
+
+
+
+
+
+
+
+
 
     def rules_solver(self, instance, plot=False):
         dur_mat, dur_cp, mch_mat = instance[0], np.copy(instance[0]), instance[1]
@@ -312,23 +394,42 @@ class JsspN5:
 def main():
     from torch_geometric.data.batch import Batch
     from ortools_baseline import MinimalJobshopSat
+    import time
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(1)
-    np.random.seed(123456324)  # 123456324
+    np.random.seed(3)  # 123456324
 
-    j = 3
-    m = 3
+    j = 30
+    m = 20
     h = 99
     l = 1
-    transit = 2048
+    batch_size = 128
+    transit = 1
 
-    env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
-                 init='rule', rule='fdd/mwkr', transition=transit)
-    actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
-    inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
-    # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(10)])
+    # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
+    inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
+
+    # env = JsspN5(n_job=j, n_mch=m, low=l, high=h, init='p_list', rule='fdd/mwkr', transition=transit)
+    # state, feasible_action, done = env.reset(instance=inst[0], fix_instance=True)
+
+    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, init='p_list', rule='fdd/mwkr', transition=transit)
+    # state, feasible_action, done = env.reset(instance=inst[0], fix_instance=True)
+
+    # print(inst)
+    # print(np.repeat(np.arange(j).repeat(m).reshape(1, -1), repeats=inst.shape[0], axis=0))
+    t1 = time.time()
+    env._p_list_solver(args=[inst, np.repeat(np.arange(j).repeat(m).reshape(1, -1), repeats=inst.shape[0], axis=0), device])
+    t2 = time.time()
+    print(t2 - t1)
+
+
+
+
+
+
+    '''actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
     initial_gap = []
     simulate_result = []
@@ -376,7 +477,7 @@ def main():
     results_ortools = np.array(results_ortools)
 
     print('Initial Gap:', ((initial_gap - results_ortools) / results_ortools).mean())
-    print('Simulation Gap:', ((simulate_result - results_ortools) / results_ortools).mean())
+    print('Simulation Gap:', ((simulate_result - results_ortools) / results_ortools).mean())'''
 
 
 if __name__ == '__main__':

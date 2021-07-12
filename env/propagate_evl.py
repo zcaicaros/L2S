@@ -1,7 +1,6 @@
 import numpy as np
 from typing import Union
 from torch_geometric.typing import OptPairTensor, Adj, Size
-
 import torch
 from torch import Tensor
 from torch_geometric.nn.conv import MessagePassing
@@ -47,12 +46,13 @@ class Evaluator:
 
     def forward(self, edge_index, duration, n_j, n_m):
         """
+        support batch version
         edge_index: [2, n_edges] tensor
         duration: [n_nodes, 1] tensor
         """
-        device = edge_index.device
         n_nodes = duration.shape[0]
         n_nodes_each_graph = n_j * n_m + 2
+        device = edge_index.device
 
         # forward pass...
         earliest_start_time = torch.zeros_like(duration, dtype=torch.float32, device=device)
@@ -80,7 +80,7 @@ class Evaluator:
             latest_start_time[index_T] = - make_span
             mask_latest_start_time = self.backward_pass(x=mask_latest_start_time, edge_index=edge_index)
 
-        return earliest_start_time, - latest_start_time
+        return earliest_start_time, torch.abs(latest_start_time)
 
 
 if __name__ == "__main__":
@@ -89,11 +89,11 @@ if __name__ == "__main__":
     import time
     from torch_geometric.data.batch import Batch
 
-    j = 30
-    m = 20
+    j = 3
+    m = 3
     l = 1
     h = 99
-    batch_size = 128
+    batch_size = 3
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     np.random.seed(3)
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
     t2 = time.time()
 
-    '''# testing forward pass
+    # testing forward pass
     dur_earliest_st = torch.from_numpy(np.pad(inst[0].reshape(-1), (1, 1), 'constant', constant_values=0)).reshape(-1, 1).to(dev)
     forward_pass = ForwardPass(aggr='max', flow="source_to_target")
     earliest_st = torch.zeros(size=[j * m + 2, 1], dtype=torch.float32, device=dev)
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     t4 = time.time()
     # print(- latest_st.squeeze().cpu() / 1000)
     if torch.equal(- latest_st.squeeze().cpu() / 1000, state.x[:, 2]):
-        print('backward pass is OK! It takes:', t4 - t3, 'networkx version forward pass and backward pass take:', t2 - t1)'''
+        print('backward pass is OK! It takes:', t4 - t3, 'networkx version forward pass and backward pass take:', t2 - t1)
 
     print()
 

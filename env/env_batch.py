@@ -200,7 +200,6 @@ class JsspN5:
 
         edge_indices = torch.cat(edge_indices, dim=-1)
         durations = torch.cat(durations, dim=0).reshape(-1, 1)
-        print(durations.reshape(instances.shape[0], -1).t())
         est, lst = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=self.n_job, n_m=self.n_mch)
 
         # prepare x
@@ -422,7 +421,7 @@ class JsspN5:
         if self.init == 'p_list':
             # p_list = np.random.permutation(np.arange(self.n_job).repeat(self.n_mch))
             p_list = np.arange(self.n_job).repeat(self.n_mch)  # fixed priority list: [0, 0, 0, ..., n-1, n-1, n-1]
-            data, G = self._p_list_solver_single_instance(plot, args=[self.instance, p_list])
+            data, G = self._p_list_solver_single_instance(args=[self.instance, p_list])
             return data, G
         elif self.init == 'rule':
             data, G = self.rules_solver(self.instance)
@@ -493,11 +492,11 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 3
-    m = 3
+    j = 30
+    m = 20
     h = 99
     l = 1
-    batch_size = 2
+    batch_size = 128
     transit = 1
 
     # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
@@ -537,11 +536,11 @@ def main():
     # print(x_pl)
     # print(x_rl)
     # print(edge_indices_pl)
-    if torch.equal(b_pl.edge_index[:, b_pl.edge_index[0] != b_pl.edge_index[1]], edge_indices_pl) and torch.equal(
-            b_rl.edge_index[:, b_rl.edge_index[0] != b_rl.edge_index[1]], edge_indices_rl):
+    if torch.equal(b_pl.edge_index[:, b_pl.edge_index[0] != b_pl.edge_index[1]], edge_indices_pl.cpu()) and torch.equal(
+            b_rl.edge_index[:, b_rl.edge_index[0] != b_rl.edge_index[1]], edge_indices_rl.cpu()):
         print('edge index is same')
 
-    if torch.equal(b_pl.x, x_pl) and torch.equal(b_rl.x, x_rl):
+    if torch.equal(b_pl.x, x_pl.cpu()) and torch.equal(b_rl.x, x_rl.cpu()):
         print('yes')
 
     '''actor = Actor(in_dim=3, hidden_dim=64).to(device)

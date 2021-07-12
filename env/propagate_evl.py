@@ -1,3 +1,7 @@
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 from typing import Union
 from torch_geometric.typing import OptPairTensor, Adj, Size

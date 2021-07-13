@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 
 
 show = True
-j = 15
-m = 15
+j = 10
+m = 10
 episode = 64000
 transit = 64
-init = 'spt'  # 'plist', 'spt', ...
+init = 'fdd-divide-mwkr'  # 'plist', 'spt', ...
 file = './log/log_{}x{}_{}w_{}_{}.npy'.format(j, m, str(episode/10000), init, transit)
-plot_step_size = 200
+plot_step_size = 100
 horizon = None
 if horizon is not None:
     log = np.load(file)[:horizon]

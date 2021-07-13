@@ -14,9 +14,9 @@ l = 1
 h = 99
 episode_length = 64
 n_generated_instances = 100
-transit = 128
+transit = 64
 init = 'rule'  # 'plist', 'spt', ...
-rule = 'spt'
+rule = 'fdd-divide-mwkr'
 
 torch.manual_seed(1)
 np.random.seed(1)

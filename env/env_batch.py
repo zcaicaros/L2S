@@ -317,7 +317,8 @@ class JsspN5:
         self.change_nxgraph_topology(actions)  # change graph topology
         x, edge_indices, batch, makespan = self.dag2pyg(self.instances, self.current_graphs, device)  # generate new state data
         reward = self.current_objs - makespan
-        self.incumbent_objs = torch.where(makespan - self.incumbent_objs > 0, makespan, self.incumbent_objs)
+
+        self.incumbent_objs = torch.where(makespan - self.incumbent_objs < 0, makespan, self.incumbent_objs)
         self.current_objs = makespan
 
         # update tabu list
@@ -332,6 +333,9 @@ class JsspN5:
                         self.tabu_lists[i].append(action)
                     else:
                         self.tabu_lists[i].append(action)
+
+        self.itr = self.itr + 1
+
         # compute done flag
         if self.itr == self.max_transition:
             done = True
@@ -339,7 +343,7 @@ class JsspN5:
             done = False
         feasible_actions, flag = self.feasible_actions()  # new feasible actions w.r.t updated tabu list
 
-        self.itr = self.itr + 1
+
 
         return (x, torch_geometric.utils.add_self_loops(edge_indices)[0], batch), reward, feasible_actions, done
 
@@ -393,16 +397,16 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 30
+    j = 100
     m = 20
     h = 99
     l = 1
     transit = 2000
-    batch_size = 32
+    batch_size = 1
     init = 'fdd-divide-mwkr'
 
-    # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
-    insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
+    insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
+    # insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, transition=transit)
     states, feasible_actions, done = env.reset(instances=insts, init_type=init, device=device)
 
@@ -412,13 +416,16 @@ def main():
     returns = []
     with torch.no_grad():
         while not done:
-            # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
-            actions, _ = actor(states, feasible_actions)
+            print(done)
+            actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
+            # actions, _ = actor(states, feasible_actions)
             states, reward, feasible_actions, done = env.step(actions, device)
             returns.append(reward)
+            print(env.itr)
     t4 = time.time()
 
     print(t4 - t3)
+    print(env.incumbent_objs)
 
 
 if __name__ == '__main__':

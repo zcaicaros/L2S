@@ -8,14 +8,9 @@ import torch
 import numpy as np
 import networkx as nx
 from env.generateJSP import uni_instance_gen
-import env.jsp_problem as jsp
-from sklearn.preprocessing import MinMaxScaler
-from env.utils import plot_sol, dag2pyg
-from torch_geometric.data import Data
 from model.actor import Actor
 from env.permissible_LS import permissibleLeftShift
 from parameters import args as parameters
-from env.jsp_problem import forward_and_backward_pass
 from propagate_evl import Evaluator
 import matplotlib.pyplot as plt
 
@@ -26,8 +21,6 @@ class JsspN5:
                  n_mch,
                  low,
                  high,
-                 init='p_list',
-                 rule='spt',
                  transition=100):
 
         self.n_job = n_job
@@ -35,8 +28,6 @@ class JsspN5:
         self.n_oprs = self.n_job * self.n_mch
         self.low = low
         self.high = high
-        self.init = init
-        self.rule = rule
         self.itr = 0
         self.max_transition = transition
         self.instances = None
@@ -45,7 +36,6 @@ class JsspN5:
         self.tabu_size = 1
         self.tabu_lists = None
         self.incumbent_objs = None
-        self.incumbent_idle = None
         self.fea_norm_const = 1000
         self.eva = Evaluator()
 
@@ -125,8 +115,7 @@ class JsspN5:
         edge_indices = []
         durations = []
         current_graphs = []
-        for i, item in enumerate(zip(instances, priority_lists)):
-            instance, priority_list = item[0], item[1]
+        for i, (instance, priority_list) in enumerate(zip(instances, priority_lists)):
             dur_mat, mch_mat = instance[0], instance[1]
             n_jobs = mch_mat.shape[0]
             n_machines = mch_mat.shape[1]
@@ -268,63 +257,82 @@ class JsspN5:
 
         return (x, torch_geometric.utils.add_self_loops(edge_indices)[0], batch), current_graphs, make_span
 
-    def dag2pyg(self, G, instance):
-        n_job, n_mch = instance[0].shape[0], instance[0].shape[1]
-        n_oprs = n_job * n_mch
+    def dag2pyg(self, instances, nx_graphs, device):
+        n_jobs, n_machines = instances[0][0].shape
+        n_operations = n_jobs * n_machines
 
-        # start to build PyG data
-        adj = nx.to_numpy_matrix(G)
-        adj[0, [i for i in range(1, n_oprs + 2 - 1, n_mch)]] = 1
-        np.fill_diagonal(adj, 1)
-        topological_order = list(nx.topological_sort(G))
-        est_ST = np.fromiter(jsp.forward_pass(graph=G, topological_order=topological_order).values(), dtype=np.float32)
-        lst_ST = np.fromiter(jsp.backward_pass(graph=G, topological_order=topological_order, makespan=est_ST[-1]).values(), dtype=np.float32)
-        f1 = torch.from_numpy(np.pad(np.float32((instance[0].reshape(-1, 1)) / self.high), ((1, 1), (0, 0)), 'constant', constant_values=0))
-        f2 = torch.from_numpy(est_ST.reshape(-1, 1) / self.fea_norm_const)
-        f3 = torch.from_numpy(lst_ST.reshape(-1, 1) / self.fea_norm_const)
-        x = torch.cat([f1, f2, f3], dim=-1)
-        edge_idx = torch.nonzero(torch.from_numpy(adj)).t().contiguous()
-        return Data(x=x, edge_index=edge_idx, y=np.amax(est_ST))
+        edge_indices = []
+        durations = []
+        for i, (instance, G) in enumerate(zip(instances, nx_graphs)):
+            durations.append(np.pad(instance[0].reshape(-1), (1, 1), 'constant', constant_values=0))
+            adj = nx.to_numpy_matrix(G)
+            adj[0, [i for i in range(1, n_operations + 2 - 1, n_machines)]] = 1
+            edge_indices.append(
+                torch.nonzero(torch.from_numpy(adj)).t().contiguous() + (n_operations + 2) * i)
 
-    def _transit_single(self, plot, args):
-        """
-        action: [2,]
-        """
-        action, sol, instance = args[0], args[1], args[2]
+        edge_indices = torch.cat(edge_indices, dim=-1).to(device)
+        durations = torch.from_numpy(np.concatenate(durations)).reshape(-1, 1).to(device)
+        est, lst, make_span = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=n_jobs, n_m=n_machines)
+        # prepare x
+        x = torch.cat([durations / self.high, est / self.fea_norm_const, lst / self.fea_norm_const], dim=-1)
+        # prepare batch
+        batch = torch.from_numpy(
+            np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=n_jobs * n_machines + 2)).to(device)
 
-        if action == [0, 0]:  # if dummy action then do not transit
-            return dag2pyg(G=sol, instance=instance, high=self.high, min_max=self.min_max, normalizer=self.normalizer)
-        else:
-            S = [s for s in sol.predecessors(action[0]) if
-                 int((s - 1) // self.n_mch) != int((action[0] - 1) // self.n_mch) and s != 0]
-            T = [t for t in sol.successors(action[1]) if
-                 int((t - 1) // self.n_mch) != int((action[1] - 1) // self.n_mch) and t != self.n_oprs + 1]
-            s = S[0] if len(S) != 0 else None
-            t = T[0] if len(T) != 0 else None
+        return x, torch_geometric.utils.add_self_loops(edge_indices)[0], batch, make_span
 
-            if s is not None:  # connect s with action[1]
-                sol.remove_edge(s, action[0])
-                sol.add_edge(s, action[1], weight=np.take(instance[0], s - 1))
-            else:
+    def change_nxgraph_topology(self, actions, plot=False):
+        n_jobs, n_machines = self.instances[0][0].shape
+        n_operations = n_jobs * n_machines
+
+        for i, (action, G, instance) in enumerate(zip(actions, self.current_graphs, self.instances)):
+            if action == [0, 0]:  # if dummy action then do not transit
                 pass
+            else:  # change nx graph topology
+                S = [s for s in G.predecessors(action[0]) if
+                     int((s - 1) // n_machines) != int((action[0] - 1) // n_machines) and s != 0]
+                T = [t for t in G.successors(action[1]) if
+                     int((t - 1) // n_machines) != int((action[1] - 1) // n_machines) and t != n_operations + 1]
+                s = S[0] if len(S) != 0 else None
+                t = T[0] if len(T) != 0 else None
 
-            if t is not None:  # connect action[0] with t
-                sol.remove_edge(action[1], t)
-                sol.add_edge(action[0], t, weight=np.take(instance[0], action[0] - 1))
-            else:
-                pass
+                if s is not None:  # connect s with action[1]
+                    G.remove_edge(s, action[0])
+                    G.add_edge(s, action[1], weight=np.take(instance[0], s - 1))
+                else:
+                    pass
 
-            # reverse edge connecting selected pair
-            sol.remove_edge(action[0], action[1])
-            sol.add_edge(action[1], action[0], weight=np.take(instance[0], action[1] - 1))
+                if t is not None:  # connect action[0] with t
+                    G.remove_edge(action[1], t)
+                    G.add_edge(action[0], t, weight=np.take(instance[0], action[0] - 1))
+                else:
+                    pass
 
-            new_state = dag2pyg(G=sol, instance=instance, high=self.high, min_max=self.min_max,
-                                normalizer=self.normalizer)
-
+                # reverse edge connecting selected pair
+                G.remove_edge(action[0], action[1])
+                G.add_edge(action[1], action[0], weight=np.take(instance[0], action[1] - 1))
             if plot:
-                plot_sol(sol, n_job=self.n_job, n_mch=self.n_mch)
+                self.show_state(G)
 
-            return new_state
+    def step(self, actions, device):
+        self.change_nxgraph_topology(actions)  # change graph topology
+        x, edge_indices, batch, makespan = self.dag2pyg(self.instances, self.current_graphs, device)  # generate new state data
+        # update tabu list
+        if self.tabu_size != 0:
+            action_reversed = [a[::-1] for a in actions]
+            for i, action in enumerate(action_reversed):
+                if action == [0, 0]:  # if dummy action, don't update tabu list
+                    pass
+                else:
+                    if len(self.tabu_lists[i]) == self.tabu_size:
+                        self.tabu_lists[i].pop(0)
+                        self.tabu_lists[i].append(action)
+                    else:
+                        self.tabu_lists[i].append(action)
+        feasible_actions, flag = self.feasible_actions()
+        reward = self.current_objs - makespan
+
+
 
     def reset(self, instances, init_type, device, plot=False):
         self.instances = instances
@@ -369,7 +377,6 @@ class JsspN5:
         return actions, np.array(feasible_actions_flag)
 
 
-
 def main():
     from torch_geometric.data.batch import Batch
     from ortools_baseline import MinimalJobshopSat
@@ -388,8 +395,19 @@ def main():
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
     insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
-    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, init='p_list', rule='fdd-divide-mwkr', transition=transit)
-    env.reset(instances=insts, init_type='spt', device=device)
+    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, transition=transit)
+    (x, edge_indices, batch), feasible_actions, done = env.reset(instances=insts, init_type='spt', device=device)
+    print(x)
+    print(edge_indices)
+    print(batch)
+    print(feasible_actions)
+    print(done)
+
+    x1, edge_indices1, batch1, makespan = env.dag2pyg(env.instances, env.current_graphs, device)
+    print('yes1') if torch.equal(x, x1) else print('no')
+    print('yes2') if torch.equal(edge_indices, edge_indices1) else print('no')
+    print('yes1') if torch.equal(batch, batch1) else print('no')
+
 
 
 if __name__ == '__main__':

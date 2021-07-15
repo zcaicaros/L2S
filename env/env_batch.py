@@ -8,11 +8,10 @@ import torch
 import numpy as np
 import networkx as nx
 from env.generateJSP import uni_instance_gen
-from model.actor import Actor
 from env.permissible_LS import permissibleLeftShift
-from parameters import args as parameters
 from propagate_evl import Evaluator
 import matplotlib.pyplot as plt
+import time
 
 
 class JsspN5:
@@ -317,6 +316,10 @@ class JsspN5:
     def step(self, actions, device):
         self.change_nxgraph_topology(actions)  # change graph topology
         x, edge_indices, batch, makespan = self.dag2pyg(self.instances, self.current_graphs, device)  # generate new state data
+        reward = self.current_objs - makespan
+        self.incumbent_objs = torch.where(makespan - self.incumbent_objs > 0, makespan, self.incumbent_objs)
+        self.current_objs = makespan
+
         # update tabu list
         if self.tabu_size != 0:
             action_reversed = [a[::-1] for a in actions]
@@ -329,10 +332,16 @@ class JsspN5:
                         self.tabu_lists[i].append(action)
                     else:
                         self.tabu_lists[i].append(action)
-        feasible_actions, flag = self.feasible_actions()
-        reward = self.current_objs - makespan
+        # compute done flag
+        if self.itr == self.max_transition:
+            done = True
+        else:
+            done = False
+        feasible_actions, flag = self.feasible_actions()  # new feasible actions w.r.t updated tabu list
 
+        self.itr = self.itr + 1
 
+        return (x, torch_geometric.utils.add_self_loops(edge_indices)[0], batch), reward, feasible_actions, done
 
     def reset(self, instances, init_type, device, plot=False):
         self.instances = instances
@@ -345,10 +354,6 @@ class JsspN5:
             (x, edge_indices, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'fdd-divide-mwkr'], plot=plot)
         else:
             assert False, 'Initial solution type = "p_list", "spt", "fdd-divide-mwkr".'
-
-        # print(x)
-        # print(edge_indices)
-        # print(batch)
 
         self.current_graphs = current_graphs
         self.current_objs = make_span
@@ -371,47 +376,52 @@ class JsspN5:
             if len(action) != 0:
                 actions.append(action)
                 feasible_actions_flag.append(1)
-            else:  # if no feasible actions available append dummy actions [0, 0], this is the sign for local search terminate
+            else:  # if no feasible actions available append dummy actions [0, 0]
                 actions.append([[0, 0]])
                 feasible_actions_flag.append(0)
         return actions, np.array(feasible_actions_flag)
 
 
 def main():
-    from torch_geometric.data.batch import Batch
-    from ortools_baseline import MinimalJobshopSat
     import time
+    import random
+    from parameters import args as parameters
+    from model.actor_v2 import Actor
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    random.seed(1)
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 3
-    m = 3
+    j = 100
+    m = 20
     h = 99
     l = 1
     transit = 1
-    batch_size = 2
+    batch_size = 128
+    init = 'fdd-divide-mwkr'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]
     insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, transition=transit)
-    (x, edge_indices, batch), feasible_actions, done = env.reset(instances=insts, init_type='spt', device=device)
-    print(x)
-    print(edge_indices)
-    print(batch)
-    print(feasible_actions)
-    print(done)
+    states, feasible_actions, done = env.reset(instances=insts, init_type=init, device=device)
 
-    x1, edge_indices1, batch1, makespan = env.dag2pyg(env.instances, env.current_graphs, device)
-    print('yes1') if torch.equal(x, x1) else print('no')
-    print('yes2') if torch.equal(edge_indices, edge_indices1) else print('no')
-    print('yes1') if torch.equal(batch, batch1) else print('no')
+    actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
+    t3 = time.time()
+    returns = []
+    with torch.no_grad():
+        while not done:
+            # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
+            actions, _ = actor(states, feasible_actions)
+            states, reward, feasible_actions, done = env.step(actions, device)
+            returns.append(reward)
+    t4 = time.time()
+
+    print(t4 - t3)
 
 
 if __name__ == '__main__':
-    import time
 
     t1 = time.time()
     main()

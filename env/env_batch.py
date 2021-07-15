@@ -393,12 +393,12 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 100
+    j = 30
     m = 20
     h = 99
     l = 1
-    transit = 1
-    batch_size = 128
+    transit = 2000
+    batch_size = 32
     init = 'fdd-divide-mwkr'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:1]

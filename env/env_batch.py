@@ -397,7 +397,7 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 100
+    j = 30
     m = 20
     h = 99
     l = 1

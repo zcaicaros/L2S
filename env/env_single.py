@@ -312,8 +312,10 @@ def main():
     from torch_geometric.data.batch import Batch
     from ortools_baseline import MinimalJobshopSat
     import torch_geometric.utils
+    import random
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    random.seed(1)
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
@@ -349,13 +351,10 @@ def main():
                 if state.edge_index.shape[1] != (j-1)*m + (m-1)*j + (j*m+2) + j + j:
                     print('not equal {} at:'.format((j-1)*m + (m-1)*j + (j*m+2) + j + j), env.itr)
                     np.save('./mal_func_instance.npy', env.instance)
-                # print(env.itr)
-                # print([param for param in actor.parameters()])
                 action, _ = actor(Batch.from_data_list([state]).to(device), [feasible_action])
-                # print(action)
-                # print(done)
-                # action = random.choice(feasible_action)
                 state_prime, reward, new_feasible_actions, done = env.step_single(action=action[0])
+                # action = random.choice(feasible_action)
+                # state_prime, reward, new_feasible_actions, done = env.step_single(action=action)
                 # print('make span reward:', reward)
                 if torch.equal(state.x.cpu(), state_prime.x) and torch.equal(state.edge_index.cpu(), state_prime.edge_index):
                     print('In absorbing state at', env.itr - 1)

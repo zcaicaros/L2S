@@ -416,8 +416,8 @@ def main():
     returns = []
     with torch.no_grad():
         while not done:
-            # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
-            actions, _ = actor(states, feasible_actions)
+            actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
+            # actions, _ = actor(states, feasible_actions)
             # print(actions)
             # print(done)
             states, reward, feasible_actions, done = env.step(actions, device)

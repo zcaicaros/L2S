@@ -397,11 +397,11 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 30
-    m = 20
+    j = 15
+    m = 15
     h = 99
     l = 1
-    transit = 2000
+    transit = 88
     batch_size = 1
     init = 'fdd-divide-mwkr'
 
@@ -412,16 +412,24 @@ def main():
 
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
+    # print([param for param in actor.parameters()])
+    # print(insts)
+
     t3 = time.time()
     returns = []
     with torch.no_grad():
         while not done:
-            print(done)
-            actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
-            # actions, _ = actor(states, feasible_actions)
+            # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
+            actions, _ = actor(states, feasible_actions)
+            print(actions)
+            # print(done)
             states, reward, feasible_actions, done = env.step(actions, device)
             returns.append(reward)
-            print(env.itr)
+            # print(env.itr)
+            print(states[1].shape)
+            if env.itr == 87:
+                print(states[0])
+                print(torch_geometric.utils.sort_edge_index(states[1])[0].shape)
     t4 = time.time()
 
     print(t4 - t3)

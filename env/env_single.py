@@ -321,7 +321,7 @@ def main():
     m = 15
     h = 99
     l = 1
-    transit = 88
+    transit = 2000
     batch_size = 1
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
@@ -352,7 +352,7 @@ def main():
                 # print(env.itr)
                 # print([param for param in actor.parameters()])
                 action, _ = actor(Batch.from_data_list([state]).to(device), [feasible_action])
-                print(action)
+                # print(action)
                 # print(done)
                 # action = random.choice(feasible_action)
                 state_prime, reward, new_feasible_actions, done = env.step_single(action=action[0])
@@ -363,10 +363,9 @@ def main():
                 state = state_prime
                 feasible_action = new_feasible_actions
                 t += 1
-                print(state.edge_index.shape)
-                if env.itr == 87:
+                '''if env.itr == 87:
                     print(state.x)
-                    print(torch_geometric.utils.sort_edge_index(state.edge_index)[0].shape)
+                    print(torch_geometric.utils.sort_edge_index(state.edge_index)[0].shape)'''
                     # print(state.batch)
                 # print()
         simulate_result.append(env.incumbent_obj)

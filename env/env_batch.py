@@ -342,10 +342,7 @@ class JsspN5:
         else:
             done = False
         feasible_actions, flag = self.feasible_actions()  # new feasible actions w.r.t updated tabu list
-
-
-
-        return (x, torch_geometric.utils.add_self_loops(edge_indices)[0], batch), reward, feasible_actions, done
+        return (x, edge_indices, batch), reward, feasible_actions, done
 
     def reset(self, instances, init_type, device, plot=False):
         self.instances = instances
@@ -401,7 +398,7 @@ def main():
     m = 15
     h = 99
     l = 1
-    transit = 88
+    transit = 2000
     batch_size = 1
     init = 'fdd-divide-mwkr'
 
@@ -421,15 +418,14 @@ def main():
         while not done:
             # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
             actions, _ = actor(states, feasible_actions)
-            print(actions)
+            # print(actions)
             # print(done)
             states, reward, feasible_actions, done = env.step(actions, device)
             returns.append(reward)
             # print(env.itr)
-            print(states[1].shape)
-            if env.itr == 87:
+            '''if env.itr == 87:
                 print(states[0])
-                print(torch_geometric.utils.sort_edge_index(states[1])[0].shape)
+                print(torch_geometric.utils.sort_edge_index(states[1])[0].shape)'''
     t4 = time.time()
 
     print(t4 - t3)

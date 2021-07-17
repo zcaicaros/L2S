@@ -409,7 +409,7 @@ def main():
     h = 99
     l = 1
     transit = 7
-    batch_size = 1
+    batch_size = 2
     init = 'fdd-divide-mwkr'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
@@ -424,7 +424,7 @@ def main():
 
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
-    print([param for param in actor.parameters()])
+    # print([param for param in actor.parameters()])
     # print(insts)
 
     t3 = time.time()
@@ -433,18 +433,21 @@ def main():
     n_edges_per_graph = j*(m-1) + m*(j-1) + j*m+2 + j*2
     with torch.no_grad():
         while not done:
-            # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
-            actions, _ = actor(states, feasible_actions)
+            actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
+            # actions, _ = actor(states, feasible_actions)
+
 
             # print(states[0].reshape(-1, n_nodes_per_graph, 3)[0])
             # print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph])
             print(actions[0])
             # print(done)
+            # torch.save(states[0].reshape(-1, n_nodes_per_graph, 3)[0], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
+            # torch.save(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph],'C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
+            # torch.save(states[2], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
 
-            torch.save(states[0].reshape(-1, n_nodes_per_graph, 3)[0], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
-            torch.save(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph],'C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
-            torch.save(states[2], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
+
             states, reward, feasible_actions, done = env.step(actions, device)
+
             # if env.itr == 2:  # x, after x transit
             #     n_nodes_per_graph = j*m + 2
             #     print(n_nodes_per_graph)
@@ -455,11 +458,11 @@ def main():
             #     print(torch_geometric.utils.sort_edge_index(states[1][:, :j*(m-1) + m*(j-1) + j*m+2 + j*2])[0].t())
             #     print(torch_geometric.utils.sort_edge_index(states[1])[0])
             #     print(states[2])
+
             returns.append(reward)
+
             # print(env.itr)
-            '''if env.itr == 87:
-                print(states[0])
-                print(torch_geometric.utils.sort_edge_index(states[1])[0].shape)'''
+
     t4 = time.time()
 
     # print(t4 - t3)

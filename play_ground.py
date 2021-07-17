@@ -109,12 +109,13 @@ x = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
 edge_index = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
 batch = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
 
-
-node_embd1, g_embd1 = embedding1((x, edge_index, batch))
 batch_data.wrap(x, edge_index, batch)
-node_embd2, g_embd2 = embedding2(batch_data)
+print(batch_data.batch.shape)
+for _ in range(10):
+    node_embd1, g_embd1 = embedding1((x, edge_index, batch))
+    node_embd2, g_embd2 = embedding2(batch_data)
 
-print(g_embd1)
-print(g_embd2)
+    print(g_embd1)
+    print(g_embd2)
 
 # print(np.random.randint(low=1, high=4))

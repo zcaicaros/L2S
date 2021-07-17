@@ -333,7 +333,7 @@ def main():
     # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
     inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
 
-    print([param for param in actor.parameters()])
+    # print([param for param in actor.parameters()])
     # print(inst)
 
     initial_gap = []
@@ -351,21 +351,25 @@ def main():
                 if state.edge_index.shape[1] != (j-1)*m + (m-1)*j + (j*m+2) + j + j:
                     print('not equal {} at:'.format((j-1)*m + (m-1)*j + (j*m+2) + j + j), env.itr)
                     np.save('./mal_func_instance.npy', env.instance)
-                action, _ = actor(Batch.from_data_list([state]).to(device), [feasible_action])
+                action = [random.choice(feasible_action)]
+                # action, _ = actor(Batch.from_data_list([state]).to(device), [feasible_action])
+
+
 
                 # print(Batch.from_data_list([state]).to(device).x)
                 # print(torch_geometric.utils.sort_edge_index(Batch.from_data_list([state]).to(device).edge_index)[0])
                 print(action[0])
 
+
+
                 state_prime, reward, new_feasible_actions, done = env.step_single(action=action[0])
-                # action = random.choice(feasible_action)
-                # state_prime, reward, new_feasible_actions, done = env.step_single(action=action)
                 # print('make span reward:', reward)
                 if torch.equal(state.x.cpu(), state_prime.x) and torch.equal(state.edge_index.cpu(), state_prime.edge_index):
                     print('In absorbing state at', env.itr - 1)
                 returns.append(reward)
                 state = state_prime
                 feasible_action = new_feasible_actions
+
                 # if env.itr == 2:  # x, after x transit
                 #     a = 1
                 #     print(action[0])
@@ -374,12 +378,7 @@ def main():
                 #     print(torch_geometric.utils.sort_edge_index(Batch.from_data_list([state]).to(device).edge_index)[0].t())
                 #     print(Batch.from_data_list([state]).to(device).batch)
 
-
                 t += 1
-                '''if env.itr == 87:
-                    print(state.x)
-                    print(torch_geometric.utils.sort_edge_index(state.edge_index)[0].shape)'''
-                    # print(state.batch)
                 # print()
         simulate_result.append(env.incumbent_obj)
         print('Incumbent sol:', env.incumbent_obj)

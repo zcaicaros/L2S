@@ -115,7 +115,7 @@ class Actor(nn.Module):
 
         node_embed, graph_embed = self.embedding(batch_states)
 
-        # print(graph_embed)
+        print(graph_embed)
         # torch.save(graph_embed[0].unsqueeze(0), 'C:/Users/CONG030/Desktop/reinforce_debug/compare/actor.pt')
 
         device = node_embed.device

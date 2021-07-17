@@ -1,9 +1,11 @@
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 
 import time
+import torch_geometric
 import torch
 import numpy as np
 import torch.nn.functional as F
@@ -24,15 +26,15 @@ class GIN(torch.nn.Module):
 
         ## GIN conv layers
         self.GIN_layers = torch.nn.ModuleList()
-        self.batch_norms = torch.nn.ModuleList()
+        # self.batch_norms = torch.nn.ModuleList()
         # init gin layer
         nn_layer = Sequential(Linear(in_dim, hidden_dim), ReLU(), Linear(hidden_dim, hidden_dim))
         self.GIN_layers.append(GINConv(nn_layer, eps=0, train_eps=False, aggr='mean', flow="source_to_target"))
-        self.batch_norms.append(torch.nn.BatchNorm1d(hidden_dim))
+        # self.batch_norms.append(torch.nn.BatchNorm1d(hidden_dim))
         for layer in range(layer_gin - 1):
             nn_layer = Sequential(Linear(hidden_dim, hidden_dim), ReLU(), Linear(hidden_dim, hidden_dim))
             self.GIN_layers.append(GINConv(nn_layer, eps=0, train_eps=False, aggr='mean', flow="source_to_target"))
-            self.batch_norms.append(torch.nn.BatchNorm1d(hidden_dim))
+            # self.batch_norms.append(torch.nn.BatchNorm1d(hidden_dim))
 
         ## layers used in graph pooling
         '''self.linear_prediction = torch.nn.ModuleList()
@@ -43,15 +45,22 @@ class GIN(torch.nn.Module):
 
         x, edge_index, batch = batch_states.x, batch_states.edge_index, batch_states.batch
 
+        # print(x)
+        # print(torch_geometric.utils.sort_edge_index(edge_index)[0])
+        # print(batch)
+
         ## GIN conv
         hidden_rep = []
         node_pool_over_layer = 0
         # initial layer forward
-        h = self.batch_norms[0](F.relu(self.GIN_layers[0](x, edge_index)))
+        # h = self.batch_norms[0](F.relu(self.GIN_layers[0](x, edge_index)))
+        h = F.relu(self.GIN_layers[0](x, edge_index))
+        # print(h)
         node_pool_over_layer += h
         hidden_rep.append(h)
         for layer in range(1, self.layer_gin):
-            h = self.batch_norms[layer](F.relu(self.GIN_layers[layer](h, edge_index)))
+            # h = self.batch_norms[layer](F.relu(self.GIN_layers[layer](h, edge_index)))
+            h = F.relu(self.GIN_layers[layer](h, edge_index))
             node_pool_over_layer += h
             hidden_rep.append(h)
 
@@ -106,6 +115,9 @@ class Actor(nn.Module):
 
         node_embed, graph_embed = self.embedding(batch_states)
 
+        # print(graph_embed)
+        # torch.save(graph_embed[0].unsqueeze(0), 'C:/Users/CONG030/Desktop/reinforce_debug/compare/actor.pt')
+
         device = node_embed.device
         batch_size = graph_embed.shape[0]
         n_nodes_per_state = node_embed.shape[0] // batch_size
@@ -136,6 +148,11 @@ class Actor(nn.Module):
         action_score.masked_fill_(mask, -np.inf)
         action_score_flat = action_score.reshape(batch_size, 1, -1)
         pi = F.softmax(action_score_flat, dim=-1)
+
+        # print(torch.where(pi[0] != 0))
+        # print(pi[0][torch.where(pi[0] != 0)])
+        # print(feasible_actions[0])
+
         dist = Categorical(probs=pi)
         actions_id = dist.sample()
         # actions_id = torch.argmax(pi, dim=-1)  # greedy action

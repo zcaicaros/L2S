@@ -14,6 +14,18 @@ import matplotlib.pyplot as plt
 import time
 
 
+class BatchGraph:
+    def __init__(self):
+        self.x = None
+        self.edge_index = None
+        self.batch = None
+
+    def data_wrapper(self, x, edge_index, batch):
+        self.x = x
+        self.edge_index = edge_index
+        self.batch = batch
+
+
 class JsspN5:
     def __init__(self,
                  n_job,
@@ -151,12 +163,11 @@ class JsspN5:
             if plot:
                 self.show_state(G)
 
-            edge_indices.append(
-                torch.nonzero(torch.from_numpy(adj_mat)).t().contiguous().to(device) + (n_operations + 2) * i)
+            edge_indices.append((torch.nonzero(torch.from_numpy(adj_mat)).t().contiguous()) + (n_operations + 2) * i)
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
             current_graphs.append(G)
 
-        edge_indices = torch.cat(edge_indices, dim=-1)
+        edge_indices = torch.cat(edge_indices, dim=-1).to(device)
         durations = torch.cat(durations, dim=0).reshape(-1, 1)
         est, lst, make_span = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=self.n_job, n_m=self.n_mch)
 
@@ -239,12 +250,11 @@ class JsspN5:
             if plot:
                 self.show_state(G)
 
-            edge_indices.append(
-                torch.nonzero(torch.from_numpy(adj_mat)).t().contiguous().to(device) + (n_operations + 2) * i)
+            edge_indices.append((torch.nonzero(torch.from_numpy(adj_mat)).t().contiguous()) + (n_operations + 2) * i)
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
             current_graphs.append(G)
 
-        edge_indices = torch.cat(edge_indices, dim=-1)
+        edge_indices = torch.cat(edge_indices, dim=-1).to(device)
         durations = torch.cat(durations, dim=0).reshape(-1, 1)
         est, lst, make_span = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=self.n_job, n_m=self.n_mch)
 
@@ -266,8 +276,7 @@ class JsspN5:
             durations.append(np.pad(instance[0].reshape(-1), (1, 1), 'constant', constant_values=0))
             adj = nx.to_numpy_matrix(G)
             adj[0, [i for i in range(1, n_operations + 2 - 1, n_machines)]] = 1
-            edge_indices.append(
-                torch.nonzero(torch.from_numpy(adj)).t().contiguous() + (n_operations + 2) * i)
+            edge_indices.append((torch.nonzero(torch.from_numpy(adj)).t().contiguous()) + (n_operations + 2) * i)
 
         edge_indices = torch.cat(edge_indices, dim=-1).to(device)
         durations = torch.from_numpy(np.concatenate(durations)).reshape(-1, 1).to(device)
@@ -342,6 +351,7 @@ class JsspN5:
         else:
             done = False
         feasible_actions, flag = self.feasible_actions()  # new feasible actions w.r.t updated tabu list
+
         return (x, edge_indices, batch), reward, feasible_actions, done
 
     def reset(self, instances, init_type, device, plot=False):
@@ -394,33 +404,57 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 15
-    m = 15
+    j = 10
+    m = 10
     h = 99
     l = 1
-    transit = 2000
+    transit = 7
     batch_size = 1
     init = 'fdd-divide-mwkr'
 
-    insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
-    # insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
+    # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
+    insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, transition=transit)
     states, feasible_actions, done = env.reset(instances=insts, init_type=init, device=device)
 
+    # print(states[0].shape)
+    # print(states[1])
+    # print(states[2].sum())
+    # print(env.incumbent_objs)
+
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
-    # print([param for param in actor.parameters()])
+    print([param for param in actor.parameters()])
     # print(insts)
 
     t3 = time.time()
     returns = []
+    n_nodes_per_graph = j * m + 2
+    n_edges_per_graph = j*(m-1) + m*(j-1) + j*m+2 + j*2
     with torch.no_grad():
         while not done:
-            actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
-            # actions, _ = actor(states, feasible_actions)
-            # print(actions)
+            # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
+            actions, _ = actor(states, feasible_actions)
+
+            # print(states[0].reshape(-1, n_nodes_per_graph, 3)[0])
+            # print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph])
+            print(actions[0])
             # print(done)
+
+            torch.save(states[0].reshape(-1, n_nodes_per_graph, 3)[0], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
+            torch.save(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph],'C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
+            torch.save(states[2], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
             states, reward, feasible_actions, done = env.step(actions, device)
+            # if env.itr == 2:  # x, after x transit
+            #     n_nodes_per_graph = j*m + 2
+            #     print(n_nodes_per_graph)
+            #     print(actions[0])
+            #     print(states[0].reshape(-1, n_nodes_per_graph, 3))
+            #     print(states[1][:, :j*(m-1) + m*(j-1) + j*m+2 + j*2])
+            #     print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :].t())
+            #     print(torch_geometric.utils.sort_edge_index(states[1][:, :j*(m-1) + m*(j-1) + j*m+2 + j*2])[0].t())
+            #     print(torch_geometric.utils.sort_edge_index(states[1])[0])
+            #     print(states[2])
             returns.append(reward)
             # print(env.itr)
             '''if env.itr == 87:
@@ -428,12 +462,12 @@ def main():
                 print(torch_geometric.utils.sort_edge_index(states[1])[0].shape)'''
     t4 = time.time()
 
-    print(t4 - t3)
-    print(env.incumbent_objs)
+    # print(t4 - t3)
+    # print(env.incumbent_objs)
 
 
 if __name__ == '__main__':
 
     t1 = time.time()
     main()
-    print('main() function running time:', time.time() - t1)
+    # print('main() function running time:', time.time() - t1)

@@ -319,21 +319,21 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 15
-    m = 15
+    j = 10
+    m = 10
     h = 99
     l = 1
-    transit = 2000
+    transit = 7
     batch_size = 1
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
                  init='rule', rule='fdd-divide-mwkr', transition=transit)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
-    inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
-    # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
+    # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
+    inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
 
-    # print([param for param in actor.parameters()])
+    print([param for param in actor.parameters()])
     # print(inst)
 
     initial_gap = []
@@ -341,9 +341,9 @@ def main():
     for i, data in enumerate(inst):
         state, feasible_action, done = env.reset(instance=data, fix_instance=True)
         # print(state.edge_index)
-        # print(state.x.shape)
+        # print(state.x)
         initial_gap.append(env.current_objs)
-        print('Initial sol:', env.current_objs)
+        # print('Initial sol:', env.current_objs)
         returns = []
         t = 0
         with torch.no_grad():
@@ -352,6 +352,11 @@ def main():
                     print('not equal {} at:'.format((j-1)*m + (m-1)*j + (j*m+2) + j + j), env.itr)
                     np.save('./mal_func_instance.npy', env.instance)
                 action, _ = actor(Batch.from_data_list([state]).to(device), [feasible_action])
+
+                # print(Batch.from_data_list([state]).to(device).x)
+                # print(torch_geometric.utils.sort_edge_index(Batch.from_data_list([state]).to(device).edge_index)[0])
+                print(action[0])
+
                 state_prime, reward, new_feasible_actions, done = env.step_single(action=action[0])
                 # action = random.choice(feasible_action)
                 # state_prime, reward, new_feasible_actions, done = env.step_single(action=action)
@@ -361,6 +366,15 @@ def main():
                 returns.append(reward)
                 state = state_prime
                 feasible_action = new_feasible_actions
+                # if env.itr == 2:  # x, after x transit
+                #     a = 1
+                #     print(action[0])
+                #     print(Batch.from_data_list([state]).to(device).x)
+                #     print(torch_geometric.utils.sort_edge_index(Batch.from_data_list([state]).to(device).edge_index)[0].t())
+                #     print(torch_geometric.utils.sort_edge_index(Batch.from_data_list([state]).to(device).edge_index)[0].t())
+                #     print(Batch.from_data_list([state]).to(device).batch)
+
+
                 t += 1
                 '''if env.itr == 87:
                     print(state.x)
@@ -374,7 +388,7 @@ def main():
     simulate_result = np.array(simulate_result)
     initial_gap = np.array(initial_gap)
 
-    # ortools solver
+    '''# ortools solver
     results_ortools = []
     for i, data in enumerate(inst):
         times_rearrange = np.expand_dims(data[0], axis=-1)
@@ -386,7 +400,7 @@ def main():
     results_ortools = np.array(results_ortools)
 
     print('Initial Gap:', ((initial_gap - results_ortools) / results_ortools).mean())
-    print('Simulation Gap:', ((simulate_result - results_ortools) / results_ortools).mean())
+    print('Simulation Gap:', ((simulate_result - results_ortools) / results_ortools).mean())'''
 
 
 if __name__ == '__main__':
@@ -394,6 +408,6 @@ if __name__ == '__main__':
 
     t1 = time.time()
     main()
-    print('\nmain() function running time:', time.time() - t1)
+    # print('\nmain() function running time:', time.time() - t1)
 
 

@@ -19,29 +19,18 @@ class GIN(torch.nn.Module):
     def __init__(self, in_dim, hidden_dim, layer_gin=4):
         super(GIN, self).__init__()
         self.layer_gin = layer_gin
-        ## init projection
-        # 1st mlp layer
-        '''self.mlp1 = Sequential(Linear(in_dim, hidden_dim), torch.nn.BatchNorm1d(hidden_dim), torch.nn.ReLU(),
-                               Linear(hidden_dim, hidden_dim))'''
 
         ## GIN conv layers
         self.GIN_layers = torch.nn.ModuleList()
-        # self.batch_norms = torch.nn.ModuleList()
 
         # init gin layer
         nn_layer = Sequential(Linear(in_dim, hidden_dim), torch.nn.BatchNorm1d(hidden_dim), ReLU(), Linear(hidden_dim, hidden_dim))
         self.GIN_layers.append(GINConv(nn_layer, eps=0, train_eps=False, aggr='mean', flow="source_to_target"))
-        # self.batch_norms.append(torch.nn.BatchNorm1d(hidden_dim))
 
         for layer in range(layer_gin - 1):
             nn_layer = Sequential(Linear(hidden_dim, hidden_dim), torch.nn.BatchNorm1d(hidden_dim), ReLU(), Linear(hidden_dim, hidden_dim))
             self.GIN_layers.append(GINConv(nn_layer, eps=0, train_eps=False, aggr='mean', flow="source_to_target"))
-            # self.batch_norms.append(torch.nn.BatchNorm1d(hidden_dim))
 
-        ## layers used in graph pooling
-        '''self.linear_prediction = torch.nn.ModuleList()
-        for layer in range(self.layer_gin):
-            self.linear_prediction.append(nn.Linear(hidden_dim, hidden_dim))'''
 
     def forward(self, batch_states):
 
@@ -55,30 +44,19 @@ class GIN(torch.nn.Module):
         hidden_rep = []
         node_pool_over_layer = 0
         # initial layer forward
-        # h = self.batch_norms[0](F.relu(self.GIN_layers[0](x, edge_index)))
-        # h = F.relu(self.GIN_layers[0](x, edge_index))
         h = self.GIN_layers[0](x, edge_index)
-        # print(h)
         node_pool_over_layer += h
         hidden_rep.append(h)
         for layer in range(1, self.layer_gin):
-            # h = self.batch_norms[layer](F.relu(self.GIN_layers[layer](h, edge_index)))
-            # h = F.relu(self.GIN_layers[layer](h, edge_index))
             h = self.GIN_layers[layer](h, edge_index)
             node_pool_over_layer += h
             hidden_rep.append(h)
 
-        gPool_over_layer = 0
         # Graph pool
+        gPool_over_layer = 0
         for layer, layer_h in enumerate(hidden_rep):
             g_pool = global_mean_pool(layer_h, batch)
             gPool_over_layer += g_pool
-            '''if layer == 0:
-                gPool_over_layer += g_pool
-            else:
-                gPool_over_layer += F.dropout(self.linear_prediction[layer-1](g_pool),
-                                              0.5,
-                                              training=self.training)'''
 
         return node_pool_over_layer, gPool_over_layer
 

@@ -20,7 +20,7 @@ class BatchGraph:
         self.edge_index = None
         self.batch = None
 
-    def data_wrapper(self, x, edge_index, batch):
+    def wrapper(self, x, edge_index, batch):
         self.x = x
         self.edge_index = edge_index
         self.batch = batch
@@ -397,53 +397,62 @@ def main():
     import time
     import random
     from parameters import args as parameters
-    from model.actor_v2 import Actor
+    from model.actor_v2 import Actor as Actor_v2
+    from model.actor import Actor
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     random.seed(1)
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 10
-    m = 10
+
+    j = 100
+    m = 20
     h = 99
     l = 1
-    transit = 7
-    batch_size = 2
+    transit = 2000
+    batch_size = 10
     init = 'fdd-divide-mwkr'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
     insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
+    # np.save('test_inst.npy', insts)
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, transition=transit)
     states, feasible_actions, done = env.reset(instances=insts, init_type=init, device=device)
+    batch_wrapper = BatchGraph()
 
     # print(states[0].shape)
     # print(states[1])
     # print(states[2].sum())
     # print(env.incumbent_objs)
 
+    # actor = Actor_v2(in_dim=3, hidden_dim=64).to(device)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
     # print([param for param in actor.parameters()])
     # print(insts)
 
     t3 = time.time()
+    # saved_acts = []
     returns = []
     n_nodes_per_graph = j * m + 2
     n_edges_per_graph = j*(m-1) + m*(j-1) + j*m+2 + j*2
     with torch.no_grad():
         while not done:
-            actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
-            # actions, _ = actor(states, feasible_actions)
+            batch_wrapper.wrapper(*states)
+            actions, _ = actor(batch_wrapper, feasible_actions)
+            # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
 
 
             # print(states[0].reshape(-1, n_nodes_per_graph, 3)[0])
             # print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph])
-            print(actions[0])
+            print(actions[6])
+            # saved_acts.append(actions[6])
             # print(done)
             # torch.save(states[0].reshape(-1, n_nodes_per_graph, 3)[0], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
             # torch.save(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph],'C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
             # torch.save(states[2], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
+
 
 
             states, reward, feasible_actions, done = env.step(actions, device)
@@ -463,10 +472,12 @@ def main():
 
             # print(env.itr)
 
+        # np.save('saved_acts.mpy', np.array(saved_acts))
+
     t4 = time.time()
 
     # print(t4 - t3)
-    # print(env.incumbent_objs)
+    print(env.incumbent_objs)
 
 
 if __name__ == '__main__':

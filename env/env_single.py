@@ -11,7 +11,6 @@ import env.jsp_problem as jsp
 from sklearn.preprocessing import MinMaxScaler
 from env.utils import plot_sol, dag2pyg
 from torch_geometric.data import Data
-from model.actor import Actor
 from env.permissible_LS import permissibleLeftShift
 from parameters import args as parameters
 from env.jsp_problem import forward_and_backward_pass
@@ -312,6 +311,8 @@ def main():
     from torch_geometric.data.batch import Batch
     from ortools_baseline import MinimalJobshopSat
     import torch_geometric.utils
+    from model.actor_v2 import Actor as Actor_v2
+    from model.actor import Actor
     import random
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -319,19 +320,23 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 10
-    m = 10
+    j = 100
+    m = 20
     h = 99
     l = 1
-    transit = 7
+    transit = 2000
     batch_size = 1
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
                  init='rule', rule='fdd-divide-mwkr', transition=transit)
-    actor = Actor(in_dim=3, hidden_dim=64).to(device)
+    actor = Actor(in_dim=3, hidden_dim=64).to(device).eval()
+    actor_v2 = Actor_v2(in_dim=3, hidden_dim=64).to(device).eval()
+    actor_v2.load_state_dict(actor.state_dict())
 
+    inst = np.expand_dims(np.load('./test_inst.npy')[6], axis=0)
     # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
-    inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
+    # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
+    # saved_acts = np.load('./saved_acts.npy')
 
     # print([param for param in actor.parameters()])
     # print(inst)
@@ -351,8 +356,11 @@ def main():
                 if state.edge_index.shape[1] != (j-1)*m + (m-1)*j + (j*m+2) + j + j:
                     print('not equal {} at:'.format((j-1)*m + (m-1)*j + (j*m+2) + j + j), env.itr)
                     np.save('./mal_func_instance.npy', env.instance)
-                action = [random.choice(feasible_action)]
-                # action, _ = actor(Batch.from_data_list([state]).to(device), [feasible_action])
+                # action = [random.choice(feasible_action)]
+                # action = saved_acts[env.itr].tolist()
+                batch_data = Batch.from_data_list([state]).to(device)
+                action, _ = actor(batch_data, [feasible_action])
+                # action, _ = actor_v2((batch_data.x, batch_data.edge_index, batch_data.batch), [feasible_action])
 
 
 

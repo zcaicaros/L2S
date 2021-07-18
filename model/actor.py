@@ -115,7 +115,7 @@ class Actor(nn.Module):
 
         node_embed, graph_embed = self.embedding(batch_states)
 
-        print(graph_embed)
+        # print(graph_embed)
         # torch.save(graph_embed[0].unsqueeze(0), 'C:/Users/CONG030/Desktop/reinforce_debug/compare/actor.pt')
 
         device = node_embed.device
@@ -154,8 +154,8 @@ class Actor(nn.Module):
         # print(feasible_actions[0])
 
         dist = Categorical(probs=pi)
-        actions_id = dist.sample()
-        # actions_id = torch.argmax(pi, dim=-1)  # greedy action
+        # actions_id = dist.sample()
+        actions_id = torch.argmax(pi, dim=-1)  # greedy action
         sampled_actions = [[actions_id[i].item()//n_nodes_per_state, actions_id[i].item()%n_nodes_per_state] for i in range(len(feasible_actions))]
         log_prob = dist.log_prob(actions_id)
         return sampled_actions, log_prob

@@ -406,31 +406,29 @@ def main():
     np.random.seed(3)  # 123456324
 
 
-    j = 10
+    j = 200
     m = 10
     h = 99
     l = 1
     transit = 2000
     batch_size = 10
+    save_action_for_instance = 6
     init = 'fdd-divide-mwkr'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
     insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
-    np.save('test_inst.npy', insts)
+    # np.save('test_inst.npy', insts)
+    # print(insts)
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, transition=transit)
     states, feasible_actions, done = env.reset(instances=insts, init_type=init, device=device)
     batch_wrapper = BatchGraph()
 
-    # print(states[0].shape)
-    # print(states[1])
-    # print(states[2].sum())
     # print(env.incumbent_objs)
 
     # actor = Actor_v2(in_dim=3, hidden_dim=64).to(device)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
     # print([param for param in actor.parameters()])
-    # print(insts)
 
     t3 = time.time()
     saved_acts = []
@@ -446,27 +444,15 @@ def main():
 
             # print(states[0].reshape(-1, n_nodes_per_graph, 3)[0])
             # print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph])
-            print(actions[6])
-            saved_acts.append(actions[6])
+            print(actions[save_action_for_instance])
+            saved_acts.append(actions[save_action_for_instance])
             # print(done)
             # torch.save(states[0].reshape(-1, n_nodes_per_graph, 3)[0], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
             # torch.save(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph],'C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
             # torch.save(states[2], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
 
 
-
             states, reward, feasible_actions, done = env.step(actions, device)
-
-            # if env.itr == 2:  # x, after x transit
-            #     n_nodes_per_graph = j*m + 2
-            #     print(n_nodes_per_graph)
-            #     print(actions[0])
-            #     print(states[0].reshape(-1, n_nodes_per_graph, 3))
-            #     print(states[1][:, :j*(m-1) + m*(j-1) + j*m+2 + j*2])
-            #     print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :].t())
-            #     print(torch_geometric.utils.sort_edge_index(states[1][:, :j*(m-1) + m*(j-1) + j*m+2 + j*2])[0].t())
-            #     print(torch_geometric.utils.sort_edge_index(states[1])[0])
-            #     print(states[2])
 
             returns.append(reward)
 

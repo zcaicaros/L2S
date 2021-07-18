@@ -333,10 +333,10 @@ def main():
     actor_v2 = Actor_v2(in_dim=3, hidden_dim=64).to(device).eval()
     actor_v2.load_state_dict(actor.state_dict())
 
-    inst = np.expand_dims(np.load('./test_inst.npy')[6], axis=0)
+    # inst = np.expand_dims(np.load('./test_inst.npy')[6], axis=0)
     # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
-    # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
-    saved_acts = np.load('./saved_acts.npy')
+    inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
+    # saved_acts = np.load('./saved_acts.npy')
 
     # print([param for param in actor.parameters()])
     # print(inst)
@@ -345,10 +345,8 @@ def main():
     simulate_result = []
     for i, data in enumerate(inst):
         state, feasible_action, done = env.reset(instance=data, fix_instance=True)
-        # print(state.edge_index)
-        # print(state.x)
         initial_gap.append(env.current_objs)
-        # print('Initial sol:', env.current_objs)
+        print('Initial sol:', env.current_objs)
         returns = []
         t = 0
         with torch.no_grad():
@@ -356,19 +354,15 @@ def main():
                 if state.edge_index.shape[1] != (j-1)*m + (m-1)*j + (j*m+2) + j + j:
                     print('not equal {} at:'.format((j-1)*m + (m-1)*j + (j*m+2) + j + j), env.itr)
                     np.save('./mal_func_instance.npy', env.instance)
-                # action = [random.choice(feasible_action)]
-                action = np.expand_dims(saved_acts[env.itr], axis=0).tolist()
+                action = [random.choice(feasible_action)]
+                # action = np.expand_dims(saved_acts[env.itr], axis=0).tolist()
                 # batch_data = Batch.from_data_list([state]).to(device)
                 # action, _ = actor(batch_data, [feasible_action])
                 # action, _ = actor_v2((batch_data.x, batch_data.edge_index, batch_data.batch), [feasible_action])
 
-
-
                 # print(Batch.from_data_list([state]).to(device).x)
                 # print(torch_geometric.utils.sort_edge_index(Batch.from_data_list([state]).to(device).edge_index)[0])
-                print(action[0])
-
-
+                # print(action[0])
 
                 state_prime, reward, new_feasible_actions, done = env.step_single(action=action[0])
                 # print('make span reward:', reward)
@@ -377,14 +371,6 @@ def main():
                 returns.append(reward)
                 state = state_prime
                 feasible_action = new_feasible_actions
-
-                # if env.itr == 2:  # x, after x transit
-                #     a = 1
-                #     print(action[0])
-                #     print(Batch.from_data_list([state]).to(device).x)
-                #     print(torch_geometric.utils.sort_edge_index(Batch.from_data_list([state]).to(device).edge_index)[0].t())
-                #     print(torch_geometric.utils.sort_edge_index(Batch.from_data_list([state]).to(device).edge_index)[0].t())
-                #     print(Batch.from_data_list([state]).to(device).batch)
 
                 t += 1
                 # print()

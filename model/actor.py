@@ -23,11 +23,10 @@ class GIN(torch.nn.Module):
         # init gin layer
         self.GIN_layers.append(
             GINConv(
-                Sequential(
-                    Linear(in_dim, hidden_dim),
-                    torch.nn.BatchNorm1d(hidden_dim),
-                    ReLU(),
-                    Linear(hidden_dim, hidden_dim)),
+                Sequential(Linear(in_dim, hidden_dim),
+                           torch.nn.BatchNorm1d(hidden_dim),
+                           ReLU(),
+                           Linear(hidden_dim, hidden_dim)),
                 eps=0,
                 train_eps=False,
                 aggr='mean',
@@ -38,11 +37,10 @@ class GIN(torch.nn.Module):
         for layer in range(layer_gin - 1):
             self.GIN_layers.append(
                 GINConv(
-                    Sequential(
-                        Linear(hidden_dim, hidden_dim),
-                        torch.nn.BatchNorm1d(hidden_dim),
-                        ReLU(),
-                        Linear(hidden_dim, hidden_dim)),
+                    Sequential(Linear(hidden_dim, hidden_dim),
+                               torch.nn.BatchNorm1d(hidden_dim),
+                               ReLU(),
+                               Linear(hidden_dim, hidden_dim)),
                     eps=0,
                     train_eps=False,
                     aggr='mean',

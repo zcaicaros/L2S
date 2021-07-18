@@ -34,6 +34,7 @@ class GIN(torch.nn.Module):
                 flow="source_to_target")
         )
 
+        # rest gin layers
         for layer in range(layer_gin - 1):
             self.GIN_layers.append(
                 GINConv(

@@ -427,7 +427,7 @@ def main():
     n_nodes_per_graph = j * m + 2
     n_edges_per_graph = j*(m-1) + m*(j-1) + j*m+2 + j*2
     with torch.no_grad():
-        while done.sum() != batch_size:
+        while done.sum() != env.batch_size:
             batch_wrapper.wrapper(*states)
             actions, _ = actor(batch_wrapper, feasible_actions)
             # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]

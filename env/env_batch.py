@@ -384,7 +384,7 @@ class JsspN5:
             else:  # if no feasible actions available append dummy actions [0, 0]
                 actions.append([[0, 0]])
                 feasible_actions_flag.append(False)
-        return actions, torch.tensor(feasible_actions_flag)
+        return actions, torch.tensor(feasible_actions_flag).unsqueeze(1)
 
 
 def main():
@@ -427,7 +427,7 @@ def main():
     n_nodes_per_graph = j * m + 2
     n_edges_per_graph = j*(m-1) + m*(j-1) + j*m+2 + j*2
     with torch.no_grad():
-        while done.sum() != env.batch_size:
+        while env.itr < transit:
             batch_wrapper.wrapper(*states)
             actions, _ = actor(batch_wrapper, feasible_actions)
             # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]

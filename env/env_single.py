@@ -324,7 +324,7 @@ def main():
     h = 99
     l = 1
     transit = 2000
-    batch_size = 10
+    batch_size = 1
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
                  init='rule', rule='fdd-divide-mwkr', transition=transit)
@@ -358,7 +358,7 @@ def main():
 
                 # print(Batch.from_data_list([state]).to(device).x)
                 # print(torch_geometric.utils.sort_edge_index(Batch.from_data_list([state]).to(device).edge_index)[0])
-                # print(action[0])
+                print(action[0])
 
                 state_prime, reward, new_feasible_actions, done = env.step_single(action=action[0])
                 # print('make span reward:', reward)

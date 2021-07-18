@@ -3,7 +3,6 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-
 import torch
 import numpy as np
 import torch.nn.functional as F
@@ -22,13 +21,32 @@ class GIN(torch.nn.Module):
         self.GIN_layers = torch.nn.ModuleList()
 
         # init gin layer
-        nn_layer = Sequential(Linear(in_dim, hidden_dim), torch.nn.BatchNorm1d(hidden_dim), ReLU(), Linear(hidden_dim, hidden_dim))
-        self.GIN_layers.append(GINConv(nn_layer, eps=0, train_eps=False, aggr='mean', flow="source_to_target"))
+        self.GIN_layers.append(
+            GINConv(
+                Sequential(
+                    Linear(in_dim, hidden_dim),
+                    torch.nn.BatchNorm1d(hidden_dim),
+                    ReLU(),
+                    Linear(hidden_dim, hidden_dim)),
+                eps=0,
+                train_eps=False,
+                aggr='mean',
+                flow="source_to_target")
+        )
 
         for layer in range(layer_gin - 1):
-            nn_layer = Sequential(Linear(hidden_dim, hidden_dim), torch.nn.BatchNorm1d(hidden_dim), ReLU(), Linear(hidden_dim, hidden_dim))
-            self.GIN_layers.append(GINConv(nn_layer, eps=0, train_eps=False, aggr='mean', flow="source_to_target"))
-
+            self.GIN_layers.append(
+                GINConv(
+                    Sequential(
+                        Linear(hidden_dim, hidden_dim),
+                        torch.nn.BatchNorm1d(hidden_dim),
+                        ReLU(),
+                        Linear(hidden_dim, hidden_dim)),
+                    eps=0,
+                    train_eps=False,
+                    aggr='mean',
+                    flow="source_to_target")
+            )
 
     def forward(self, batch_states):
 
@@ -120,7 +138,7 @@ class Actor(nn.Module):
             for j in range(len(feasible_actions[i])):
                 a_merge.append([feasible_actions[i][j][0] + carries[i], feasible_actions[i][j][1]])
         a_merge = np.array(a_merge)
-        mask = torch.ones(size=[batch_size*n_nodes_per_state, n_nodes_per_state], dtype=torch.bool, device=device)
+        mask = torch.ones(size=[batch_size * n_nodes_per_state, n_nodes_per_state], dtype=torch.bool, device=device)
         mask[a_merge[:, 0], a_merge[:, 1]] = False
         mask.resize_as_(action_score)
 
@@ -136,7 +154,8 @@ class Actor(nn.Module):
         dist = Categorical(probs=pi)
         actions_id = dist.sample()
         # actions_id = torch.argmax(pi, dim=-1)  # greedy action
-        sampled_actions = [[actions_id[i].item()//n_nodes_per_state, actions_id[i].item()%n_nodes_per_state] for i in range(len(feasible_actions))]
+        sampled_actions = [[actions_id[i].item() // n_nodes_per_state, actions_id[i].item() % n_nodes_per_state] for i
+                           in range(len(feasible_actions))]
         log_prob = dist.log_prob(actions_id)
         return sampled_actions, log_prob
 
@@ -167,10 +186,3 @@ if __name__ == '__main__':
     _, log_p = actor(Batch.from_data_list([init_s]).to(dev), [feasible_a])
     grad = torch.autograd.grad(log_p.mean(), [param for param in actor.parameters()])
     # print(grad)
-
-
-
-
-
-
-

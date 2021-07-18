@@ -351,10 +351,10 @@ def main():
                 if state.edge_index.shape[1] != (j-1)*m + (m-1)*j + (j*m+2) + j + j:
                     print('not equal {} at:'.format((j-1)*m + (m-1)*j + (j*m+2) + j + j), env.itr)
                     np.save('./mal_func_instance.npy', env.instance)
-                action = [random.choice(feasible_action)]
+                # action = [random.choice(feasible_action)]
                 # action = np.expand_dims(saved_acts[env.itr], axis=0).tolist()
-                # batch_data = Batch.from_data_list([state]).to(device)
-                # action, _ = actor(batch_data, [feasible_action])
+                batch_data = Batch.from_data_list([state]).to(device)
+                action, _ = actor(batch_data, [feasible_action])
 
                 # print(Batch.from_data_list([state]).to(device).x)
                 # print(torch_geometric.utils.sort_edge_index(Batch.from_data_list([state]).to(device).edge_index)[0])

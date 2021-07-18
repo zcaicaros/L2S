@@ -47,6 +47,7 @@ class JsspN5:
         self.tabu_size = 1
         self.tabu_lists = None
         self.incumbent_objs = None
+        self.batch_size = None
         self.fea_norm_const = 1000
         self.eva = Evaluator()
 
@@ -345,14 +346,10 @@ class JsspN5:
 
         self.itr = self.itr + 1
 
-        # compute done flag
-        if self.itr == self.max_transition:
-            done = True
-        else:
-            done = False
+
         feasible_actions, flag = self.feasible_actions()  # new feasible actions w.r.t updated tabu list
 
-        return (x, edge_indices, batch), reward, feasible_actions, done
+        return (x, edge_indices, batch), reward, feasible_actions, ~flag
 
     def reset(self, instances, init_type, device, plot=False):
         self.instances = instances
@@ -367,30 +364,27 @@ class JsspN5:
             assert False, 'Initial solution type = "p_list", "spt", "fdd-divide-mwkr".'
 
         self.current_graphs = current_graphs
+        self.batch_size = instances.shape[0]
         self.current_objs = make_span
         self.incumbent_objs = make_span
         self.itr = 0
         self.tabu_lists = [[] for _ in range(instances.shape[0])]
         feasible_actions, flag = self.feasible_actions()
-        if self.itr == self.max_transition:
-            done = True
-        else:
-            done = False
 
-        return (x, edge_indices, batch), feasible_actions, done
+        return (x, edge_indices, batch), feasible_actions, ~flag
 
     def feasible_actions(self):
         actions = []
         feasible_actions_flag = []  # 0 for no feasible operation pairs
-        for current_graph, instance, tabu_list in zip(self.current_graphs, self.instances, self.tabu_lists):
+        for i, (current_graph, instance, tabu_list) in enumerate(zip(self.current_graphs, self.instances, self.tabu_lists)):
             action = self._gen_moves(solution=current_graph, mch_mat=instance[1], tabu_list=tabu_list)
             if len(action) != 0:
                 actions.append(action)
-                feasible_actions_flag.append(1)
+                feasible_actions_flag.append(True)
             else:  # if no feasible actions available append dummy actions [0, 0]
                 actions.append([[0, 0]])
-                feasible_actions_flag.append(0)
-        return actions, np.array(feasible_actions_flag)
+                feasible_actions_flag.append(False)
+        return actions, torch.tensor(feasible_actions_flag)
 
 
 def main():
@@ -434,7 +428,7 @@ def main():
     n_nodes_per_graph = j * m + 2
     n_edges_per_graph = j*(m-1) + m*(j-1) + j*m+2 + j*2
     with torch.no_grad():
-        while not done:
+        while done.sum() != batch_size:
             batch_wrapper.wrapper(*states)
             actions, _ = actor(batch_wrapper, feasible_actions)
             # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
@@ -442,8 +436,10 @@ def main():
 
             # print(states[0].reshape(-1, n_nodes_per_graph, 3)[0])
             # print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph])
-            print(actions[save_action_for_instance])
-            saved_acts.append(actions[save_action_for_instance])
+            # print(actions[save_action_for_instance])
+            print(done)
+            print(actions)
+            # saved_acts.append(actions[save_action_for_instance])
             # print(done)
             # torch.save(states[0].reshape(-1, n_nodes_per_graph, 3)[0], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
             # torch.save(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph],'C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
@@ -456,7 +452,7 @@ def main():
 
             # print(env.itr)
 
-        np.save('saved_acts.npy', np.array(saved_acts))
+        # np.save('saved_acts.npy', np.array(saved_acts))
 
     t4 = time.time()
 

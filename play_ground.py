@@ -95,9 +95,9 @@ class BatchGraph:
 
 batch_data = BatchGraph()
 
-from model.actor_v2 import GIN
+'''from model.actor_v2 import GIN
 torch.manual_seed(1)
-embedding1 = GIN(in_dim=3, hidden_dim=64, layer_gin=4)
+embedding1 = GIN(in_dim=3, hidden_dim=64, layer_gin=4)'''
 
 from model.actor import GIN
 torch.manual_seed(1)
@@ -110,12 +110,7 @@ edge_index = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_i
 batch = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
 
 batch_data.wrap(x, edge_index, batch)
-print(batch_data.batch.shape)
-for _ in range(10):
-    node_embd1, g_embd1 = embedding1((x, edge_index, batch))
-    node_embd2, g_embd2 = embedding2(batch_data)
+# print(edge_index)
 
-    print(g_embd1)
-    print(g_embd2)
 
 # print(np.random.randint(low=1, high=4))

@@ -27,12 +27,14 @@ class GIN(torch.nn.Module):
         ## GIN conv layers
         self.GIN_layers = torch.nn.ModuleList()
         # self.batch_norms = torch.nn.ModuleList()
+
         # init gin layer
-        nn_layer = Sequential(Linear(in_dim, hidden_dim), ReLU(), Linear(hidden_dim, hidden_dim))
+        nn_layer = Sequential(Linear(in_dim, hidden_dim), torch.nn.BatchNorm1d(hidden_dim), ReLU(), Linear(hidden_dim, hidden_dim))
         self.GIN_layers.append(GINConv(nn_layer, eps=0, train_eps=False, aggr='mean', flow="source_to_target"))
         # self.batch_norms.append(torch.nn.BatchNorm1d(hidden_dim))
+
         for layer in range(layer_gin - 1):
-            nn_layer = Sequential(Linear(hidden_dim, hidden_dim), ReLU(), Linear(hidden_dim, hidden_dim))
+            nn_layer = Sequential(Linear(hidden_dim, hidden_dim), torch.nn.BatchNorm1d(hidden_dim), ReLU(), Linear(hidden_dim, hidden_dim))
             self.GIN_layers.append(GINConv(nn_layer, eps=0, train_eps=False, aggr='mean', flow="source_to_target"))
             # self.batch_norms.append(torch.nn.BatchNorm1d(hidden_dim))
 
@@ -54,13 +56,15 @@ class GIN(torch.nn.Module):
         node_pool_over_layer = 0
         # initial layer forward
         # h = self.batch_norms[0](F.relu(self.GIN_layers[0](x, edge_index)))
-        h = F.relu(self.GIN_layers[0](x, edge_index))
+        # h = F.relu(self.GIN_layers[0](x, edge_index))
+        h = self.GIN_layers[0](x, edge_index)
         # print(h)
         node_pool_over_layer += h
         hidden_rep.append(h)
         for layer in range(1, self.layer_gin):
             # h = self.batch_norms[layer](F.relu(self.GIN_layers[layer](h, edge_index)))
-            h = F.relu(self.GIN_layers[layer](h, edge_index))
+            # h = F.relu(self.GIN_layers[layer](h, edge_index))
+            h = self.GIN_layers[layer](h, edge_index)
             node_pool_over_layer += h
             hidden_rep.append(h)
 

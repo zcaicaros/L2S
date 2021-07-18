@@ -154,8 +154,8 @@ class Actor(nn.Module):
         # print(feasible_actions[0])
 
         dist = Categorical(probs=pi)
-        # actions_id = dist.sample()
-        actions_id = torch.argmax(pi, dim=-1)  # greedy action
+        actions_id = dist.sample()
+        # actions_id = torch.argmax(pi, dim=-1)  # greedy action
         sampled_actions = [[actions_id[i].item()//n_nodes_per_state, actions_id[i].item()%n_nodes_per_state] for i in range(len(feasible_actions))]
         log_prob = dist.log_prob(actions_id)
         return sampled_actions, log_prob

@@ -320,12 +320,12 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 100
-    m = 20
+    j = 10
+    m = 10
     h = 99
     l = 1
     transit = 2000
-    batch_size = 1
+    batch_size = 10
 
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
                  init='rule', rule='fdd-divide-mwkr', transition=transit)
@@ -336,7 +336,7 @@ def main():
     inst = np.expand_dims(np.load('./test_inst.npy')[6], axis=0)
     # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
     # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
-    # saved_acts = np.load('./saved_acts.npy')
+    saved_acts = np.load('./saved_acts.npy')
 
     # print([param for param in actor.parameters()])
     # print(inst)
@@ -357,9 +357,9 @@ def main():
                     print('not equal {} at:'.format((j-1)*m + (m-1)*j + (j*m+2) + j + j), env.itr)
                     np.save('./mal_func_instance.npy', env.instance)
                 # action = [random.choice(feasible_action)]
-                # action = saved_acts[env.itr].tolist()
-                batch_data = Batch.from_data_list([state]).to(device)
-                action, _ = actor(batch_data, [feasible_action])
+                action = np.expand_dims(saved_acts[env.itr], axis=0).tolist()
+                # batch_data = Batch.from_data_list([state]).to(device)
+                # action, _ = actor(batch_data, [feasible_action])
                 # action, _ = actor_v2((batch_data.x, batch_data.edge_index, batch_data.batch), [feasible_action])
 
 

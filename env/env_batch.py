@@ -406,8 +406,8 @@ def main():
     np.random.seed(3)  # 123456324
 
 
-    j = 100
-    m = 20
+    j = 10
+    m = 10
     h = 99
     l = 1
     transit = 2000
@@ -416,7 +416,7 @@ def main():
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
     insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
-    # np.save('test_inst.npy', insts)
+    np.save('test_inst.npy', insts)
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, transition=transit)
     states, feasible_actions, done = env.reset(instances=insts, init_type=init, device=device)
     batch_wrapper = BatchGraph()
@@ -433,7 +433,7 @@ def main():
     # print(insts)
 
     t3 = time.time()
-    # saved_acts = []
+    saved_acts = []
     returns = []
     n_nodes_per_graph = j * m + 2
     n_edges_per_graph = j*(m-1) + m*(j-1) + j*m+2 + j*2
@@ -447,7 +447,7 @@ def main():
             # print(states[0].reshape(-1, n_nodes_per_graph, 3)[0])
             # print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph])
             print(actions[6])
-            # saved_acts.append(actions[6])
+            saved_acts.append(actions[6])
             # print(done)
             # torch.save(states[0].reshape(-1, n_nodes_per_graph, 3)[0], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
             # torch.save(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph],'C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
@@ -472,7 +472,7 @@ def main():
 
             # print(env.itr)
 
-        # np.save('saved_acts.mpy', np.array(saved_acts))
+        np.save('saved_acts.npy', np.array(saved_acts))
 
     t4 = time.time()
 

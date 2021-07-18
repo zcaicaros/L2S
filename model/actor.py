@@ -4,8 +4,6 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-import time
-import torch_geometric
 import torch
 import numpy as np
 import torch.nn.functional as F
@@ -40,13 +38,13 @@ class GIN(torch.nn.Module):
         # print(torch_geometric.utils.sort_edge_index(edge_index)[0])
         # print(batch)
 
-        ## GIN conv
         hidden_rep = []
         node_pool_over_layer = 0
         # initial layer forward
         h = self.GIN_layers[0](x, edge_index)
         node_pool_over_layer += h
         hidden_rep.append(h)
+        # rest layers forward
         for layer in range(1, self.layer_gin):
             h = self.GIN_layers[layer](h, edge_index)
             node_pool_over_layer += h

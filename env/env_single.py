@@ -311,7 +311,6 @@ def main():
     from torch_geometric.data.batch import Batch
     from ortools_baseline import MinimalJobshopSat
     import torch_geometric.utils
-    from model.actor_v2 import Actor as Actor_v2
     from model.actor import Actor
     import random
 
@@ -330,8 +329,6 @@ def main():
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h,
                  init='rule', rule='fdd-divide-mwkr', transition=transit)
     actor = Actor(in_dim=3, hidden_dim=64).to(device).eval()
-    actor_v2 = Actor_v2(in_dim=3, hidden_dim=64).to(device).eval()
-    actor_v2.load_state_dict(actor.state_dict())
 
     # inst = np.expand_dims(np.load('./test_inst.npy')[6], axis=0)
     # inst = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
@@ -358,7 +355,6 @@ def main():
                 # action = np.expand_dims(saved_acts[env.itr], axis=0).tolist()
                 # batch_data = Batch.from_data_list([state]).to(device)
                 # action, _ = actor(batch_data, [feasible_action])
-                # action, _ = actor_v2((batch_data.x, batch_data.edge_index, batch_data.batch), [feasible_action])
 
                 # print(Batch.from_data_list([state]).to(device).x)
                 # print(torch_geometric.utils.sort_edge_index(Batch.from_data_list([state]).to(device).edge_index)[0])

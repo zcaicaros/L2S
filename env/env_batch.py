@@ -397,7 +397,6 @@ def main():
     import time
     import random
     from parameters import args as parameters
-    from model.actor_v2 import Actor as Actor_v2
     from model.actor import Actor
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -425,7 +424,6 @@ def main():
 
     # print(env.incumbent_objs)
 
-    # actor = Actor_v2(in_dim=3, hidden_dim=64).to(device)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
 
     # print([param for param in actor.parameters()])

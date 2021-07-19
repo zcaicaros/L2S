@@ -398,12 +398,12 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 200
-    m = 10
+    j = 30
+    m = 20
     h = 99
     l = 1
-    transit = 2000
-    batch_size = 10
+    transit = 128
+    batch_size = 256
     save_action_for_instance = 6
     init = 'fdd-divide-mwkr'
 
@@ -412,16 +412,15 @@ def main():
     # np.save('test_inst.npy', insts)
     # print(insts)
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, transition=transit)
-    states, feasible_actions, done = env.reset(instances=insts, init_type=init, device=device)
-    batch_wrapper = BatchGraph()
-
-    # print(env.incumbent_objs)
-
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
-
     # print([param for param in actor.parameters()])
 
+
     t3 = time.time()
+    states, feasible_actions, done = env.reset(instances=insts, init_type=init, device=device)
+    batch_wrapper = BatchGraph()
+    # print(env.incumbent_objs)
+
     saved_acts = []
     returns = []
     n_nodes_per_graph = j * m + 2
@@ -436,8 +435,8 @@ def main():
             # print(states[0].reshape(-1, n_nodes_per_graph, 3)[0])
             # print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph])
             # print(actions[save_action_for_instance])
-            print(done)
-            print(actions)
+            # print(done)
+            # print(actions)
             # saved_acts.append(actions[save_action_for_instance])
             # print(done)
             # torch.save(states[0].reshape(-1, n_nodes_per_graph, 3)[0], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
@@ -455,8 +454,8 @@ def main():
 
     t4 = time.time()
 
-    # print(t4 - t3)
-    print(env.incumbent_objs)
+    print(t4 - t3)
+    # print(env.incumbent_objs)
 
 
 if __name__ == '__main__':

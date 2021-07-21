@@ -50,7 +50,7 @@ def finish_episode(rewards, log_probs, dones):
 
 def main():
 
-    batch_size = 10
+    batch_size = 256
     from env.env_batch import BatchGraph
     batch_data = BatchGraph()
 
@@ -67,7 +67,8 @@ def main():
 
     # instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(batch_size)])  # fixed instances
     # np.save('./instances.npy', instances)
-    for i_episode in range(1, args.episodes // batch_size + 1):
+    for batch_i in range(1, args.episodes // batch_size + 1):
+
         t1 = time.time()
 
         instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(batch_size)])
@@ -92,10 +93,21 @@ def main():
             # logging...
             ep_reward_log.append(rewards)
 
-        # training...
-        finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
+            if env.itr % 10 == 0:
+                # training...
+                finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
+                ep_reward_log = []
+                rewards_buffer = []
+                log_probs_buffer = []
+                dones_buffer = [dones]
+
         t2 = time.time()
-        print('One batch training takes: {:.2f}'.format(t2 - t1))
+        print('Batch {} training takes: {:.2f}'.format(batch_i, t2 - t1),
+              'Mean Performance: {}'.format(env.current_objs.cpu().mean().item()))
+        log.append(env.current_objs.cpu().mean().item())
+        np.save('./log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, str(args.transit)),
+                np.array(log))
+
 
 
 if __name__ == '__main__':

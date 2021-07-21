@@ -50,7 +50,7 @@ def finish_episode(rewards, log_probs, dones):
 
 def main():
 
-    batch_size = 2
+    batch_size = 10
     from env.env_batch import BatchGraph
     batch_data = BatchGraph()
 
@@ -95,7 +95,7 @@ def main():
         # training...
         finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
         t2 = time.time()
-        print('One batch training takes:', t2 - t1)
+        print('One batch training takes: {:.2f}'.format(t2 - t1))
 
 
 if __name__ == '__main__':

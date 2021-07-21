@@ -402,8 +402,8 @@ def main():
     m = 20
     h = 99
     l = 1
-    transit = 128
-    batch_size = 256
+    transit = 256
+    batch_size = 512
     save_action_for_instance = 6
     init = 'fdd-divide-mwkr'
 
@@ -436,12 +436,14 @@ def main():
             # print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph])
             # print(actions[save_action_for_instance])
             # print(done)
+            # print(done.sum())
             # print(actions)
             # saved_acts.append(actions[save_action_for_instance])
             # print(done)
             # torch.save(states[0].reshape(-1, n_nodes_per_graph, 3)[0], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
             # torch.save(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph],'C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
             # torch.save(states[2], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
+            print(env.itr)
 
 
             states, reward, feasible_actions, done = env.step(actions, device)

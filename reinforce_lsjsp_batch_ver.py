@@ -106,7 +106,7 @@ def main():
 
         t2 = time.time()
         print('Batch {} training takes: {:.2f}'.format(batch_i, t2 - t1),
-              'Mean Performance: {}'.format(env.current_objs.cpu().mean().item()))
+              'Mean Performance: {:.2f}'.format(env.current_objs.cpu().mean().item()))
         log.append(env.current_objs.cpu().mean().item())
         np.save('./log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, str(args.transit)),
                 np.array(log))

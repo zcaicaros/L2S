@@ -398,8 +398,8 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 30
-    m = 20
+    j = 10
+    m = 10
     h = 99
     l = 1
     transit = 256

@@ -347,7 +347,7 @@ class JsspN5:
         self.itr = self.itr + 1
 
 
-        feasible_actions, flag = self.feasible_actions()  # new feasible actions w.r.t updated tabu list
+        feasible_actions, flag = self.feasible_actions(device)  # new feasible actions w.r.t updated tabu list
 
         return (x, edge_indices, batch), reward, feasible_actions, ~flag
 
@@ -369,11 +369,11 @@ class JsspN5:
         self.incumbent_objs = make_span
         self.itr = 0
         self.tabu_lists = [[] for _ in range(instances.shape[0])]
-        feasible_actions, flag = self.feasible_actions()
+        feasible_actions, flag = self.feasible_actions(device)
 
         return (x, edge_indices, batch), feasible_actions, ~flag
 
-    def feasible_actions(self):
+    def feasible_actions(self, device):
         actions = []
         feasible_actions_flag = []  # 0 for no feasible operation pairs
         for i, (current_graph, instance, tabu_list) in enumerate(zip(self.current_graphs, self.instances, self.tabu_lists)):
@@ -384,7 +384,7 @@ class JsspN5:
             else:  # if no feasible actions available append dummy actions [0, 0]
                 actions.append([[0, 0]])
                 feasible_actions_flag.append(False)
-        return actions, torch.tensor(feasible_actions_flag).unsqueeze(1)
+        return actions, torch.tensor(feasible_actions_flag, device=device).unsqueeze(1)
 
 
 def main():
@@ -403,7 +403,7 @@ def main():
     h = 99
     l = 1
     transit = 256
-    batch_size = 128
+    batch_size = 4
     save_action_for_instance = 6
     init = 'fdd-divide-mwkr'
 

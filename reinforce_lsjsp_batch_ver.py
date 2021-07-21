@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from parameters import args
 
@@ -31,6 +33,7 @@ def finish_episode(rewards, log_probs, dones):
     dones = torch.cat(dones, dim=-1)
     log_probs = torch.cat(log_probs, dim=-1)
 
+
     losses = []
     for b in range(returns.shape[0]):
         masked_R = torch.masked_select(returns[b], ~dones[b])
@@ -47,7 +50,7 @@ def finish_episode(rewards, log_probs, dones):
 
 def main():
 
-    batch_size = 4
+    batch_size = 2
     from env.env_batch import BatchGraph
     batch_data = BatchGraph()
 
@@ -65,6 +68,8 @@ def main():
     # instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(batch_size)])  # fixed instances
     # np.save('./instances.npy', instances)
     for i_episode in range(1, args.episodes // batch_size + 1):
+        t1 = time.time()
+
         instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(batch_size)])
         states, feasible_actions, dones = env.reset(instances=instances, init_type=init, device=dev)
         batch_data.wrapper(*states)
@@ -73,6 +78,7 @@ def main():
         rewards_buffer = []
         log_probs_buffer = []
         dones_buffer = [dones]
+
         while env.itr < args.transit:
             actions, log_ps = policy(batch_data, feasible_actions)
             states, rewards, feasible_actions, dones = env.step(actions, dev)
@@ -88,7 +94,12 @@ def main():
 
         # training...
         finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
+        t2 = time.time()
+        print('One batch training takes:', t2 - t1)
 
 
 if __name__ == '__main__':
+
     main()
+
+    print()

@@ -50,7 +50,7 @@ def finish_episode(rewards, log_probs, dones):
 
 def main():
 
-    batch_size = 256
+    batch_size = 48
     from env.env_batch import BatchGraph
     batch_data = BatchGraph()
 
@@ -81,6 +81,7 @@ def main():
         dones_buffer = [dones]
 
         while env.itr < args.transit:
+            # print(len(feasible_actions))
             actions, log_ps = policy(batch_data, feasible_actions)
             states, rewards, feasible_actions, dones = env.step(actions, dev)
             batch_data.wrapper(*states)
@@ -93,13 +94,15 @@ def main():
             # logging...
             ep_reward_log.append(rewards)
 
-            if env.itr % 10 == 0:
+            '''if env.itr % 10 == 0:
                 # training...
                 finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
                 ep_reward_log = []
                 rewards_buffer = []
                 log_probs_buffer = []
-                dones_buffer = [dones]
+                dones_buffer = [dones]'''
+
+        finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
 
         t2 = time.time()
         print('Batch {} training takes: {:.2f}'.format(batch_i, t2 - t1),

@@ -1,6 +1,6 @@
 import argparse
 parser = argparse.ArgumentParser(description='PyTorch REINFORCE example')
-parser.add_argument('--gamma', type=float, default=1)
+parser.add_argument('--gamma', type=float, default=0.99)
 parser.add_argument('--lr', type=float, default=1e-5)
 parser.add_argument('--j', type=int, default=10)
 parser.add_argument('--m', type=int, default=10)

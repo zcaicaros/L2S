@@ -20,22 +20,28 @@ optimizer = optim.Adam(policy.parameters(), lr=args.lr)
 eps = np.finfo(np.float32).eps.item()
 
 
-def finish_episode(rewards, log_probs):
-    R = 0
-    policy_loss = []
+def finish_episode(rewards, log_probs, dones):
+
+    R = torch.zeros_like(rewards[0], dtype=torch.float, device=rewards[0].device)
     returns = []
     for r in rewards[::-1]:
         R = r + args.gamma * R
         returns.insert(0, R)
-    returns = torch.tensor(returns)
-    if returns.shape[0] > 1:  # normalization should be over >=2 elements otherwise it will get Nan and causing error.
-        returns = (returns - returns.mean()) / (torch.std(returns) + eps)
+    returns = torch.cat(returns, dim=-1)
+    dones = torch.cat(dones, dim=-1)
+    log_probs = torch.cat(log_probs, dim=-1)
 
-    for log_prob, R in zip(log_probs, returns):
-        policy_loss.append(-log_prob * R)
+    losses = []
+    for b in range(returns.shape[0]):
+        masked_R = torch.masked_select(returns[b], ~dones[b])
+        masked_R = (masked_R - masked_R.mean()) / (torch.std(masked_R) + eps)
+        masked_log_prob = torch.masked_select(log_probs[b], ~dones[b])
+        loss = (- masked_log_prob * masked_R).sum()
+        losses.append(loss)
+
     optimizer.zero_grad()
-    policy_loss = torch.cat(policy_loss).sum()
-    policy_loss.backward()
+    mean_loss = torch.stack(losses).mean()
+    mean_loss.backward()
     optimizer.step()
 
 
@@ -53,7 +59,7 @@ def main():
     # np.random.seed(2)
     # validation_data = np.array([uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(100)])
     # np.save('./validation_data/validation_instance_{}x{}.npy'.format(args.j, args.m), validation_data)
-    validation_data = np.load('./validation_data/validation_instance_{}x{}.npy'.format(args.j, args.m))
+    # validation_data = np.load('./validation_data/validation_instance_{}x{}.npy'.format(args.j, args.m))
     np.random.seed(1)
 
     # instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(batch_size)])  # fixed instances
@@ -66,6 +72,7 @@ def main():
         ep_reward_log = []
         rewards_buffer = []
         log_probs_buffer = []
+        dones_buffer = [dones]
         while env.itr < args.transit:
             actions, log_ps = policy(batch_data, feasible_actions)
             states, rewards, feasible_actions, dones = env.step(actions, dev)
@@ -74,12 +81,13 @@ def main():
             # store training data
             rewards_buffer.append(rewards)
             log_probs_buffer.append(log_ps)
+            dones_buffer.append(dones)
 
             # logging...
             ep_reward_log.append(rewards)
 
         # training...
-        finish_episode(rewards_buffer, log_probs_buffer)
+        finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
 
 
 if __name__ == '__main__':

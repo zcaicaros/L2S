@@ -9,7 +9,7 @@ import numpy as np
 import networkx as nx
 from env.generateJSP import uni_instance_gen
 from env.permissible_LS import permissibleLeftShift
-from propagate_evl import Evaluator
+from env.propagate_evl import Evaluator
 import matplotlib.pyplot as plt
 import time
 
@@ -398,12 +398,12 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 10
-    m = 10
+    j = 30
+    m = 20
     h = 99
     l = 1
     transit = 256
-    batch_size = 512
+    batch_size = 128
     save_action_for_instance = 6
     init = 'fdd-divide-mwkr'
 

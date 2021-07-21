@@ -8,7 +8,6 @@ import torch.optim as optim
 from env.env_batch import JsspN5
 from model.actor import Actor
 from env.generateJSP import uni_instance_gen
-from torch_geometric.data.batch import Batch
 
 torch.manual_seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -23,6 +22,8 @@ eps = np.finfo(np.float32).eps.item()
 
 
 def finish_episode(rewards, log_probs, dones):
+
+    # print(rewards)
 
     R = torch.zeros_like(rewards[0], dtype=torch.float, device=rewards[0].device)
     returns = []
@@ -41,6 +42,9 @@ def finish_episode(rewards, log_probs, dones):
         masked_log_prob = torch.masked_select(log_probs[b], ~dones[b])
         loss = (- masked_log_prob * masked_R).sum()
         losses.append(loss)
+
+    # grad = torch.autograd.grad(torch.stack(losses).mean(), [param for param in policy.parameters()])
+    # print(grad)
 
     optimizer.zero_grad()
     mean_loss = torch.stack(losses).mean()

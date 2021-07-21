@@ -54,7 +54,7 @@ def finish_episode(rewards, log_probs, dones):
 
 def main():
 
-    batch_size = 48
+    batch_size = 32
     from env.env_batch import BatchGraph
     batch_data = BatchGraph()
 

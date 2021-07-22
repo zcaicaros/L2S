@@ -145,4 +145,8 @@ optimizer.zero_grad()
 node_embed.sum().backward()
 # print(embedding.GIN_layers[0].parameters().data.grad)
 grad_log = [torch.isnan(param.grad).sum() for param in embedding.parameters()]
-print(torch.stack(grad_log))
+# print(torch.stack(grad_log))
+
+print(torch.load('malfunctioning_masked_Rs.pt'))
+
+print([1, 2, 3][:-1])

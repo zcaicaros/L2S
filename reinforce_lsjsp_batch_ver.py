@@ -22,7 +22,9 @@ eps = np.finfo(np.float32).eps.item()
 
 
 def finish_episode(rewards, log_probs, dones):
+
     # print(rewards)
+    # print(dones)
 
     R = torch.zeros_like(rewards[0], dtype=torch.float, device=rewards[0].device)
     returns = []
@@ -34,12 +36,22 @@ def finish_episode(rewards, log_probs, dones):
     log_probs = torch.cat(log_probs, dim=-1)
 
     losses = []
+    masked_Rs = []
+    masked_logps = []
     for b in range(returns.shape[0]):
         masked_R = torch.masked_select(returns[b], ~dones[b])
         masked_R = (masked_R - masked_R.mean()) / (torch.std(masked_R) + eps)
+        masked_Rs.append(masked_R)
         masked_log_prob = torch.masked_select(log_probs[b], ~dones[b])
+        masked_logps.append(masked_log_prob)
         loss = (- masked_log_prob * masked_R).sum()
         losses.append(loss)
+
+    print('finish calculating loss. saving...')
+    # print(dones.sum(dim=-1))
+    # torch.save(torch.stack(masked_Rs), 'malfunctioning_masked_Rs.pt')
+    # torch.save(torch.stack(masked_logps), 'malfunctioning_masked_logps.pt')
+    print(torch.stack(losses))
 
     # grad = torch.autograd.grad(torch.stack(losses).mean(), [param for param in policy.parameters()])
     # print(grad)
@@ -72,6 +84,8 @@ def main():
     # instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(batch_size)])  # fixed instances
     # np.save('./instances.npy', instances)
     for batch_i in range(1, args.episodes // batch_size + 1):
+
+        print()
 
         t1 = time.time()
 

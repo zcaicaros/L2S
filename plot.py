@@ -37,7 +37,7 @@ if show:
 plt.close()
 
 
-running_returns = log[:log.shape[0]//plot_step_size*plot_step_size, 2].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
+'''running_returns = log[:log.shape[0]//plot_step_size*plot_step_size, 2].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)
 # plot running return...
 plt.xlabel('iteration({})'.format(plot_step_size))
 plt.ylabel('running return')
@@ -46,7 +46,7 @@ plt.grid()
 plt.tight_layout()
 if show:
     plt.show()
-plt.close()
+plt.close()'''
 
 validation_file = './log/validation_log_{}x{}_{}w_{}_{}.npy'.format(j, m, str(episode/10000), init, transit)
 validation_log = np.load(validation_file)

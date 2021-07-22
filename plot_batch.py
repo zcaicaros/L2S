@@ -9,7 +9,7 @@ episode = 64000
 transit = 128
 init = 'fdd-divide-mwkr'  # 'plist', 'spt', ...
 file = './log/batch_log_{}x{}_{}w_{}_{}.npy'.format(j, m, str(episode/10000), init, transit)
-plot_step_size = 1
+plot_step_size = 10
 log = np.load(file)
 
 obj = log[:log.shape[0]//plot_step_size*plot_step_size].reshape(log.shape[0] // plot_step_size, -1).mean(axis=1)

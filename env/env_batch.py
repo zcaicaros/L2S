@@ -398,13 +398,13 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 6
-    m = 6
+    j = 10
+    m = 10
     h = 99
     l = 1
-    transit = 0
+    transit = 128
     batch_size = 32
-    n_batch = 10
+    n_batch = 10000
     save_action_for_instance = 6
     init = 'fdd-divide-mwkr'
 

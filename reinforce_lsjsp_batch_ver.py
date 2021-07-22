@@ -94,8 +94,6 @@ def main():
         else:
             pass
 
-        batch_data.wrapper(*states)
-
         ep_reward_log = []
         rewards_buffer = []
         log_probs_buffer = []
@@ -103,9 +101,9 @@ def main():
 
         while env.itr < args.transit:
             # print(len(feasible_actions))
+            batch_data.wrapper(*states)
             actions, log_ps = policy(batch_data, feasible_actions)
             states, rewards, feasible_actions, dones = env.step(actions, dev)
-            batch_data.wrapper(*states)
 
             if states[1].shape[0] != 2:
                 print('edge_index row number != 2 at batch:', batch_i, 'transition:', env.itr,

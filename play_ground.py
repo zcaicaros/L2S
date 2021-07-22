@@ -105,12 +105,21 @@ embedding2 = GIN(in_dim=3, hidden_dim=64, layer_gin=4)
 # print([param for param in embedding.parameters()])
 
 
-x = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
-edge_index = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
-batch = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
+# x = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
+# edge_index = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
+# batch = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
 
-batch_data.wrap(x, edge_index, batch)
+# batch_data.wrap(x, edge_index, batch)
 # print(edge_index)
 
 
 # print(np.random.randint(low=1, high=4))
+
+print(torch.isnan(torch.tensor([1, float('nan'), 2])))
+print(torch.tensor([1, float('nan'), 2]).sum())
+
+if torch.isnan(torch.tensor([1, float('nan'), 2])).sum() != 0:
+    torch.save(torch.tensor([1, float('nan'), 2]), 'malfunctioning_example.pt')
+
+print(torch.load('malfunctioning_example.pt'))
+

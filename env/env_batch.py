@@ -398,12 +398,13 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 30
-    m = 20
+    j = 6
+    m = 6
     h = 99
     l = 1
-    transit = 256
-    batch_size = 4
+    transit = 0
+    batch_size = 32
+    n_batch = 10
     save_action_for_instance = 6
     init = 'fdd-divide-mwkr'
 
@@ -415,49 +416,53 @@ def main():
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
     # print([param for param in actor.parameters()])
 
+    for b_i in range(n_batch):
 
-    t3 = time.time()
-    states, feasible_actions, done = env.reset(instances=insts, init_type=init, device=device)
-    batch_wrapper = BatchGraph()
-    # print(env.incumbent_objs)
+        t3 = time.time()
+        states, feasible_actions, done = env.reset(instances=insts, init_type=init, device=device)
+        batch_wrapper = BatchGraph()
+        # print(states[0].sum())
+        # print(states[1].sum())
+        # print(states[2].sum())
+        # print(env.incumbent_objs)
 
-    saved_acts = []
-    returns = []
-    n_nodes_per_graph = j * m + 2
-    n_edges_per_graph = j*(m-1) + m*(j-1) + j*m+2 + j*2
-    with torch.no_grad():
-        while env.itr < transit:
-            batch_wrapper.wrapper(*states)
-            actions, _ = actor(batch_wrapper, feasible_actions)
-            # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
-
-
-            # print(states[0].reshape(-1, n_nodes_per_graph, 3)[0])
-            # print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph])
-            # print(actions[save_action_for_instance])
-            # print(done)
-            # print(done.sum())
-            # print(actions)
-            # saved_acts.append(actions[save_action_for_instance])
-            # print(done)
-            # torch.save(states[0].reshape(-1, n_nodes_per_graph, 3)[0], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
-            # torch.save(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph],'C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
-            # torch.save(states[2], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
-            print(env.itr)
+        saved_acts = []
+        returns = []
+        n_nodes_per_graph = j * m + 2
+        n_edges_per_graph = j*(m-1) + m*(j-1) + j*m+2 + j*2
+        with torch.no_grad():
+            while env.itr < transit:
+                batch_wrapper.wrapper(*states)
+                actions, _ = actor(batch_wrapper, feasible_actions)
+                # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
 
 
-            states, reward, feasible_actions, done = env.step(actions, device)
+                # print(states[0].reshape(-1, n_nodes_per_graph, 3)[0])
+                # print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph])
+                # print(actions[save_action_for_instance])
+                # print(done)
+                # print(done.sum())
+                # print(actions)
+                # saved_acts.append(actions[save_action_for_instance])
+                # print(done)
+                # torch.save(states[0].reshape(-1, n_nodes_per_graph, 3)[0], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
+                # torch.save(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph],'C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
+                # torch.save(states[2], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
+                # print(env.itr)
 
-            returns.append(reward)
 
-            # print(env.itr)
+                states, reward, feasible_actions, done = env.step(actions, device)
 
-        # np.save('saved_acts.npy', np.array(saved_acts))
+                returns.append(reward)
 
-    t4 = time.time()
+                # print(env.itr)
 
-    print(t4 - t3)
-    # print(env.incumbent_objs)
+            # np.save('saved_acts.npy', np.array(saved_acts))
+
+        t4 = time.time()
+
+        print(t4 - t3)
+        # print(env.incumbent_objs)
 
 
 if __name__ == '__main__':

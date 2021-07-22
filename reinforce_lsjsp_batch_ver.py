@@ -22,7 +22,6 @@ eps = np.finfo(np.float32).eps.item()
 
 
 def finish_episode(rewards, log_probs, dones):
-
     # print(rewards)
 
     R = torch.zeros_like(rewards[0], dtype=torch.float, device=rewards[0].device)
@@ -33,7 +32,6 @@ def finish_episode(rewards, log_probs, dones):
     returns = torch.cat(returns, dim=-1)
     dones = torch.cat(dones, dim=-1)
     log_probs = torch.cat(log_probs, dim=-1)
-
 
     losses = []
     for b in range(returns.shape[0]):
@@ -53,7 +51,6 @@ def finish_episode(rewards, log_probs, dones):
 
 
 def main():
-
     batch_size = 32
     from env.env_batch import BatchGraph
     batch_data = BatchGraph()
@@ -77,6 +74,26 @@ def main():
 
         instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(batch_size)])
         states, feasible_actions, dones = env.reset(instances=instances, init_type=init, device=dev)
+
+        if states[1].shape[0] != 2:
+            print('edge_index row number != 2 at batch:', batch_i, 'transition:', env.itr,
+                  'saving malfunctioning edge_index and corresponding instances...')
+            torch.save(states[1], 'malfunctioning_edge_index.pt')
+            np.save('malfunctioning_instances.npy', instances)
+        elif states[1].shape[1] != (
+                args.j * (args.m - 1) + args.m * (args.j - 1) + args.j * args.m + 2 + args.j * 2) * batch_size:
+            print('number of edges != (j*(m-1) + m*(j-1) + j*m+2 + j*2)*batch_size at batch:', batch_i, 'transition:',
+                  env.itr, 'saving malfunctioning edge_index and corresponding instances...')
+            torch.save(states[1], 'malfunctioning_edge_index.pt')
+            np.save('malfunctioning_instances.npy', instances)
+        elif torch.isnan(states[0]).sum() != 0:
+            print('nan occur in calculated feature at batch:', batch_i, 'transition:', env.itr,
+                  'saving malfunctioning x and corresponding instances...')
+            torch.save(states[0], 'malfunctioning_x.pt')
+            np.save('malfunctioning_instances.npy', instances)
+        else:
+            pass
+
         batch_data.wrapper(*states)
 
         ep_reward_log = []
@@ -89,6 +106,25 @@ def main():
             actions, log_ps = policy(batch_data, feasible_actions)
             states, rewards, feasible_actions, dones = env.step(actions, dev)
             batch_data.wrapper(*states)
+
+            if states[1].shape[0] != 2:
+                print('edge_index row number != 2 at batch:', batch_i, 'transition:', env.itr,
+                      'saving malfunctioning edge_index and corresponding instances...')
+                torch.save(states[1], 'malfunctioning_edge_index.pt')
+                np.save('malfunctioning_instances.npy', instances)
+            elif states[1].shape[1] != (
+                    args.j * (args.m - 1) + args.m * (args.j - 1) + args.j * args.m + 2 + args.j * 2) * batch_size:
+                print('number of edges != (j*(m-1) + m*(j-1) + j*m+2 + j*2)*batch_size at batch:', batch_i,
+                      'transition:', env.itr, 'saving malfunctioning edge_index and corresponding instances...')
+                torch.save(states[1], 'malfunctioning_edge_index.pt')
+                np.save('malfunctioning_instances.npy', instances)
+            elif torch.isnan(states[0]).sum() != 0:
+                print('nan occur in calculated feature at batch:', batch_i, 'transition:', env.itr,
+                      'saving malfunctioning x and corresponding instances...')
+                torch.save(states[0], 'malfunctioning_x.pt')
+                np.save('malfunctioning_instances.npy', instances)
+            else:
+                pass
 
             # store training data
             rewards_buffer.append(rewards)
@@ -112,13 +148,12 @@ def main():
         print('Batch {} training takes: {:.2f}'.format(batch_i, t2 - t1),
               'Mean Performance: {:.2f}'.format(env.current_objs.cpu().mean().item()))
         log.append(env.current_objs.cpu().mean().item())
-        np.save('./log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, str(args.transit)),
+        np.save('./log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init,
+                                                             str(args.transit)),
                 np.array(log))
 
 
-
 if __name__ == '__main__':
-
     main()
 
     print()

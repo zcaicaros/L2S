@@ -115,11 +115,34 @@ embedding2 = GIN(in_dim=3, hidden_dim=64, layer_gin=4)
 
 # print(np.random.randint(low=1, high=4))
 
-print(torch.isnan(torch.tensor([1, float('nan'), 2])))
-print(torch.tensor([1, float('nan'), 2]).sum())
+# print(torch.isnan(torch.tensor([1, float('nan'), 2])))
+# print(torch.tensor([1, float('nan'), 2]).sum().item())
+print(torch.isnan(torch.tensor([1, float('nan'), 2])).sum())
 
-if torch.isnan(torch.tensor([1, float('nan'), 2])).sum() != 0:
-    torch.save(torch.tensor([1, float('nan'), 2]), 'malfunctioning_example.pt')
+from model.actor import GIN
+from env.env_batch import BatchGraph
+import torch.optim as optim
+dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+mal_x = torch.load('malfunctioning_x.pt', map_location=torch.device(dev))
+mal_edge_index = torch.load('malfunctioning_edge_index.pt', map_location=torch.device(dev))
+mal_batch = torch.load('malfunctioning_batch.pt', map_location=torch.device(dev))
+where_nan = torch.where(torch.isnan(mal_x))
+print(where_nan)
+print(mal_batch)
 
-print(torch.load('malfunctioning_example.pt'))
+batch_data = BatchGraph()
+batch_data.wrapper(mal_x, mal_edge_index, mal_batch)
 
+embedding = GIN(3, 128).to(dev)
+node_embed, graph_embed = embedding(batch_data)
+print(node_embed.sum())
+print(graph_embed.sum())
+
+# print([param for param in embedding.parameters()])
+
+optimizer = optim.Adam(embedding.parameters(), lr=1e-5)
+optimizer.zero_grad()
+node_embed.sum().backward()
+# print(embedding.GIN_layers[0].parameters().data.grad)
+grad_log = [torch.isnan(param.grad).sum() for param in embedding.parameters()]
+print(torch.stack(grad_log))

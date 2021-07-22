@@ -46,7 +46,10 @@ def finish_episode(rewards, log_probs, dones):
 
     optimizer.zero_grad()
     mean_loss = torch.stack(losses).mean()
+    print(mean_loss)
     mean_loss.backward()
+    grad_log = [torch.isnan(param.grad).sum() for param in policy.parameters()]
+    print(torch.stack(grad_log))
     optimizer.step()
 
 
@@ -103,6 +106,7 @@ def main():
             # print(len(feasible_actions))
             batch_data.wrapper(*states)
             actions, log_ps = policy(batch_data, feasible_actions)
+            # actions, log_ps = policy(states, feasible_actions)
             states, rewards, feasible_actions, dones = env.step(actions, dev)
 
             if states[1].shape[0] != 2:

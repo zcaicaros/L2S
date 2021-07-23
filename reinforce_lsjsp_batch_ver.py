@@ -66,7 +66,7 @@ def main():
 
     # instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(batch_size)])  # fixed instances
     # np.save('./instances.npy', instances)
-    
+
     print()
     for batch_i in range(1, args.episodes // batch_size + 1):
 
@@ -125,7 +125,6 @@ def main():
             current_validation_result = validation_result2
 
             np.save('./log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, args.transit), np.array(log))
-
 
 
 if __name__ == '__main__':

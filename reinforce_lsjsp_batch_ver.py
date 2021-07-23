@@ -46,6 +46,13 @@ def finish_episode(rewards, log_probs, dones):
         masked_logps.append(masked_log_prob)
         loss = (- masked_log_prob * masked_R).sum()
         losses.append(loss)
+        if b == 4:
+            print(~dones[b])
+            print(returns[b])
+            print(masked_R)
+            print(log_probs[b])
+            print(masked_log_prob)
+
 
     print('finish calculating loss. saving...')
     # print(dones.sum(dim=-1))

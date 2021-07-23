@@ -123,12 +123,12 @@ def main():
                 print('Find better model w.r.t incumbent objs, saving model...')
                 torch.save(policy.state_dict(),
                            './saved_model/{}x{}_{}_{}_incumbent.pth'.format(args.j, args.m, init, args.transit))
+                incumbent_validation_result = validation_result1
             if validation_result2 < current_validation_result:
                 print('Find better model w.r.t final step objs, saving model...')
                 torch.save(policy.state_dict(),
                            './saved_model/{}x{}_{}_{}_current.pth'.format(args.j, args.m, init, args.transit))
-            incumbent_validation_result = validation_result1
-            current_validation_result = validation_result2
+                current_validation_result = validation_result2
 
             # saving log
             np.save('./log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, args.transit), np.array(log))

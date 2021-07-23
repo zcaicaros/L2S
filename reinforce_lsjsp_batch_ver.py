@@ -111,23 +111,22 @@ def main():
 
             t3 = time.time()
 
-            states_val, feasible_actions_val, _ = env_validation.reset(instances=validation_data, init_type=init,
-                                                                       device=dev)
+            # validating...
+            states_val, feasible_actions_val, _ = env_validation.reset(instances=validation_data, init_type=init, device=dev)
             while env_validation.itr < args.transit:
                 validation_batch_data.wrapper(*states_val)
                 actions_val, log_ps_val = policy(validation_batch_data, feasible_actions_val)
                 states_val, _, feasible_actions_val, _ = env_validation.step(actions_val, dev)
             validation_result1 = env_validation.incumbent_objs.mean().cpu().item()
             validation_result2 = env_validation.current_objs.mean().cpu().item()
+            # saving model based on validation results
             if validation_result1 < incumbent_validation_result:
                 print('Find better model w.r.t incumbent objs, saving model...')
-                torch.save(policy.state_dict(),
-                           './saved_model/{}x{}_{}_{}_incumbent.pth'.format(args.j, args.m, init, args.transit))
+                torch.save(policy.state_dict(), './saved_model/{}x{}_{}_{}_incumbent.pth'.format(args.j, args.m, init, args.transit))
                 incumbent_validation_result = validation_result1
             if validation_result2 < current_validation_result:
                 print('Find better model w.r.t final step objs, saving model...')
-                torch.save(policy.state_dict(),
-                           './saved_model/{}x{}_{}_{}_current.pth'.format(args.j, args.m, init, args.transit))
+                torch.save(policy.state_dict(), './saved_model/{}x{}_{}_{}_current.pth'.format(args.j, args.m, init, args.transit))
                 current_validation_result = validation_result2
 
             # saving log
@@ -137,12 +136,9 @@ def main():
 
             t4 = time.time()
 
-            print('Incumbent objs and final step objs for validation are: {:.2f}  {:.2f}'.format(validation_result1,
-                                                                                                 validation_result2),
-                  'validation takes:{:.2f}'.format(t4 - t3))
+            print('Incumbent objs and final step objs for validation are: {:.2f}  {:.2f}'.format(validation_result1, validation_result2), 'validation takes:{:.2f}'.format(t4 - t3))
 
 
 if __name__ == '__main__':
-    main()
 
-    print()
+    main()

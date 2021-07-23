@@ -115,11 +115,6 @@ class Actor(nn.Module):
 
         # print(graph_embed)
         # torch.save(graph_embed[0].unsqueeze(0), 'C:/Users/CONG030/Desktop/reinforce_debug/compare/actor.pt')
-        if torch.isnan(node_embed).sum() != 0:
-            torch.save(batch_states.x, 'malfunctioning_x.pt')
-            torch.save(batch_states.edge_index, 'malfunctioning_edge_index.pt')
-            torch.save(batch_states.batch, 'malfunctioning_batch.pt')
-            print('x have NaN value')
 
         device = node_embed.device
         batch_size = graph_embed.shape[0]

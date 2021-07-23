@@ -55,9 +55,6 @@ def finish_episode(rewards, log_probs, dones):
 
 
     print('finish calculating loss. saving...')
-    # print(dones.sum(dim=-1))
-    # torch.save(torch.stack(masked_Rs), 'malfunctioning_masked_Rs.pt')
-    # torch.save(torch.stack(masked_logps), 'malfunctioning_masked_logps.pt')
     print(torch.stack(losses))
 
     # grad = torch.autograd.grad(torch.stack(losses).mean(), [param for param in policy.parameters()])
@@ -99,55 +96,16 @@ def main():
         instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(batch_size)])
         states, feasible_actions, dones = env.reset(instances=instances, init_type=init, device=dev)
 
-        if states[1].shape[0] != 2:
-            print('edge_index row number != 2 at batch:', batch_i, 'transition:', env.itr,
-                  'saving malfunctioning edge_index and corresponding instances...')
-            torch.save(states[1], 'malfunctioning_edge_index.pt')
-            np.save('malfunctioning_instances.npy', instances)
-        elif states[1].shape[1] != (
-                args.j * (args.m - 1) + args.m * (args.j - 1) + args.j * args.m + 2 + args.j * 2) * batch_size:
-            print('number of edges != (j*(m-1) + m*(j-1) + j*m+2 + j*2)*batch_size at batch:', batch_i, 'transition:',
-                  env.itr, 'saving malfunctioning edge_index and corresponding instances...')
-            torch.save(states[1], 'malfunctioning_edge_index.pt')
-            np.save('malfunctioning_instances.npy', instances)
-        elif torch.isnan(states[0]).sum() != 0:
-            print('nan occur in calculated feature at batch:', batch_i, 'transition:', env.itr,
-                  'saving malfunctioning x and corresponding instances...')
-            torch.save(states[0], 'malfunctioning_x.pt')
-            np.save('malfunctioning_instances.npy', instances)
-        else:
-            pass
-
         ep_reward_log = []
         rewards_buffer = []
         log_probs_buffer = []
         dones_buffer = [dones]
 
         while env.itr < args.transit:
-            # print(len(feasible_actions))
+
             batch_data.wrapper(*states)
             actions, log_ps = policy(batch_data, feasible_actions)
-            # actions, log_ps = policy(states, feasible_actions)
             states, rewards, feasible_actions, dones = env.step(actions, dev)
-
-            if states[1].shape[0] != 2:
-                print('edge_index row number != 2 at batch:', batch_i, 'transition:', env.itr,
-                      'saving malfunctioning edge_index and corresponding instances...')
-                torch.save(states[1], 'malfunctioning_edge_index.pt')
-                np.save('malfunctioning_instances.npy', instances)
-            elif states[1].shape[1] != (
-                    args.j * (args.m - 1) + args.m * (args.j - 1) + args.j * args.m + 2 + args.j * 2) * batch_size:
-                print('number of edges != (j*(m-1) + m*(j-1) + j*m+2 + j*2)*batch_size at batch:', batch_i,
-                      'transition:', env.itr, 'saving malfunctioning edge_index and corresponding instances...')
-                torch.save(states[1], 'malfunctioning_edge_index.pt')
-                np.save('malfunctioning_instances.npy', instances)
-            elif torch.isnan(states[0]).sum() != 0:
-                print('nan occur in calculated feature at batch:', batch_i, 'transition:', env.itr,
-                      'saving malfunctioning x and corresponding instances...')
-                torch.save(states[0], 'malfunctioning_x.pt')
-                np.save('malfunctioning_instances.npy', instances)
-            else:
-                pass
 
             # store training data
             rewards_buffer.append(rewards)

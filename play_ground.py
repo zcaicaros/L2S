@@ -123,30 +123,15 @@ from model.actor import GIN
 from env.env_batch import BatchGraph
 import torch.optim as optim
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-mal_x = torch.load('malfunctioning_x.pt', map_location=torch.device(dev))
-mal_edge_index = torch.load('malfunctioning_edge_index.pt', map_location=torch.device(dev))
-mal_batch = torch.load('malfunctioning_batch.pt', map_location=torch.device(dev))
-where_nan = torch.where(torch.isnan(mal_x))
-print(where_nan)
-print(mal_batch)
 
-batch_data = BatchGraph()
-batch_data.wrapper(mal_x, mal_edge_index, mal_batch)
-
-embedding = GIN(3, 128).to(dev)
-node_embed, graph_embed = embedding(batch_data)
-print(node_embed.sum())
-print(graph_embed.sum())
-
-# print([param for param in embedding.parameters()])
-
-optimizer = optim.Adam(embedding.parameters(), lr=1e-5)
-optimizer.zero_grad()
-node_embed.sum().backward()
-# print(embedding.GIN_layers[0].parameters().data.grad)
-grad_log = [torch.isnan(param.grad).sum() for param in embedding.parameters()]
+# grad_log = [torch.isnan(param.grad).sum() for param in embedding.parameters()]
 # print(torch.stack(grad_log))
 
-print(torch.load('malfunctioning_masked_Rs.pt'))
 
 print([1, 2, 3][:-1])
+
+eps = np.finfo(np.float32).eps.item()
+tnsr = torch.tensor([666], dtype=torch.float, device=dev)
+out = (tnsr - tnsr.mean()) / (torch.std(tnsr) + eps)
+print(out)
+print((torch.std(tnsr) + eps))

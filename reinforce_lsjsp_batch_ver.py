@@ -40,7 +40,7 @@ def finish_episode(rewards, log_probs, dones):
     masked_logps = []
     for b in range(returns.shape[0]):
         masked_R = torch.masked_select(returns[b], ~dones[b])
-        masked_R = (masked_R - masked_R.mean()) / (torch.std(masked_R) + eps)
+        masked_R = (masked_R - masked_R.mean()) / (torch.std(masked_R, unbiased=False) + eps)
         masked_Rs.append(masked_R)
         masked_log_prob = torch.masked_select(log_probs[b], ~dones[b])
         masked_logps.append(masked_log_prob)

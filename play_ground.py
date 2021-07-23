@@ -132,6 +132,6 @@ print([1, 2, 3][:-1])
 
 eps = np.finfo(np.float32).eps.item()
 tnsr = torch.tensor([666], dtype=torch.float, device=dev)
-out = (tnsr - tnsr.mean()) / (torch.std(tnsr) + eps)
+out = (tnsr - tnsr.mean()) / (torch.std(tnsr, unbiased=False) + eps)
 print(out)
-print((torch.std(tnsr) + eps))
+print((torch.std(tnsr, unbiased=False) + eps))

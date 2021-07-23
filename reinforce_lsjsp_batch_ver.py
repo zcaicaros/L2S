@@ -13,8 +13,8 @@ torch.manual_seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 init = 'fdd-divide-mwkr'
-env = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, transition=args.transit)
-env_validation = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, transition=args.transit)
+env = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h)
+env_validation = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h)
 policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)  # policy = Actor(3, 64, gin_l=3, policy_l=3).to(dev)
 
 optimizer = optim.Adam(policy.parameters(), lr=args.lr)
@@ -22,7 +22,6 @@ eps = np.finfo(np.float32).eps.item()
 
 
 def finish_episode(rewards, log_probs, dones):
-
     R = torch.zeros_like(rewards[0], dtype=torch.float, device=rewards[0].device)
     returns = []
     for r in rewards[::-1]:
@@ -81,7 +80,6 @@ def main():
         dones_buffer = [dones]
 
         while env.itr < args.transit:
-
             batch_data.wrapper(*states)
             actions, log_ps = policy(batch_data, feasible_actions)
             states, rewards, feasible_actions, dones = env.step(actions, dev)
@@ -110,21 +108,36 @@ def main():
         log.append(env.current_objs.mean().cpu().item())
 
         if batch_i % 10 == 0:
-            states_val, feasible_actions_val, dones_val = env_validation.reset(instances=validation_data, init_type=init, device=dev)
+
+            t3 = time.time()
+
+            states_val, feasible_actions_val, _ = env_validation.reset(instances=validation_data, init_type=init,
+                                                                       device=dev)
             while env_validation.itr < args.transit:
                 validation_batch_data.wrapper(*states_val)
                 actions_val, log_ps_val = policy(validation_batch_data, feasible_actions_val)
-                states_val, feasible_actions_val, dones_val = env.step(actions_val, dev)
+                states_val, _, feasible_actions_val, _ = env_validation.step(actions_val, dev)
             validation_result1 = env_validation.incumbent_objs.mean().cpu().item()
             validation_result2 = env_validation.current_objs.mean().cpu().item()
             if validation_result1 < incumbent_validation_result:
-                torch.save(policy.state_dict(), './saved_model/{}x{}_{}_{}_incumbent.pth'.format(args.j, args.m, init, args.transit))
+                print('Find better model w.r.t incumbent objs, saving model...')
+                torch.save(policy.state_dict(),
+                           './saved_model/{}x{}_{}_{}_incumbent.pth'.format(args.j, args.m, init, args.transit))
             if validation_result2 < current_validation_result:
-                torch.save(policy.state_dict(), './saved_model/{}x{}_{}_{}_current.pth'.format(args.j, args.m, init, args.transit))
+                print('Find better model w.r.t final step objs, saving model...')
+                torch.save(policy.state_dict(),
+                           './saved_model/{}x{}_{}_{}_current.pth'.format(args.j, args.m, init, args.transit))
             incumbent_validation_result = validation_result1
             current_validation_result = validation_result2
+            np.save(
+                './log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, args.transit),
+                np.array(log))
 
-            np.save('./log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, args.transit), np.array(log))
+            t4 = time.time()
+
+            print('Incumbent objs and final step objs for validation are: {:.2f}  {:.2f}'.format(validation_result1,
+                                                                                                 validation_result2),
+                  'validation takes:{:.2f}'.format(t4 - t3))
 
 
 if __name__ == '__main__':

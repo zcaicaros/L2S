@@ -27,12 +27,7 @@ class BatchGraph:
 
 
 class JsspN5:
-    def __init__(self,
-                 n_job,
-                 n_mch,
-                 low,
-                 high,
-                 transition=100):
+    def __init__(self, n_job, n_mch, low, high):
 
         self.n_job = n_job
         self.n_mch = n_mch
@@ -40,7 +35,6 @@ class JsspN5:
         self.low = low
         self.high = high
         self.itr = 0
-        self.max_transition = transition
         self.instances = None
         self.current_graphs = None
         self.current_objs = None
@@ -412,7 +406,7 @@ def main():
     insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
     # np.save('test_inst.npy', insts)
     # print(insts)
-    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, transition=transit)
+    env = JsspN5(n_job=j, n_mch=m, low=l, high=h)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
     # print([param for param in actor.parameters()])
 

@@ -41,7 +41,6 @@ class JsspN5:
         self.tabu_size = 1
         self.tabu_lists = None
         self.incumbent_objs = None
-        self.batch_size = None
         self.fea_norm_const = 1000
         self.eva = Evaluator()
 
@@ -358,7 +357,6 @@ class JsspN5:
             assert False, 'Initial solution type = "p_list", "spt", "fdd-divide-mwkr".'
 
         self.current_graphs = current_graphs
-        self.batch_size = instances.shape[0]
         self.current_objs = make_span
         self.incumbent_objs = make_span
         self.itr = 0

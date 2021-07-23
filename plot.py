@@ -50,6 +50,7 @@ plt.close()'''
 
 validation_file = './log/validation_log_{}x{}_{}w_{}_{}.npy'.format(j, m, str(episode/10000), init, transit)
 validation_log = np.load(validation_file)
+# print(validation_log.min(axis=0))
 # plot validation result...
 plt.xlabel('iteration(per 100)')
 plt.ylabel('last step make span')

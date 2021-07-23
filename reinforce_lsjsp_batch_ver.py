@@ -23,9 +23,6 @@ eps = np.finfo(np.float32).eps.item()
 
 def finish_episode(rewards, log_probs, dones):
 
-    # print(rewards)
-    # print(dones)
-
     R = torch.zeros_like(rewards[0], dtype=torch.float, device=rewards[0].device)
     returns = []
     for r in rewards[::-1]:
@@ -36,36 +33,16 @@ def finish_episode(rewards, log_probs, dones):
     log_probs = torch.cat(log_probs, dim=-1)
 
     losses = []
-    masked_Rs = []
-    masked_logps = []
     for b in range(returns.shape[0]):
         masked_R = torch.masked_select(returns[b], ~dones[b])
         masked_R = (masked_R - masked_R.mean()) / (torch.std(masked_R, unbiased=False) + eps)
-        masked_Rs.append(masked_R)
         masked_log_prob = torch.masked_select(log_probs[b], ~dones[b])
-        masked_logps.append(masked_log_prob)
         loss = (- masked_log_prob * masked_R).sum()
         losses.append(loss)
-        if b == 4:
-            print(~dones[b])
-            print(returns[b])
-            print(masked_R)
-            print(log_probs[b])
-            print(masked_log_prob)
-
-
-    print('finish calculating loss. saving...')
-    print(torch.stack(losses))
-
-    # grad = torch.autograd.grad(torch.stack(losses).mean(), [param for param in policy.parameters()])
-    # print(grad)
 
     optimizer.zero_grad()
     mean_loss = torch.stack(losses).mean()
-    print(mean_loss)
     mean_loss.backward()
-    grad_log = [torch.isnan(param.grad).sum() for param in policy.parameters()]
-    print(torch.stack(grad_log))
     optimizer.step()
 
 
@@ -73,23 +50,25 @@ def main():
     batch_size = 32
     from env.env_batch import BatchGraph
     batch_data = BatchGraph()
+    validation_batch_data = BatchGraph()
 
     running_reward = 0
     incumbent_validation_result = np.inf
+    current_validation_result = np.inf
     log = []
     validation_log = []
     # remember to generate validation data if size is not in {10x10, 15x15, 20x20, 30x20}
     # np.random.seed(2)
     # validation_data = np.array([uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(100)])
     # np.save('./validation_data/validation_instance_{}x{}.npy'.format(args.j, args.m), validation_data)
-    # validation_data = np.load('./validation_data/validation_instance_{}x{}.npy'.format(args.j, args.m))
+    validation_data = np.load('./validation_data/validation_instance_{}x{}.npy'.format(args.j, args.m))
     np.random.seed(1)
 
     # instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(batch_size)])  # fixed instances
     # np.save('./instances.npy', instances)
+    
+    print()
     for batch_i in range(1, args.episodes // batch_size + 1):
-
-        print()
 
         t1 = time.time()
 
@@ -128,10 +107,25 @@ def main():
         t2 = time.time()
         print('Batch {} training takes: {:.2f}'.format(batch_i, t2 - t1),
               'Mean Performance: {:.2f}'.format(env.current_objs.cpu().mean().item()))
-        log.append(env.current_objs.cpu().mean().item())
-        np.save('./log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init,
-                                                             str(args.transit)),
-                np.array(log))
+        log.append(env.current_objs.mean().cpu().item())
+
+        if batch_i % 10 == 0:
+            states_val, feasible_actions_val, dones_val = env_validation.reset(instances=validation_data, init_type=init, device=dev)
+            while env_validation.itr < args.transit:
+                validation_batch_data.wrapper(*states_val)
+                actions_val, log_ps_val = policy(validation_batch_data, feasible_actions_val)
+                states_val, feasible_actions_val, dones_val = env.step(actions_val, dev)
+            validation_result1 = env_validation.incumbent_objs.mean().cpu().item()
+            validation_result2 = env_validation.current_objs.mean().cpu().item()
+            if validation_result1 < incumbent_validation_result:
+                torch.save(policy.state_dict(), './saved_model/{}x{}_{}_{}_incumbent.pth'.format(args.j, args.m, init, args.transit))
+            if validation_result2 < current_validation_result:
+                torch.save(policy.state_dict(), './saved_model/{}x{}_{}_{}_current.pth'.format(args.j, args.m, init, args.transit))
+            incumbent_validation_result = validation_result1
+            current_validation_result = validation_result2
+
+            np.save('./log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, args.transit), np.array(log))
+
 
 
 if __name__ == '__main__':

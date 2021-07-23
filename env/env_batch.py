@@ -9,7 +9,7 @@ import numpy as np
 import networkx as nx
 from env.generateJSP import uni_instance_gen
 from env.permissible_LS import permissibleLeftShift
-from env.propagate_evl import Evaluator
+from env.message_passing_evl import Evaluator
 import matplotlib.pyplot as plt
 import time
 

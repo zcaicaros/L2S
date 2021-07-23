@@ -129,9 +129,11 @@ def main():
                            './saved_model/{}x{}_{}_{}_current.pth'.format(args.j, args.m, init, args.transit))
             incumbent_validation_result = validation_result1
             current_validation_result = validation_result2
-            np.save(
-                './log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, args.transit),
-                np.array(log))
+
+            # saving log
+            np.save('./log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, args.transit), np.array(log))
+            validation_log.append([validation_result1, validation_result2])
+            np.save('./log/batch_validation_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, args.transit), np.array(validation_log))
 
             t4 = time.time()
 

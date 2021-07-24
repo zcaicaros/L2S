@@ -135,3 +135,8 @@ tnsr = torch.tensor([666], dtype=torch.float, device=dev)
 out = (tnsr - tnsr.mean()) / (torch.std(tnsr, unbiased=False) + eps)
 print(out)
 print((torch.std(tnsr, unbiased=False) + eps))
+
+p_j = 100
+p_m = 20
+tai_sota = np.array([5464, 5181, 5568, 5339, 5392, 5342, 5436, 5394, 5358, 5183], dtype=float)
+np.save('./test_data/tai{}x{}_SOTA_result.npy'.format(p_j, p_m), tai_sota)

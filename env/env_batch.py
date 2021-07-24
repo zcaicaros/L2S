@@ -319,7 +319,10 @@ class JsspN5:
     def step(self, actions, device):
         self.change_nxgraph_topology(actions)  # change graph topology
         x, edge_indices, batch, makespan = self.dag2pyg(self.instances, self.current_graphs, device)  # generate new state data
-        reward = self.current_objs - makespan
+        # reward = self.current_objs - makespan
+        # print(self.incumbent_objs)
+        # print(makespan)
+        reward = torch.where(self.incumbent_objs - makespan > 0, self.incumbent_objs - makespan, torch.tensor(0, dtype=torch.float32))
 
         self.incumbent_objs = torch.where(makespan - self.incumbent_objs < 0, makespan, self.incumbent_objs)
         self.current_objs = makespan
@@ -390,13 +393,13 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 10
-    m = 10
+    j = 30
+    m = 20
     h = 99
     l = 1
-    transit = 128
-    batch_size = 32
-    n_batch = 10000
+    transit = 256
+    batch_size = 10
+    n_batch = 1
     save_action_for_instance = 6
     init = 'fdd-divide-mwkr'
 
@@ -447,7 +450,9 @@ def main():
 
                 returns.append(reward)
 
+                # print(reward)
                 # print(env.itr)
+                # print()
 
             # np.save('saved_acts.npy', np.array(saved_acts))
 
@@ -455,6 +460,8 @@ def main():
 
         print(t4 - t3)
         # print(env.incumbent_objs)
+
+        print(torch.count_nonzero(torch.cat(returns, dim=-1), dim=-1))
 
 
 if __name__ == '__main__':

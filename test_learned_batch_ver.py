@@ -46,7 +46,7 @@ def main():
         states, _, feasible_actions, _ = env.step(actions, dev)
     DRL_result = env.current_objs.cpu().squeeze().numpy()
     t2_drl = time.time()
-    print(DRL_result, 'takes: {:.2f}'.format((t2_drl - t1_drl)/inst.shape[0]))
+    print(DRL_result, 'takes: {:.2f} per instance.'.format((t2_drl - t1_drl)/inst.shape[0]))
 
     # rollout random policy
     import random
@@ -59,7 +59,7 @@ def main():
         states, _, feasible_actions, _ = env.step(actions, dev)
     Random_result = env.current_objs.cpu().squeeze().numpy()
     t2_random = time.time()
-    print(Random_result, 'takes: {:.2f} per instance'.format((t2_random - t1_random)/inst.shape[0]))
+    print(Random_result, 'takes: {:.2f} per instance.'.format((t2_random - t1_random)/inst.shape[0]))
 
     # ortools solver
     from pathlib import Path

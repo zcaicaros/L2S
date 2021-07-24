@@ -12,9 +12,9 @@ j = 10
 m = 10
 l = 1
 h = 99
-episode_length = 64
+episode_length = 128
 n_generated_instances = 100
-transit = 64
+transit = 2000
 init = 'rule'  # 'plist', 'spt', ...
 rule = 'fdd-divide-mwkr'
 

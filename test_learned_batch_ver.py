@@ -8,16 +8,16 @@ from env.env_batch import BatchGraph
 
 
 show = False
-p_j = 10
-p_m = 10
-testing_type = 'syn'  # 'tai', 'syn'
+p_j = 50
+p_m = 15
+testing_type = 'tai'  # 'tai', 'syn'
 model_j = 10
 model_m = 10
 l = 1
 h = 99
 training_episode_length = 128
 n_generated_instances = 100
-transit = 200
+transit = 1000
 init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
 model_type = 'current'
 

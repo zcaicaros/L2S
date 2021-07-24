@@ -74,15 +74,23 @@ def main():
     results_random = np.array(results_random)
 
     # ortools solver
-    results_ortools = []
-    for i, data in enumerate(inst):
-        times_rearrange = np.expand_dims(data[0], axis=-1)
-        machines_rearrange = np.expand_dims(data[1], axis=-1)
-        data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
-        result = MinimalJobshopSat(data.tolist())
-        print('Instance-' + str(i + 1) + ' Ortools makespan:', result)
-        results_ortools.append(result[1])
-    results_ortools = np.array(results_ortools)
+    from pathlib import Path
+    ortools_path = Path('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(j, m))
+    if ortools_path.is_file():
+        results_ortools = np.load('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(j, m))
+    else:
+        results_ortools = []
+        print('Starting Ortools...')
+        for i, data in enumerate(inst):
+            times_rearrange = np.expand_dims(data[0], axis=-1)
+            machines_rearrange = np.expand_dims(data[1], axis=-1)
+            data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
+            result = MinimalJobshopSat(data.tolist())
+            print('Instance-' + str(i + 1) + ' Ortools makespan:', result)
+            results_ortools.append(result[1])
+        results_ortools = np.array(results_ortools)
+        np.save('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(j, m), results_ortools)
+    print(results_ortools)
 
     print('DRL Gap:', ((results_drl - results_ortools)/results_ortools).mean())
     print('Random Gap:', ((results_random - results_ortools) / results_ortools).mean())

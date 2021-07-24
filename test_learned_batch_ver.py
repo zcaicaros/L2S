@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import time
 from env.env_batch import JsspN5
 from model.actor import Actor
 from ortools_baseline import MinimalJobshopSat
@@ -13,9 +14,9 @@ l = 1
 h = 99
 episode_length = 128
 n_generated_instances = 100
-transit = 2000
+transit = 500
 init = 'fdd-divide-mwkr'  # 'plist', 'spt', ...
-model_type = 'current'
+model_type = 'incumbent'
 
 torch.manual_seed(1)
 np.random.seed(1)
@@ -37,36 +38,47 @@ def main():
 
     # rollout network
     print('Starting rollout DRL policy...')
+    t1_drl = time.time()
     states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
     while env.itr < transit:
         batch_data.wrapper(*states)
         actions, _ = policy(batch_data, feasible_actions)
         states, _, feasible_actions, _ = env.step(actions, dev)
     DRL_result = env.current_objs.cpu().squeeze().numpy()
-    print(DRL_result)
+    t2_drl = time.time()
+    print(DRL_result, 'takes: {:.2f}'.format((t2_drl - t1_drl)/inst.shape[0]))
 
     # rollout random policy
     import random
     random.seed(1)
     print('Starting rollout random policy...')
+    t1_random = time.time()
     states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
     while env.itr < transit:
         actions = [random.choice(feasible_action) for feasible_action in feasible_actions]
         states, _, feasible_actions, _ = env.step(actions, dev)
     Random_result = env.current_objs.cpu().squeeze().numpy()
-    print(Random_result)
+    t2_random = time.time()
+    print(Random_result, 'takes: {:.2f} per instance'.format((t2_random - t1_random)/inst.shape[0]))
 
     # ortools solver
-    results_ortools = []
-    print('Starting Ortools...')
-    for i, data in enumerate(inst):
-        times_rearrange = np.expand_dims(data[0], axis=-1)
-        machines_rearrange = np.expand_dims(data[1], axis=-1)
-        data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
-        result = MinimalJobshopSat(data.tolist())
-        print('Instance-' + str(i + 1) + ' Ortools makespan:', result)
-        results_ortools.append(result[1])
-    results_ortools = np.array(results_ortools)
+    from pathlib import Path
+    ortools_path = Path('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(j, m))
+    if ortools_path.is_file():
+        results_ortools = np.load('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(j, m))
+    else:
+        results_ortools = []
+        print('Starting Ortools...')
+        for i, data in enumerate(inst):
+            times_rearrange = np.expand_dims(data[0], axis=-1)
+            machines_rearrange = np.expand_dims(data[1], axis=-1)
+            data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
+            result = MinimalJobshopSat(data.tolist())
+            print('Instance-' + str(i + 1) + ' Ortools makespan:', result)
+            results_ortools.append(result[1])
+        results_ortools = np.array(results_ortools)
+        np.save('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(j, m), results_ortools)
+    print(results_ortools)
 
     print('DRL Gap:', ((DRL_result - results_ortools)/results_ortools).mean())
     print('Random Gap:', ((Random_result - results_ortools) / results_ortools).mean())

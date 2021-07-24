@@ -33,8 +33,8 @@ def main():
 
     # inst = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(n_generated_instances)])
     # np.save('./test_data/syn_test_instance_{}x{}.npy'.format(j, m), inst)
-    # inst = np.load('./test_data/tai15x15.npy')
-    inst = np.load('./test_data/syn_test_instance_{}x{}.npy'.format(j, m))
+    inst = np.load('./test_data/tai15x15.npy')
+    # inst = np.load('./test_data/syn_test_instance_{}x{}.npy'.format(j, m))
 
     # rollout network
     print('Starting rollout DRL policy...')
@@ -46,7 +46,7 @@ def main():
         states, _, feasible_actions, _ = env.step(actions, dev)
     DRL_result = env.current_objs.cpu().squeeze().numpy()
     t2_drl = time.time()
-    print('DRL results:\n', DRL_result, '\ntakes: {:.2f} per instance.'.format((t2_drl - t1_drl)/inst.shape[0]))
+    print('DRL results takes: {:.2f}s per instance.\n'.format((t2_drl - t1_drl)/inst.shape[0]), DRL_result)
 
     # rollout random policy
     import random
@@ -59,7 +59,7 @@ def main():
         states, _, feasible_actions, _ = env.step(actions, dev)
     Random_result = env.current_objs.cpu().squeeze().numpy()
     t2_random = time.time()
-    print('Random results:\n', Random_result, '\ntakes: {:.2f} per instance.'.format((t2_random - t1_random)/inst.shape[0]))
+    print('Random results takes: {:.2f}s per instance.\n'.format((t2_random - t1_random)/inst.shape[0]), Random_result)
 
     # ortools solver
     from pathlib import Path

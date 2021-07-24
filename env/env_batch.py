@@ -322,7 +322,7 @@ class JsspN5:
         # reward = self.current_objs - makespan
         # print(self.incumbent_objs)
         # print(makespan)
-        reward = torch.where(self.incumbent_objs - makespan > 0, self.incumbent_objs - makespan, torch.tensor(0, dtype=torch.float32))
+        reward = torch.where(self.incumbent_objs - makespan > 0, self.incumbent_objs - makespan, torch.tensor(0, dtype=torch.float32, device=device))
 
         self.incumbent_objs = torch.where(makespan - self.incumbent_objs < 0, makespan, self.incumbent_objs)
         self.current_objs = makespan

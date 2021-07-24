@@ -17,7 +17,7 @@ l = 1
 h = 99
 training_episode_length = 128
 n_generated_instances = 100
-transit = 1000
+transit = 2000
 init = 'fdd-divide-mwkr'  # 'plist', 'spt', ...
 model_type = 'current'
 
@@ -53,7 +53,7 @@ def main():
         states, _, feasible_actions, _ = env.step(actions, dev)
     DRL_result = env.current_objs.cpu().squeeze().numpy()
     t2_drl = time.time()
-    print('DRL results takes: {:.2f}s per instance.\n'.format((t2_drl - t1_drl)/inst.shape[0]), DRL_result)
+    print('DRL results takes: {:.4f}s per instance.\n'.format((t2_drl - t1_drl)/inst.shape[0]), DRL_result)
 
     # rollout random policy
     import random
@@ -66,7 +66,7 @@ def main():
         states, _, feasible_actions, _ = env.step(actions, dev)
     Random_result = env.current_objs.cpu().squeeze().numpy()
     t2_random = time.time()
-    print('Random results takes: {:.2f}s per instance.\n'.format((t2_random - t1_random)/inst.shape[0]), Random_result)
+    print('Random results takes: {:.4f}s per instance.\n'.format((t2_random - t1_random)/inst.shape[0]), Random_result)
 
     # print('DRL improves {0:.2%} against Random'.format(((DRL_result - Random_result)/Random_result).mean()))
 

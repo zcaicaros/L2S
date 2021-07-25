@@ -325,7 +325,7 @@ class JsspN5:
         elif self.reward_type == 'yaoxin':
             reward = torch.where(self.incumbent_objs - makespan > 0, self.incumbent_objs - makespan, torch.tensor(0, dtype=torch.float32, device=device))
         else:
-            assert print('reward type must be "yaoxin" or "consecutive".')
+            raise ValueError('reward type must be "yaoxin" or "consecutive".')
 
         self.incumbent_objs = torch.where(makespan - self.incumbent_objs < 0, makespan, self.incumbent_objs)
         self.current_objs = makespan
@@ -388,7 +388,6 @@ class JsspN5:
 def main():
     import time
     import random
-    from parameters import args as parameters
     from model.actor import Actor
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -396,16 +395,16 @@ def main():
     torch.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    j = 30
-    m = 20
+    j = 10
+    m = 10
     h = 99
     l = 1
     transit = 256
-    batch_size = 10
+    batch_size = 1
     n_batch = 1
     save_action_for_instance = 6
     init = 'fdd-divide-mwkr'
-    reward_type = 'consecutive'
+    reward_type = 'aa'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
     insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])

@@ -8,6 +8,7 @@ from env.env_batch import BatchGraph
 
 
 show = False
+
 # problem config
 p_j = 10
 p_m = 10
@@ -25,7 +26,7 @@ model_type = 'current'  # 'current', 'incumbent'
 reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
 
 # MDP config
-transit = 1000
+transit = 2000
 
 
 torch.manual_seed(1)

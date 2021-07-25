@@ -399,12 +399,12 @@ def main():
     m = 10
     h = 99
     l = 1
-    transit = 256
-    batch_size = 1
+    transit = 128
+    batch_size = 10
     n_batch = 1
     save_action_for_instance = 6
     init = 'fdd-divide-mwkr'
-    reward_type = 'aa'
+    reward_type = 'yaoxin'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
     insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])

@@ -8,19 +8,25 @@ from env.env_batch import BatchGraph
 
 
 show = False
-p_j = 50
-p_m = 15
-testing_type = 'tai'  # 'tai', 'syn'
-model_j = 10
-model_m = 10
+# problem config
+p_j = 10
+p_m = 10
 l = 1
 h = 99
-training_episode_length = 128
+testing_type = 'syn'  # 'tai', 'syn'
 n_generated_instances = 100
-transit = 1000
+
+# model config
+model_j = 10
+model_m = 10
+training_episode_length = 128
 init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
 model_type = 'current'  # 'current', 'incumbent'
 reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
+
+# MDP config
+transit = 1000
+
 
 torch.manual_seed(1)
 np.random.seed(1)
@@ -52,7 +58,7 @@ def main():
         batch_data.wrapper(*states)
         actions, _ = policy(batch_data, feasible_actions)
         states, _, feasible_actions, _ = env.step(actions, dev)
-    DRL_result = env.current_objs.cpu().squeeze().numpy()
+    DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
     t2_drl = time.time()
     print('DRL results takes: {:.4f}s per instance.\n'.format((t2_drl - t1_drl)/inst.shape[0]), DRL_result)
 
@@ -65,7 +71,7 @@ def main():
     while env.itr < transit:
         actions = [random.choice(feasible_action) for feasible_action in feasible_actions]
         states, _, feasible_actions, _ = env.step(actions, dev)
-    Random_result = env.current_objs.cpu().squeeze().numpy()
+    Random_result = env.incumbent_objs.cpu().squeeze().numpy()
     t2_random = time.time()
     print('Random results takes: {:.4f}s per instance.\n'.format((t2_random - t1_random)/inst.shape[0]), Random_result)
 

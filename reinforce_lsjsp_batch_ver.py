@@ -13,8 +13,8 @@ torch.manual_seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 init = 'fdd-divide-mwkr'
-env = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h)
-env_validation = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h)
+env = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, reward_type=args.reward_type)
+env_validation = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, reward_type=args.reward_type)
 policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)  # policy = Actor(3, 64, gin_l=3, policy_l=3).to(dev)
 
 optimizer = optim.Adam(policy.parameters(), lr=args.lr)
@@ -122,17 +122,17 @@ def main():
             # saving model based on validation results
             if validation_result1 < incumbent_validation_result:
                 print('Find better model w.r.t incumbent objs, saving model...')
-                torch.save(policy.state_dict(), './saved_model/{}x{}_{}_{}_incumbent.pth'.format(args.j, args.m, init, args.transit))
+                torch.save(policy.state_dict(), './saved_model/{}x{}_{}_{}_incumbent_{}_reward.pth'.format(args.j, args.m, init, args.transit, args.reward_type))
                 incumbent_validation_result = validation_result1
             if validation_result2 < current_validation_result:
                 print('Find better model w.r.t final step objs, saving model...')
-                torch.save(policy.state_dict(), './saved_model/{}x{}_{}_{}_current.pth'.format(args.j, args.m, init, args.transit))
+                torch.save(policy.state_dict(), './saved_model/{}x{}_{}_{}_current_{}_reward.pth'.format(args.j, args.m, init, args.transit, args.reward_type))
                 current_validation_result = validation_result2
 
             # saving log
-            np.save('./log/batch_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, args.transit), np.array(log))
+            np.save('./log/batch_training_log_{}x{}_{}w_{}_{}_{}_reward.npy'.format(args.j, args.m, args.episodes / 10000, init, args.transit, args.reward_type), np.array(log))
             validation_log.append([validation_result1, validation_result2])
-            np.save('./log/batch_validation_log_{}x{}_{}w_{}_{}.npy'.format(args.j, args.m, args.episodes / 10000, init, args.transit), np.array(validation_log))
+            np.save('./log/batch_validation_log_{}x{}_{}w_{}_{}_{}_reward.npy'.format(args.j, args.m, args.episodes / 10000, init, args.transit, args.reward_type), np.array(validation_log))
 
             t4 = time.time()
 

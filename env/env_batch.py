@@ -27,7 +27,7 @@ class BatchGraph:
 
 
 class JsspN5:
-    def __init__(self, n_job, n_mch, low, high):
+    def __init__(self, n_job, n_mch, low, high, reward_type):
 
         self.n_job = n_job
         self.n_mch = n_mch
@@ -41,6 +41,7 @@ class JsspN5:
         self.tabu_size = 1
         self.tabu_lists = None
         self.incumbent_objs = None
+        self.reward_type = reward_type
         self.fea_norm_const = 1000
         self.eva = Evaluator()
 
@@ -319,10 +320,12 @@ class JsspN5:
     def step(self, actions, device):
         self.change_nxgraph_topology(actions)  # change graph topology
         x, edge_indices, batch, makespan = self.dag2pyg(self.instances, self.current_graphs, device)  # generate new state data
-        # reward = self.current_objs - makespan
-        # print(self.incumbent_objs)
-        # print(makespan)
-        reward = torch.where(self.incumbent_objs - makespan > 0, self.incumbent_objs - makespan, torch.tensor(0, dtype=torch.float32, device=device))
+        if self.reward_type == 'consecutive':
+            reward = self.current_objs - makespan
+        elif self.reward_type == 'yaoxin':
+            reward = torch.where(self.incumbent_objs - makespan > 0, self.incumbent_objs - makespan, torch.tensor(0, dtype=torch.float32, device=device))
+        else:
+            assert print('reward type must be "yaoxin" or "consecutive".')
 
         self.incumbent_objs = torch.where(makespan - self.incumbent_objs < 0, makespan, self.incumbent_objs)
         self.current_objs = makespan
@@ -402,12 +405,13 @@ def main():
     n_batch = 1
     save_action_for_instance = 6
     init = 'fdd-divide-mwkr'
+    reward_type = 'consecutive'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
     insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
     # np.save('test_inst.npy', insts)
     # print(insts)
-    env = JsspN5(n_job=j, n_mch=m, low=l, high=h)
+    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, reward_type=reward_type)
     actor = Actor(in_dim=3, hidden_dim=64).to(device)
     # print([param for param in actor.parameters()])
 

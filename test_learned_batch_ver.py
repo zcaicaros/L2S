@@ -19,7 +19,8 @@ training_episode_length = 128
 n_generated_instances = 100
 transit = 1000
 init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
-model_type = 'current'
+model_type = 'current'  # 'current', 'incumbent'
+reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
 
 torch.manual_seed(1)
 np.random.seed(1)
@@ -29,7 +30,7 @@ dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 def main():
     env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h)
     policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)
-    saved_model_path = './saved_model/{}x{}_{}_{}_{}.pth'.format(model_j, model_m, init, training_episode_length, model_type)
+    saved_model_path = './saved_model/{}x{}_{}_{}_{}_{}_reward.pth'.format(model_j, model_m, init, training_episode_length, model_type, reward_type)
     policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
     batch_data = BatchGraph()
 

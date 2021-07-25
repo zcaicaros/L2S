@@ -27,7 +27,7 @@ reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
 
 # MDP config
 transit = 2000
-result_type = 'current'  # 'current', 'incumbent'
+result_type = 'incumbent'  # 'current', 'incumbent'
 
 
 torch.manual_seed(1)

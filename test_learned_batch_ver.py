@@ -27,6 +27,7 @@ reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
 
 # MDP config
 transit = 2000
+result_type = 'current'  # 'current', 'incumbent'
 
 
 torch.manual_seed(1)
@@ -59,7 +60,10 @@ def main():
         batch_data.wrapper(*states)
         actions, _ = policy(batch_data, feasible_actions)
         states, _, feasible_actions, _ = env.step(actions, dev)
-    DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
+    if result_type == 'incumbent':
+        DRL_result = env.current_objs.cpu().squeeze().numpy()
+    else:
+        DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
     t2_drl = time.time()
     print('DRL results takes: {:.4f}s per instance.\n'.format((t2_drl - t1_drl)/inst.shape[0]), DRL_result)
 
@@ -72,7 +76,11 @@ def main():
     while env.itr < transit:
         actions = [random.choice(feasible_action) for feasible_action in feasible_actions]
         states, _, feasible_actions, _ = env.step(actions, dev)
-    Random_result = env.incumbent_objs.cpu().squeeze().numpy()
+    if result_type == 'incumbent':
+        Random_result = env.incumbent_objs.cpu().squeeze().numpy()
+    else:
+        Random_result = env.current_objs.cpu().squeeze().numpy()
+
     t2_random = time.time()
     print('Random results takes: {:.4f}s per instance.\n'.format((t2_random - t1_random)/inst.shape[0]), Random_result)
 

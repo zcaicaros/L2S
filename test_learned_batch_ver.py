@@ -60,7 +60,7 @@ def best_improvement_move(feasible_actions, current_graph, current_tabu_list, cu
     if support_env.current_objs.min().cpu().item() < current_obj.cpu().item():
         best_move = [feasible_actions[torch.argmin(support_env.current_objs, dim=0, keepdim=True).cpu().item()]]
     else:
-        best_move = [[0, 0]]
+        best_move = [[0, 0]]  # if there is no better move, don't move
 
     return best_move
 

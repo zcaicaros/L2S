@@ -11,8 +11,8 @@ import copy
 show = False
 
 # problem config
-p_j = 10
-p_m = 10
+p_j = 30
+p_m = 20
 l = 1
 h = 99
 testing_type = 'syn'  # 'tai', 'syn'
@@ -85,8 +85,9 @@ def main():
     print('Starting rollout greedy policy...')
     t1_greedy = time.time()
     greedy_result = []
-    for ins in inst[np.newaxis, np.newaxis, :, :]:
+    for ins in inst[np.newaxis, np.newaxis, 0, :]:
         _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
+        print(env.incumbent_objs)
 
         while env.itr < transit:
             best_move = greedy(feasible_actions=feasible_actions[0],
@@ -97,9 +98,13 @@ def main():
                                instance=env.instances[0],
                                device=dev)
             _, _, feasible_actions, _ = env.step(best_move, dev)
+            print(env.itr)
+            print(env.current_objs)
+            print(env.incumbent_objs)
         greedy_result.append(env.incumbent_objs.cpu().item())
     t2_greedy = time.time()
     greedy_result = np.array(greedy_result)
+    print(greedy_result)
     print('Greedy results takes: {:.4f}s per instance.\n'.format(t2_greedy - t1_greedy), greedy_result)
     # print(env.incumbent_objs)
     # print(np.load('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m)))

@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import time
+import copy
 from env.env_batch import JsspN5
 from model.actor import Actor
 from ortools_baseline import MinimalJobshopSat
@@ -35,7 +36,7 @@ np.random.seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-def greedy(feasible_actions, current_graph, current_tabu_list, current_obj, incumbent_obj, instance, device):
+def best_improvement_move(feasible_actions, current_graph, current_tabu_list, current_obj, incumbent_obj, instance, device):
 
     # only support single instance, so env.inst.shape = [b=1, 2, j, m]
 
@@ -94,7 +95,8 @@ def main():
     else:
         DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
     t2_drl = time.time()
-    print('DRL results takes: {:.4f}s per instance.\n'.format((t2_drl - t1_drl)/inst.shape[0]), DRL_result)
+    print('DRL results takes: {:.4f}s per instance.'.format((t2_drl - t1_drl)/inst.shape[0]))
+    print(DRL_result)
 
     # rollout random policy
     import random
@@ -111,30 +113,32 @@ def main():
         Random_result = env.current_objs.cpu().squeeze().numpy()
 
     t2_random = time.time()
-    print('Random results takes: {:.4f}s per instance.\n'.format((t2_random - t1_random)/inst.shape[0]), Random_result)
+    print('Random results takes: {:.4f}s per instance.'.format((t2_random - t1_random)/inst.shape[0]))
+    print(Random_result)
 
     # print('DRL improves {0:.2%} against Random'.format(((DRL_result - Random_result)/Random_result).mean()))
 
     # rollout greedy
     print('Starting rollout greedy policy...')
-    t1_greedy = time.time()
-    greedy_result = []
+    t1_best_improvement = time.time()
+    best_improvement_result = []
     for ins in inst[np.newaxis, np.newaxis, :, :]:
         _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
 
         while env.itr < transit:
-            best_move = greedy(feasible_actions=feasible_actions[0],
-                               current_graph=env.current_graphs[0],
-                               current_tabu_list=env.tabu_lists[0],
-                               current_obj=env.current_objs[0],
-                               incumbent_obj=env.incumbent_objs[0],
-                               instance=env.instances[0],
-                               device=dev)
+            best_move = best_improvement_move(feasible_actions=feasible_actions[0],
+                                              current_graph=env.current_graphs[0],
+                                              current_tabu_list=env.tabu_lists[0],
+                                              current_obj=env.current_objs[0],
+                                              incumbent_obj=env.incumbent_objs[0],
+                                              instance=env.instances[0],
+                                              device=dev)
             _, _, feasible_actions, _ = env.step(best_move, dev)
-        greedy_result.append(env.incumbent_objs.cpu().item())
-    t2_greedy = time.time()
-    greedy_result = np.array(greedy_result)
-    print('Greedy results takes: {:.4f}s per instance.\n'.format(t2_greedy - t1_greedy), greedy_result)
+        best_improvement_result.append(env.incumbent_objs.cpu().item())
+    t2_best_improvement = time.time()
+    best_improvement_result = np.array(best_improvement_result)
+    print('Greedy results takes: {:.4f}s per instance.'.format(t2_best_improvement - t1_best_improvement))
+    print(best_improvement_result)
 
     if testing_type == 'tai':
         tai_sota_result = np.load('./test_data/tai{}x{}_SOTA_result.npy'.format(p_j, p_m))

@@ -57,7 +57,12 @@ def greedy(feasible_actions, current_graph, current_tabu_list, current_obj, incu
 
     support_env.step(feasible_actions, device)
 
-    print(support_env.current_objs)
+    if support_env.current_objs.min().cpu().item() < current_obj.cpu().item():
+        best_move = [feasible_actions[torch.argmin(support_env.current_objs, dim=0, keepdim=True).cpu().item()]]
+    else:
+        best_move = [[0, 0]]
+
+    return best_move
 
 
 def main():
@@ -65,7 +70,6 @@ def main():
     policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)
     saved_model_path = './saved_model/{}x{}_{}_{}_{}_{}_reward.pth'.format(model_j, model_m, init, training_episode_length, model_type, reward_type)
     policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
-    batch_data = BatchGraph()
 
     # inst = np.array([uni_instance_gen(n_j=p_j, n_m=p_m, low=l, high=h) for _ in range(n_generated_instances)])
     # np.save('./test_data/syn_test_instance_{}x{}.npy'.format(p_j, p_m), inst)
@@ -80,18 +84,25 @@ def main():
     # rollout greedy
     print('Starting rollout greedy policy...')
     t1_greedy = time.time()
-    for ins in inst[np.newaxis, np.newaxis, 0, :]:
+    greedy_result = []
+    for ins in inst[np.newaxis, np.newaxis, :, :]:
         _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
-        greedy(feasible_actions=feasible_actions[0],
-               current_graph=env.current_graphs[0],
-               current_tabu_list=env.tabu_lists[0],
-               current_obj=env.current_objs[0],
-               incumbent_obj=env.incumbent_objs[0],
-               instance=env.instances[0],
-               device=dev)
 
+        while env.itr < transit:
+            best_move = greedy(feasible_actions=feasible_actions[0],
+                               current_graph=env.current_graphs[0],
+                               current_tabu_list=env.tabu_lists[0],
+                               current_obj=env.current_objs[0],
+                               incumbent_obj=env.incumbent_objs[0],
+                               instance=env.instances[0],
+                               device=dev)
+            _, _, feasible_actions, _ = env.step(best_move, dev)
+        greedy_result.append(env.incumbent_objs.cpu().item())
     t2_greedy = time.time()
-    print('Greedy results takes: {:.4f}s per instance.\n'.format((t2_greedy - t1_greedy)/inst.shape[0]))
+    greedy_result = np.array(greedy_result)
+    print('Greedy results takes: {:.4f}s per instance.\n'.format(t2_greedy - t1_greedy), greedy_result)
+    # print(env.incumbent_objs)
+    # print(np.load('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m)))
 
 
 

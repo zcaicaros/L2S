@@ -7,10 +7,10 @@ init = 'fdd-divide-mwkr'  # 'plist', 'spt', ...
 j = 10
 m = 10
 episode = 128000
-training_episode_length = 256
-reward_type = 'consecutive'  # 'yaoxin', 'consecutive'
-log_type = 'training'  # 'validation', 'training'
-plot_step_size_training = 20
+training_episode_length = 128
+reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
+log_type = 'validation'  # 'validation', 'training'
+plot_step_size_training = 10
 plot_step_size_validation = 2
 
 

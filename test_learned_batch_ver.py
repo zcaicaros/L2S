@@ -31,7 +31,7 @@ model_type = ['incumbent', 'current']  # 'incumbent', 'current'
 transit = [500, 1000, 2000]
 result_type = 'incumbent'  # 'current', 'incumbent'
 
-torch.manual_seed(1)
+# torch.manual_seed(1)
 # np.random.seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -48,7 +48,7 @@ def best_improvement_move(feasible_actions, current_graph, current_tabu_list, cu
     duplicated_current_graphs = [copy.deepcopy(current_graph) for _ in range(n_feasible_actions)]
     duplicated_tabu_lists = [copy.copy(current_tabu_list) for _ in range(n_feasible_actions)]
 
-    support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type=reward_type)
+    support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
     support_env.instances = duplicated_instances
     support_env.current_graphs = duplicated_current_graphs
     support_env.current_objs = duplicated_current_obj
@@ -109,7 +109,7 @@ def main():
                     saved_model_path = './saved_model/{}x{}_{}_{}_{}_{}_reward.pth'.format(model_j, model_m, init,
                                                                                            training_length,
                                                                                            m_type, r_type)
-                    print(saved_model_path)
+                    print('loading model from:', saved_model_path)
                     policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
                     batch_data = BatchGraph()
                     # rollout network

@@ -6,27 +6,29 @@ from model.actor import Actor
 from ortools_baseline import MinimalJobshopSat
 from env.env_batch import BatchGraph
 import copy
+import random
 
 
 show = False
 
 # problem config
-p_j = 10
-p_m = 10
+p_j = 15
+p_m = 15
 l = 1
 h = 99
-testing_type = 'syn'  # 'tai', 'syn'
+testing_type = 'tai'  # 'tai', 'syn'
 n_generated_instances = 100
 init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
 reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
 
 # MDP config
-transit = 500
+transit = 2000
 result_type = 'incumbent'  # 'current', 'incumbent'
 
 
 torch.manual_seed(1)
 np.random.seed(1)
+random.seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
@@ -54,7 +56,9 @@ def greedy(feasible_actions, current_graph, current_tabu_list, current_obj, incu
     if support_env.current_objs.min().cpu().item() < current_obj.cpu().item():
         best_move = [feasible_actions[torch.argmin(support_env.current_objs, dim=0, keepdim=True).cpu().item()]]
     else:
-        best_move = [[0, 0]]
+        # print(feasible_actions)
+        best_move = [random.choice(feasible_actions)]
+        # best_move = [[0, 0]]
 
     return best_move
 
@@ -75,11 +79,14 @@ def main():
     else:
         raise ValueError('testing_type must be "tai" or "syn".')
 
+    compare_against = np.load('./test_data/tai15x15_SOTA_result.npy'.format(p_j, p_m))
+    print(compare_against)
+
     # rollout greedy
     print('Starting rollout greedy policy...')
     t1_greedy = time.time()
     greedy_result = []
-    for ins in inst:
+    for ins in inst[:]:
         ins = np.array([ins])
         _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
 
@@ -92,16 +99,17 @@ def main():
                                instance=env.instances[0],
                                device=dev)
             _, _, feasible_actions, _ = env.step(best_move, dev)
-            print(env.itr)
-            print(env.current_objs)
-            print(env.incumbent_objs)
+            # print(env.itr)
+            # print(env.current_objs)
+            # print(env.incumbent_objs)
+        print(env.incumbent_objs.cpu().item())
         greedy_result.append(env.incumbent_objs.cpu().item())
     t2_greedy = time.time()
     greedy_result = np.array(greedy_result)
     print(greedy_result)
     print('Greedy results takes: {:.4f}s per instance.\n'.format(t2_greedy - t1_greedy), greedy_result)
     # print(env.incumbent_objs)
-    # print(np.load('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m)))
+    print('Gap:', ((greedy_result - compare_against) / compare_against).mean())
 
 
 

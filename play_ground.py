@@ -117,7 +117,7 @@ embedding2 = GIN(in_dim=3, hidden_dim=64, layer_gin=4)
 
 # print(torch.isnan(torch.tensor([1, float('nan'), 2])))
 # print(torch.tensor([1, float('nan'), 2]).sum().item())
-print(torch.isnan(torch.tensor([1, float('nan'), 2])).sum())
+# print(torch.isnan(torch.tensor([1, float('nan'), 2])).sum())
 
 from model.actor import GIN
 from env.env_batch import BatchGraph
@@ -128,15 +128,32 @@ dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 # print(torch.stack(grad_log))
 
 
-print([1, 2, 3][:-1])
+# print([1, 2, 3][:-1])
 
 eps = np.finfo(np.float32).eps.item()
 tnsr = torch.tensor([666], dtype=torch.float, device=dev)
 out = (tnsr - tnsr.mean()) / (torch.std(tnsr, unbiased=False) + eps)
-print(out)
-print((torch.std(tnsr, unbiased=False) + eps))
+# print(out)
+# print((torch.std(tnsr, unbiased=False) + eps))
 
 p_j = 100
 p_m = 20
 tai_sota = np.array([5464, 5181, 5568, 5339, 5392, 5342, 5436, 5394, 5358, 5183], dtype=float)
 np.save('./test_data/tai{}x{}_SOTA_result.npy'.format(p_j, p_m), tai_sota)
+
+import pandas as pd
+
+results = 'results_tai20x15'
+inference_time = 'inference_time_tai20x15'
+
+## convert your array into a dataframe
+df = pd.DataFrame(np.load('{}.npy'.format(results)))
+## save to xlsx file
+filepath = 'result.xlsx'
+df.to_excel(filepath, index=False)
+
+## convert your array into a dataframe
+df = pd.DataFrame(np.load('{}.npy'.format(inference_time)))
+## save to xlsx file
+filepath = 'inference_time.xlsx'
+df.to_excel(filepath, index=False)

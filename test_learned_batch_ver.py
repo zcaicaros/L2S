@@ -28,7 +28,7 @@ reward_type = ['yaoxin', 'consecutive']  # 'yaoxin', 'consecutive'
 model_type = ['incumbent', 'current']  # 'incumbent', 'current'
 
 # MDP config
-transit = [500, 1000, 2000]
+transit = [500, 1000, 2000]  # [500, 1000, 2000]
 result_type = 'incumbent'  # 'current', 'incumbent'
 
 # torch.manual_seed(1)
@@ -200,6 +200,9 @@ def main():
 
     np.save('results.npy', np.array(results))
     np.save('inference_time.npy', np.array(inference_time))
+
+    print(np.load('results.npy'))
+    print(np.load('inference_time.npy'))
 
 
 if __name__ == '__main__':

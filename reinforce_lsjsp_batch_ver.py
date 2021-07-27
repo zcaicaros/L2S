@@ -74,7 +74,7 @@ def main():
         instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(batch_size)])
         states, feasible_actions, dones = env.reset(instances=instances, init_type=init, device=dev)
 
-        ep_reward_log = []
+        # ep_reward_log = []
         rewards_buffer = []
         log_probs_buffer = []
         dones_buffer = [dones]
@@ -90,24 +90,24 @@ def main():
             dones_buffer.append(dones)
 
             # logging...
-            ep_reward_log.append(rewards)
+            # ep_reward_log.append(rewards)
 
-            '''if env.itr % 10 == 0:
+            if env.itr % 10 == 0:
                 # training...
                 finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
-                ep_reward_log = []
+                # ep_reward_log = []
                 rewards_buffer = []
                 log_probs_buffer = []
-                dones_buffer = [dones]'''
+                dones_buffer = [dones]
 
-        finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
+        # finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
 
         t2 = time.time()
         print('Batch {} training takes: {:.2f}'.format(batch_i, t2 - t1),
               'Mean Performance: {:.2f}'.format(env.current_objs.cpu().mean().item()))
         log.append(env.current_objs.mean().cpu().item())
 
-        if batch_i % 10 == 0:
+        '''if batch_i % 10 == 0:
 
             t3 = time.time()
 
@@ -136,7 +136,7 @@ def main():
 
             t4 = time.time()
 
-            print('Incumbent objs and final step objs for validation are: {:.2f}  {:.2f}'.format(validation_result1, validation_result2), 'validation takes:{:.2f}'.format(t4 - t3))
+            print('Incumbent objs and final step objs for validation are: {:.2f}  {:.2f}'.format(validation_result1, validation_result2), 'validation takes:{:.2f}'.format(t4 - t3))'''
 
 
 if __name__ == '__main__':

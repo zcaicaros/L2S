@@ -7,11 +7,11 @@ init = 'fdd-divide-mwkr'  # 'plist', 'spt', ...
 j = 30
 m = 20
 episode = 128000
-training_episode_length = 128
+training_episode_length = 500
 reward_type = 'consecutive'  # 'yaoxin', 'consecutive'
 log_type = 'training'  # 'validation', 'training'
-plot_step_size_training = 40
-plot_step_size_validation = 2
+plot_step_size_training = 1
+plot_step_size_validation = 1
 
 
 file = './log/batch_{}_log_{}x{}_{}w_{}_{}_{}_reward.npy'.format(log_type, j, m, str(episode/10000), init, training_episode_length, reward_type)

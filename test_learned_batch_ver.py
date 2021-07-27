@@ -32,7 +32,7 @@ transit = [500, 1000, 2000]
 result_type = 'incumbent'  # 'current', 'incumbent'
 
 torch.manual_seed(1)
-np.random.seed(1)
+# np.random.seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
@@ -101,10 +101,11 @@ def main():
 
     for test_step in transit:
         env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
+        print('Starting rollout DRL policy...')
         for r_type in reward_type:
             for training_length in training_episode_length:
                 for m_type in model_type:
-                    # torch.manual_seed(1)
+                    torch.manual_seed(1)
                     saved_model_path = './saved_model/{}x{}_{}_{}_{}_{}_reward.pth'.format(model_j, model_m, init,
                                                                                            training_length,
                                                                                            m_type, r_type)
@@ -112,7 +113,6 @@ def main():
                     policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
                     batch_data = BatchGraph()
                     # rollout network
-                    print('Starting rollout DRL policy...')
                     t1_drl = time.time()
                     states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
                     while env.itr < test_step:

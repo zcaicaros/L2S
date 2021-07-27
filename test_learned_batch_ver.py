@@ -61,8 +61,8 @@ def best_improvement_move(support_env, feasible_actions, current_graph, current_
     if support_env.current_objs.min().cpu().item() < current_obj.cpu().item():
         best_move = [feasible_actions[torch.argmin(support_env.current_objs, dim=0, keepdim=True).cpu().item()]]
     else:
-        # best_move = [random.choice(feasible_actions)]
-        best_move = [[0, 0]]
+        best_move = [random.choice(feasible_actions)]
+        # best_move = [[0, 0]]
 
     return best_move
 
@@ -177,7 +177,7 @@ def main():
                 for ins in inst:
                     ins = np.array([ins])
                     _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
-                    last_obj = env.incumbent_objs.cpu().item()
+                    # last_obj = env.incumbent_objs.cpu().item()
                     while env.itr < test_step:
                         # s_step = time.time()
                         best_move = best_improvement_move(support_env=support_env,
@@ -190,9 +190,9 @@ def main():
                                                           device=dev)
                         _, _, feasible_actions, _ = env.step(best_move, dev)
                         # t_step = time.time()
-                        if last_obj == env.incumbent_objs.cpu().item():
-                            break
-                        last_obj = env.incumbent_objs.cpu().item()
+                        # if last_obj == env.incumbent_objs.cpu().item():
+                        #     break
+                        # last_obj = env.incumbent_objs.cpu().item()
                     best_improvement_result.append(env.incumbent_objs.cpu().item())
                 t2_best_improvement = time.time()
                 best_improvement_result = np.array(best_improvement_result)

@@ -106,7 +106,7 @@ def main():
         results_each_test_step = []
         inference_time_each_test_step = []
         env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
-        print('Starting rollout DRL policy...')
+        '''print('Starting rollout DRL policy...')
         for r_type in reward_type:
             for training_length in training_episode_length:
                 for m_type in model_type:
@@ -135,7 +135,7 @@ def main():
                     print('DRL results takes: {:.4f} per instance.'.format((t2_drl - t1_drl)/inst.shape[0]))
                     inference_time_each_test_step.append((t2_drl - t1_drl)/inst.shape[0])
                     # print(DRL_result)
-                    print()
+                    print()'''
 
         # rollout random policy
         import random

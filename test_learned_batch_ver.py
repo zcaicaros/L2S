@@ -21,13 +21,13 @@ n_generated_instances = 100
 # model config
 model_j = 10
 model_m = 10
-training_episode_length = 128
 init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
-model_type = 'current'  # 'current', 'incumbent'
-reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
+training_episode_length = 64
+reward_type = 'consecutive'  # 'yaoxin', 'consecutive'
+model_type = 'incumbent'  # 'incumbent', 'current'
 
 # MDP config
-transit = 2000
+transit = 1000
 result_type = 'incumbent'  # 'current', 'incumbent'
 
 
@@ -82,64 +82,6 @@ def main():
     else:
         inst = np.load('./test_data/syn_test_instance_{}x{}.npy'.format(p_j, p_m))
 
-    # rollout network
-    print('Starting rollout DRL policy...')
-    t1_drl = time.time()
-    states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
-    while env.itr < transit:
-        batch_data.wrapper(*states)
-        actions, _ = policy(batch_data, feasible_actions)
-        states, _, feasible_actions, _ = env.step(actions, dev)
-    if result_type == 'incumbent':
-        DRL_result = env.current_objs.cpu().squeeze().numpy()
-    else:
-        DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
-    t2_drl = time.time()
-    print('DRL results takes: {:.4f}s per instance.'.format((t2_drl - t1_drl)/inst.shape[0]))
-    print(DRL_result)
-
-    # rollout random policy
-    import random
-    random.seed(1)
-    print('Starting rollout random policy...')
-    t1_random = time.time()
-    states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
-    while env.itr < transit:
-        actions = [random.choice(feasible_action) for feasible_action in feasible_actions]
-        states, _, feasible_actions, _ = env.step(actions, dev)
-    if result_type == 'incumbent':
-        Random_result = env.incumbent_objs.cpu().squeeze().numpy()
-    else:
-        Random_result = env.current_objs.cpu().squeeze().numpy()
-
-    t2_random = time.time()
-    print('Random results takes: {:.4f}s per instance.'.format((t2_random - t1_random)/inst.shape[0]))
-    print(Random_result)
-
-    # print('DRL improves {0:.2%} against Random'.format(((DRL_result - Random_result)/Random_result).mean()))
-
-    # rollout greedy
-    print('Starting rollout greedy policy...')
-    t1_best_improvement = time.time()
-    best_improvement_result = []
-    for ins in inst[np.newaxis, np.newaxis, :, :]:
-        _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
-
-        while env.itr < transit:
-            best_move = best_improvement_move(feasible_actions=feasible_actions[0],
-                                              current_graph=env.current_graphs[0],
-                                              current_tabu_list=env.tabu_lists[0],
-                                              current_obj=env.current_objs[0],
-                                              incumbent_obj=env.incumbent_objs[0],
-                                              instance=env.instances[0],
-                                              device=dev)
-            _, _, feasible_actions, _ = env.step(best_move, dev)
-        best_improvement_result.append(env.incumbent_objs.cpu().item())
-    t2_best_improvement = time.time()
-    best_improvement_result = np.array(best_improvement_result)
-    print('Greedy results takes: {:.4f}s per instance.'.format(t2_best_improvement - t1_best_improvement))
-    print(best_improvement_result)
-
     if testing_type == 'tai':
         tai_sota_result = np.load('./test_data/tai{}x{}_SOTA_result.npy'.format(p_j, p_m))
         gap_against = tai_sota_result
@@ -163,9 +105,75 @@ def main():
             np.save('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m), results_ortools)
         gap_against = results_ortools
 
-
+    # rollout network
+    print('Starting rollout DRL policy...')
+    t1_drl = time.time()
+    states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
+    while env.itr < transit:
+        batch_data.wrapper(*states)
+        actions, _ = policy(batch_data, feasible_actions)
+        states, _, feasible_actions, _ = env.step(actions, dev)
+    if result_type == 'incumbent':
+        DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
+    else:
+        DRL_result = env.current_objs.cpu().squeeze().numpy()
+    t2_drl = time.time()
     print('DRL Gap:', ((DRL_result - gap_against) / gap_against).mean())
+    print('DRL results takes: {:.4f} per instance.'.format((t2_drl - t1_drl)/inst.shape[0]))
+    # print(DRL_result)
+    print()
+
+    # rollout random policy
+    import random
+    random.seed(1)
+    print('Starting rollout random policy...')
+    t1_random = time.time()
+    states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
+    while env.itr < transit:
+        actions = [random.choice(feasible_action) for feasible_action in feasible_actions]
+        states, _, feasible_actions, _ = env.step(actions, dev)
+    if result_type == 'incumbent':
+        Random_result = env.incumbent_objs.cpu().squeeze().numpy()
+    else:
+        Random_result = env.current_objs.cpu().squeeze().numpy()
+
+    t2_random = time.time()
     print('Random Gap:', ((Random_result - gap_against) / gap_against).mean())
+    print('Random results takes: {:.4f} per instance.'.format((t2_random - t1_random)/inst.shape[0]))
+    # print(Random_result)
+    print()
+
+    # print('DRL improves {0:.2%} against Random'.format(((DRL_result - Random_result)/Random_result).mean()))
+
+    # rollout greedy
+    print('Starting rollout greedy policy...')
+    t1_best_improvement = time.time()
+    best_improvement_result = []
+    for ins in inst:
+        ins = np.array([ins])
+        _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
+        last_obj = env.incumbent_objs.cpu().item()
+        while env.itr < transit:
+            s_step = time.time()
+            best_move = best_improvement_move(feasible_actions=feasible_actions[0],
+                                              current_graph=env.current_graphs[0],
+                                              current_tabu_list=env.tabu_lists[0],
+                                              current_obj=env.current_objs[0],
+                                              incumbent_obj=env.incumbent_objs[0],
+                                              instance=env.instances[0],
+                                              device=dev)
+            _, _, feasible_actions, _ = env.step(best_move, dev)
+            t_step = time.time()
+            if last_obj == env.incumbent_objs.cpu().item():
+                break
+            last_obj = env.incumbent_objs.cpu().item()
+        best_improvement_result.append(env.incumbent_objs.cpu().item())
+    t2_best_improvement = time.time()
+    best_improvement_result = np.array(best_improvement_result)
+    print('Greedy Gap:', ((best_improvement_result - gap_against) / gap_against).mean())
+    print('Greedy results takes: {:.4f} per instance.'.format((t_step - s_step)*transit))
+    # print(best_improvement_result)
+    print()
 
 
 if __name__ == '__main__':

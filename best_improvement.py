@@ -11,23 +11,17 @@ import copy
 show = False
 
 # problem config
-p_j = 30
-p_m = 20
+p_j = 10
+p_m = 10
 l = 1
 h = 99
 testing_type = 'syn'  # 'tai', 'syn'
 n_generated_instances = 100
-
-# model config
-model_j = 10
-model_m = 10
-training_episode_length = 128
 init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
-model_type = 'current'  # 'current', 'incumbent'
 reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
 
 # MDP config
-transit = 2000
+transit = 500
 result_type = 'incumbent'  # 'current', 'incumbent'
 
 
@@ -67,9 +61,9 @@ def greedy(feasible_actions, current_graph, current_tabu_list, current_obj, incu
 
 def main():
     env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type=reward_type)
-    policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)
-    saved_model_path = './saved_model/{}x{}_{}_{}_{}_{}_reward.pth'.format(model_j, model_m, init, training_episode_length, model_type, reward_type)
-    policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
+    # policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)
+    # saved_model_path = './saved_model/{}x{}_{}_{}_{}_{}_reward.pth'.format(model_j, model_m, init, training_episode_length, model_type, reward_type)
+    # policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
 
     # inst = np.array([uni_instance_gen(n_j=p_j, n_m=p_m, low=l, high=h) for _ in range(n_generated_instances)])
     # np.save('./test_data/syn_test_instance_{}x{}.npy'.format(p_j, p_m), inst)
@@ -85,9 +79,9 @@ def main():
     print('Starting rollout greedy policy...')
     t1_greedy = time.time()
     greedy_result = []
-    for ins in inst[np.newaxis, np.newaxis, 0, :]:
+    for ins in inst:
+        ins = np.array([ins])
         _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
-        print(env.incumbent_objs)
 
         while env.itr < transit:
             best_move = greedy(feasible_actions=feasible_actions[0],

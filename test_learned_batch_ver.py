@@ -99,7 +99,12 @@ def main():
 
     policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)
 
+    results = []
+    inference_time = []
+
     for test_step in transit:
+        results_each_test_step = []
+        inference_time_each_test_step = []
         env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
         print('Starting rollout DRL policy...')
         for r_type in reward_type:
@@ -126,7 +131,9 @@ def main():
                     t2_drl = time.time()
                     print('DRL settings: test_step={}, reward_type={}, model_type={}, model_training_length={}'.format(test_step, r_type, m_type, training_length))
                     print('DRL Gap:', ((DRL_result - gap_against) / gap_against).mean())
+                    results_each_test_step.append(((DRL_result - gap_against) / gap_against).mean())
                     print('DRL results takes: {:.4f} per instance.'.format((t2_drl - t1_drl)/inst.shape[0]))
+                    inference_time_each_test_step.append((t2_drl - t1_drl)/inst.shape[0])
                     # print(DRL_result)
                     print()
 
@@ -147,7 +154,9 @@ def main():
         t2_random = time.time()
         print('Random settings: test_step={}'.format(test_step))
         print('Random Gap:', ((Random_result - gap_against) / gap_against).mean())
+        results_each_test_step.append(((Random_result - gap_against) / gap_against).mean())
         print('Random results takes: {:.4f} per instance.'.format((t2_random - t1_random)/inst.shape[0]))
+        inference_time_each_test_step.append((t2_random - t1_random)/inst.shape[0])
         # print(Random_result)
         print()
 
@@ -180,9 +189,17 @@ def main():
         best_improvement_result = np.array(best_improvement_result)
         print('Greedy settings: test_step={}'.format(test_step))
         print('Greedy Gap:', ((best_improvement_result - gap_against) / gap_against).mean())
+        results_each_test_step.append(((best_improvement_result - gap_against) / gap_against).mean())
         print('Greedy results takes: {:.4f} per instance.'.format((t_step - s_step)*test_step))
+        inference_time_each_test_step.append((t_step - s_step)*test_step)
         # print(best_improvement_result)
         print()
+
+        results.append(results_each_test_step)
+        inference_time.append(inference_time_each_test_step)
+
+    np.save('results.npy', np.array(results))
+    np.save('inference_time.npy', np.array(inference_time))
 
 
 if __name__ == '__main__':

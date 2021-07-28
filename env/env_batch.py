@@ -378,7 +378,7 @@ class JsspN5:
 
     def feasible_actions(self, device):
         actions = []
-        feasible_actions_flag = []  # 0 for no feasible operation pairs
+        feasible_actions_flag = []  # False for no feasible operation pairs
         for i, (current_graph, instance, tabu_list) in enumerate(zip(self.current_graphs, self.instances, self.tabu_lists)):
             action = self._gen_moves(solution=current_graph, mch_mat=instance[1], tabu_list=tabu_list)
             if len(action) != 0:

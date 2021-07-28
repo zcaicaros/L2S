@@ -74,14 +74,9 @@ def main():
     # inst = np.array([uni_instance_gen(n_j=p_j, n_m=p_m, low=l, high=h) for _ in range(n_generated_instances)])
     # np.save('./test_data/syn_test_instance_{}x{}.npy'.format(p_j, p_m), inst)
 
-    if testing_type == 'tai':
-        inst = np.load('./test_data/tai{}x{}.npy'.format(p_j, p_m))
-    elif testing_type == 'syn':
-        inst = np.load('./test_data/syn_test_instance_{}x{}.npy'.format(p_j, p_m))
-    else:
-        raise ValueError('testing_type must be "tai" or "syn".')
+    inst = np.load('./test_data/{}{}x{}.npy'.format(testing_type, p_j, p_m))
 
-    compare_against = np.load('./test_data/tai15x15_SOTA_result.npy'.format(p_j, p_m))
+    compare_against = np.load('./test_data/{}{}x{}_result.npy'.format(testing_type, p_j, p_m))
     print(compare_against)
 
     # rollout greedy

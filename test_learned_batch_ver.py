@@ -80,16 +80,15 @@ def main():
             print('\nStart testing {}{}x{}...\n'.format(test_t, p_j, p_m))
 
             if test_t == 'tai':
-                tai_sota_result = np.load('./test_data/tai{}x{}_SOTA_result.npy'.format(p_j, p_m))
-                gap_against = tai_sota_result
+                gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
             else:
                 # ortools solver
                 from pathlib import Path
-                ortools_path = Path('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m))
+                ortools_path = Path('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
                 if ortools_path.is_file():
-                    results_ortools = np.load('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m))
+                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
                 else:
-                    results_ortools = []
+                    gap_against = []
                     print('Starting Ortools...')
                     for i, data in enumerate(inst):
                         times_rearrange = np.expand_dims(data[0], axis=-1)
@@ -97,10 +96,9 @@ def main():
                         data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
                         result = MinimalJobshopSat(data.tolist())
                         print('Instance-' + str(i + 1) + ' Ortools makespan:', result)
-                        results_ortools.append(result[1])
-                    results_ortools = np.array(results_ortools)
-                    np.save('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m), results_ortools)
-                gap_against = results_ortools
+                        gap_against.append(result[1])
+                    gap_against = np.array(gap_against)
+                    np.save('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m), gap_against)
 
             policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)
 

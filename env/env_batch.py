@@ -25,6 +25,11 @@ class BatchGraph:
         self.edge_index = edge_index
         self.batch = batch
 
+    def clean(self):
+        self.x = None
+        self.edge_index = None
+        self.batch = None
+
 
 class JsspN5:
     def __init__(self, n_job, n_mch, low, high, reward_type):

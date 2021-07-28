@@ -118,6 +118,7 @@ def main():
                 actions_val, log_ps_val = policy(validation_batch_data, feasible_actions_val)
                 states_val, rewards_vall, feasible_actions_val, dones_val = env_validation.step(actions_val, dev)
             states_val, rewards_vall, feasible_actions_val, dones_val, actions_val, log_ps_val = None, None, None, None, None, None
+            validation_batch_data.clean()
             validation_result1 = env_validation.incumbent_objs.mean().cpu().item()
             validation_result2 = env_validation.current_objs.mean().cpu().item()
             # saving model based on validation results

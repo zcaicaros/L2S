@@ -92,7 +92,7 @@ def main():
             # logging...
             # ep_reward_log.append(rewards)
 
-            if env.itr % 10 == 0:
+            if env.itr % args.steps_learn == 0:
                 # training...
                 finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
                 # ep_reward_log = []
@@ -107,16 +107,17 @@ def main():
               'Mean Performance: {:.2f}'.format(env.current_objs.cpu().mean().item()))
         log.append(env.current_objs.mean().cpu().item())
 
-        '''if batch_i % 10 == 0:
+        if batch_i % 10 == 0:
 
             t3 = time.time()
 
             # validating...
-            states_val, feasible_actions_val, _ = env_validation.reset(instances=validation_data, init_type=init, device=dev)
+            states_val, feasible_actions_val, dones_val = env_validation.reset(instances=validation_data, init_type=init, device=dev)
             while env_validation.itr < args.transit:
                 validation_batch_data.wrapper(*states_val)
                 actions_val, log_ps_val = policy(validation_batch_data, feasible_actions_val)
-                states_val, _, feasible_actions_val, _ = env_validation.step(actions_val, dev)
+                states_val, rewards_vall, feasible_actions_val, dones_val = env_validation.step(actions_val, dev)
+            states_val, rewards_vall, feasible_actions_val, dones_val, actions_val, log_ps_val = None, None, None, None, None, None
             validation_result1 = env_validation.incumbent_objs.mean().cpu().item()
             validation_result2 = env_validation.current_objs.mean().cpu().item()
             # saving model based on validation results
@@ -136,7 +137,7 @@ def main():
 
             t4 = time.time()
 
-            print('Incumbent objs and final step objs for validation are: {:.2f}  {:.2f}'.format(validation_result1, validation_result2), 'validation takes:{:.2f}'.format(t4 - t3))'''
+            print('Incumbent objs and final step objs for validation are: {:.2f}  {:.2f}'.format(validation_result1, validation_result2), 'validation takes:{:.2f}'.format(t4 - t3))
 
 
 if __name__ == '__main__':

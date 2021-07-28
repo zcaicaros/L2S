@@ -3,11 +3,11 @@ import numpy as np
 
 
 # problem config
-p_j = 10
-p_m = 10
+p_j = 20
+p_m = 20
 l = 1
 h = 99
-testing_type = 'syn'  # 'tai', 'syn'
+testing_type = 'tai'  # 'tai', 'syn'
 
 ## convert your array into a dataframe
 df = pd.DataFrame(np.load('results_{}{}x{}.npy'.format(testing_type, p_j, p_m)))

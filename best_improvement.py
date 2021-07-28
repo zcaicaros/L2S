@@ -53,12 +53,14 @@ def greedy(feasible_actions, current_graph, current_tabu_list, current_obj, incu
 
     support_env.step(feasible_actions, device)
 
-    if support_env.current_objs.min().cpu().item() < current_obj.cpu().item():
+    '''if support_env.current_objs.min().cpu().item() < current_obj.cpu().item():
         best_move = [feasible_actions[torch.argmin(support_env.current_objs, dim=0, keepdim=True).cpu().item()]]
     else:
         # print(feasible_actions)
         best_move = [random.choice(feasible_actions)]
-        # best_move = [[0, 0]]
+        # best_move = [[0, 0]]'''
+
+    best_move = [feasible_actions[torch.argmin(support_env.current_objs, dim=0, keepdim=True).cpu().item()]]
 
     return best_move
 

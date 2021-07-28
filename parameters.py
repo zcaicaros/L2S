@@ -10,5 +10,6 @@ parser.add_argument('--transit', type=int, default=500)
 parser.add_argument('--batch_size', type=int, default=32)
 parser.add_argument('--episodes', type=int, default=128000)
 parser.add_argument('--reward_type', type=str, default='yaoxin')
+parser.add_argument('--steps_learn', type=int, default=10)
 
 args = parser.parse_args()

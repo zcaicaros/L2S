@@ -77,7 +77,7 @@ def main():
     inst = np.load('./test_data/{}{}x{}.npy'.format(testing_type, p_j, p_m))
 
     compare_against = np.load('./test_data/{}{}x{}_result.npy'.format(testing_type, p_j, p_m))
-    print(compare_against)
+    print(compare_against.mean())
 
     # rollout greedy
     print('Starting rollout greedy policy...')

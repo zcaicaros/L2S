@@ -9,7 +9,24 @@ import torch.nn.functional as F
 from torch.distributions.categorical import Categorical
 import torch.nn as nn
 from torch.nn import Sequential, Linear, ReLU
-from torch_geometric.nn import GINConv, global_mean_pool
+from torch_geometric.nn import GINConv, global_mean_pool, GATConv
+
+
+class DGHANlayer(torch.nn.Module):
+    def __init__(self,
+                 in_chnl: int,
+                 out_chnl: int,
+                 heads: int,
+                 dropout: float,
+                 concat: bool):
+        super(DGHANlayer, self).__init__()
+        self.dropout = dropout
+        self.opsgrp_conv = GATConv(in_chnl, out_chnl, heads=heads, dropout=dropout, concat=concat)
+        self.mchgrp_conv = GATConv(in_chnl, out_chnl, heads=heads, dropout=dropout, concat=concat)
+
+    def forward(self, node_h, edge_index):
+
+        return node_h
 
 
 class GIN(torch.nn.Module):

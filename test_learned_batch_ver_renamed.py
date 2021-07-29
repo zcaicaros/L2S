@@ -69,16 +69,18 @@ def best_improvement_move(support_env, feasible_actions, current_graph, current_
 
 def main():
 
-    for test_t in testing_type:
+    for test_t in testing_type:  # select benchmark
         if test_t == 'syn':
             problem_j, problem_m = syn_problem_j, syn_problem_m
         else:
             problem_j, problem_m = tai_problem_j, tai_problem_m
-        for p_j, p_m in zip(problem_j, problem_m):
+
+        for p_j, p_m in zip(problem_j, problem_m):  # select problem size
 
             inst = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))
             print('\nStart testing {}{}x{}...\n'.format(test_t, p_j, p_m))
 
+            # read saved gap_against or use ortools to solve it.
             if test_t == 'tai':
                 gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
             else:
@@ -102,18 +104,18 @@ def main():
 
             policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)
 
-            results = []
-            inference_time = []
+            results = []  # save result for DRL and conventional heuristic
+            inference_time = []  # save inference for DRL and conventional heuristic
 
-            for test_step in transit:
+            for test_step in transit:  # select testing max itr
                 results_each_test_step = []
                 inference_time_each_test_step = []
                 env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')  # reward_type doesn't matter, since we don't need it while rollout
                 print('Starting rollout DRL policy...')
-                for r_type in reward_type:
-                    for training_length in training_episode_length:
-                        for m_j, m_m in zip(model_j, model_m):
-                            for m_type in model_type:
+                for r_type in reward_type:  # select reward type
+                    for training_length in training_episode_length:  # select training episode length
+                        for m_j, m_m in zip(model_j, model_m):  # select training model size
+                            for m_type in model_type:  # select training model type
                                 torch.manual_seed(1)
                                 saved_model_path = './saved_model/{}x{}_{}_{}_{}_{}_reward.pth'.format(m_j, m_m, init,
                                                                                                        training_length,

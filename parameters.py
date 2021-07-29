@@ -1,5 +1,5 @@
 import argparse
-parser = argparse.ArgumentParser(description='PyTorch REINFORCE example')
+parser = argparse.ArgumentParser(description='DRL-LSJSP')
 
 # env parameters
 parser.add_argument('--j', type=int, default=20)

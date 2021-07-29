@@ -7,14 +7,17 @@ from env.env_batch import JsspN5
 from model.actor import Actor
 from ortools_baseline import MinimalJobshopSat
 from env.env_batch import BatchGraph
+from conventional_baselines import best_improvement_move
 
 show = False
+# torch.manual_seed(1)
+# np.random.seed(1)
+dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-# problem config
+# benchmark config
 l = 1
 h = 99
-n_generated_instances = 100
-init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
+init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
 testing_type = ['syn', 'tai']
 syn_problem_j = [10]
 syn_problem_m = [10]
@@ -24,51 +27,27 @@ tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 # model config
 model_j = [10]
 model_m = [10]
-
-training_episode_length = [64, 128, 256]
+training_episode_length = [500]  # [64, 128, 256]
 reward_type = ['yaoxin', 'consecutive']  # 'yaoxin', 'consecutive'
 model_type = ['incumbent', 'last_step']  # 'incumbent', 'last_step'
+gamma = 1
+hidden_dim = 128
+embedding_layer = 4
+policy_layer = 4
+lr = 1e-5
+steps_learn = 10
+batch_size = 3
+episodes = 3
+step_validation = 1
+
 
 # MDP config
 transit = [500, 1000, 2000]  # [500, 1000, 2000]
 result_type = 'incumbent'  # 'current', 'incumbent'
 
-# torch.manual_seed(1)
-# np.random.seed(1)
-dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-
-def best_improvement_move(support_env, feasible_actions, current_graph, current_tabu_list, current_obj, incumbent_obj, instance, device):
-
-    # only support single instance, so env.inst.shape = [b=1, 2, j, m]
-
-    n_feasible_actions = len(feasible_actions)
-
-    duplicated_instances = np.tile(instance, reps=[n_feasible_actions, 1, 1, 1])
-    duplicated_current_obj = current_obj.repeat(n_feasible_actions, 1)
-    duplicated_incumbent_obj = incumbent_obj.repeat(n_feasible_actions, 1)
-    duplicated_current_graphs = [copy.deepcopy(current_graph) for _ in range(n_feasible_actions)]
-    duplicated_tabu_lists = [copy.copy(current_tabu_list) for _ in range(n_feasible_actions)]
-
-    support_env.instances = duplicated_instances
-    support_env.current_graphs = duplicated_current_graphs
-    support_env.current_objs = duplicated_current_obj
-    support_env.tabu_lists = duplicated_tabu_lists
-    support_env.incumbent_objs = duplicated_incumbent_obj
-
-    support_env.step(feasible_actions, device)
-
-    if support_env.current_objs.min().cpu().item() < current_obj.cpu().item():
-        best_move = [feasible_actions[torch.argmin(support_env.current_objs, dim=0, keepdim=True).cpu().item()]]
-    else:
-        best_move = [random.choice(feasible_actions)]
-        # best_move = [[0, 0]]
-
-    return best_move
 
 
 def main():
-
     for test_t in testing_type:  # select benchmark
         if test_t == 'syn':
             problem_j, problem_m = syn_problem_j, syn_problem_m
@@ -107,109 +86,112 @@ def main():
             results = []  # save result for DRL and conventional heuristic
             inference_time = []  # save inference for DRL and conventional heuristic
 
-            for test_step in transit:  # select testing max itr
-                results_each_test_step = []
-                inference_time_each_test_step = []
-                env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')  # reward_type doesn't matter, since we don't need it while rollout
-                print('Starting rollout DRL policy...')
-                for r_type in reward_type:  # select reward type
-                    for training_length in training_episode_length:  # select training episode length
-                        for m_j, m_m in zip(model_j, model_m):  # select training model size
-                            for m_type in model_type:  # select training model type
-                                torch.manual_seed(1)
-                                saved_model_path = './saved_model/{}x{}_{}_{}_{}_{}_reward.pth'.format(m_j, m_m, init,
-                                                                                                       training_length,
-                                                                                                       m_type, r_type)
-                                print('loading model from:', saved_model_path)
-                                policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
-                                batch_data = BatchGraph()
-                                # rollout network
-                                t1_drl = time.time()
-                                states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
-                                while env.itr < test_step:
-                                    batch_data.wrapper(*states)
-                                    actions, _ = policy(batch_data, feasible_actions)
-                                    states, _, feasible_actions, _ = env.step(actions, dev)
-                                if result_type == 'incumbent':
-                                    DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
-                                else:
-                                    DRL_result = env.current_objs.cpu().squeeze().numpy()
-                                t2_drl = time.time()
-                                print('DRL settings: test_step={}, reward_type={}, model_type={}, model_training_length={}'.format(test_step, r_type, m_type, training_length))
-                                print('DRL Gap:', ((DRL_result - gap_against) / gap_against).mean())
-                                results_each_test_step.append(((DRL_result - gap_against) / gap_against).mean())
-                                print('DRL results takes: {:.4f} per instance.'.format((t2_drl - t1_drl)/inst.shape[0]))
-                                inference_time_each_test_step.append((t2_drl - t1_drl)/inst.shape[0])
-                                # print(DRL_result)
-                                print()
+            for init in init_type:
+                for test_step in transit:  # select testing max itr
+                    results_each_test_step = []
+                    inference_time_each_test_step = []
+                    env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
+                    print('Starting rollout DRL policy...')
+                    for r_type in reward_type:  # select reward type
+                        for training_length in training_episode_length:  # select training episode length
+                            for m_j, m_m in zip(model_j, model_m):  # select training model size
+                                for m_type in model_type:  # select training model type
+                                    torch.manual_seed(1)
+                                    saved_model_path = './renamed_saved_model/' \
+                                                       '{}_{}x{}[{},{}]_{}_{}_{}_' \
+                                                       '{}_{}_{}_' \
+                                                       '{}_{}_{}_{}_{}_{}' \
+                                                       '.pth'\
+                                        .format(m_type, m_j, m_m, l, h, init, r_type, gamma,
+                                                hidden_dim, embedding_layer, policy_layer,
+                                                lr, steps_learn, training_length, batch_size, episodes, step_validation)
+                                    print('loading model from:', saved_model_path)
+                                    policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
+                                    batch_data = BatchGraph()
+                                    # rollout network
+                                    t1_drl = time.time()
+                                    states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
+                                    while env.itr < test_step:
+                                        batch_data.wrapper(*states)
+                                        actions, _ = policy(batch_data, feasible_actions)
+                                        states, _, feasible_actions, _ = env.step(actions, dev)
+                                    if result_type == 'incumbent':
+                                        DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
+                                    else:
+                                        DRL_result = env.current_objs.cpu().squeeze().numpy()
+                                    t2_drl = time.time()
+                                    print(
+                                        'DRL settings: test_step={}, reward_type={}, model_type={}, model_training_length={}'.format(
+                                            test_step, r_type, m_type, training_length))
+                                    print('DRL Gap:', ((DRL_result - gap_against) / gap_against).mean())
+                                    results_each_test_step.append(((DRL_result - gap_against) / gap_against).mean())
+                                    print(
+                                        'DRL results takes: {:.4f} per instance.'.format((t2_drl - t1_drl) / inst.shape[0]))
+                                    inference_time_each_test_step.append((t2_drl - t1_drl) / inst.shape[0])
+                                    # print(DRL_result)
+                                    print()
 
-                # rollout random policy
-                import random
-                random.seed(1)
-                print('Starting rollout random policy...')
-                t1_random = time.time()
-                states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
-                while env.itr < test_step:
-                    actions = [random.choice(feasible_action) for feasible_action in feasible_actions]
-                    states, _, feasible_actions, _ = env.step(actions, dev)
-                if result_type == 'incumbent':
-                    Random_result = env.incumbent_objs.cpu().squeeze().numpy()
-                else:
-                    Random_result = env.current_objs.cpu().squeeze().numpy()
 
-                t2_random = time.time()
-                print('Random settings: test_step={}'.format(test_step))
-                print('Random Gap:', ((Random_result - gap_against) / gap_against).mean())
-                results_each_test_step.append(((Random_result - gap_against) / gap_against).mean())
-                print('Random results takes: {:.4f} per instance.'.format((t2_random - t1_random)/inst.shape[0]))
-                inference_time_each_test_step.append((t2_random - t1_random)/inst.shape[0])
-                # print(Random_result)
-                print()
-
-                # print('DRL improves {0:.2%} against Random'.format(((DRL_result - Random_result)/Random_result).mean()))
-
-                # rollout greedy
-                random.seed(1)
-                print('Starting rollout greedy policy...')
-                support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')  # reward_type doesn't matter
-                best_improvement_result = []
-                t1_best_improvement = time.time()
-                for ins in inst:
-                    ins = np.array([ins])
-                    _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
-                    # last_obj = env.incumbent_objs.cpu().item()
+                    # rollout random policy
+                    import random
+                    random.seed(1)
+                    print('Starting rollout random policy...')
+                    t1_random = time.time()
+                    states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
                     while env.itr < test_step:
-                        # s_step = time.time()
-                        best_move = best_improvement_move(support_env=support_env,
-                                                          feasible_actions=feasible_actions[0],
-                                                          current_graph=env.current_graphs[0],
-                                                          current_tabu_list=env.tabu_lists[0],
-                                                          current_obj=env.current_objs[0],
-                                                          incumbent_obj=env.incumbent_objs[0],
-                                                          instance=env.instances[0],
-                                                          device=dev)
-                        _, _, feasible_actions, _ = env.step(best_move, dev)
-                        # t_step = time.time()
-                        # if last_obj == env.incumbent_objs.cpu().item():
-                        #     break
-                        # last_obj = env.incumbent_objs.cpu().item()
-                    best_improvement_result.append(env.incumbent_objs.cpu().item())
-                t2_best_improvement = time.time()
-                best_improvement_result = np.array(best_improvement_result)
-                print('Greedy settings: test_step={}'.format(test_step))
-                print('Greedy Gap:', ((best_improvement_result - gap_against) / gap_against).mean())
-                results_each_test_step.append(((best_improvement_result - gap_against) / gap_against).mean())
-                print('Greedy results takes: {:.4f} per instance.'.format((t2_best_improvement - t1_best_improvement)/inst.shape[0]))
-                inference_time_each_test_step.append((t2_best_improvement - t1_best_improvement)/inst.shape[0])
-                # print(best_improvement_result)
-                print()
+                        actions = [random.choice(feasible_action) for feasible_action in feasible_actions]
+                        states, _, feasible_actions, _ = env.step(actions, dev)
+                    if result_type == 'incumbent':
+                        Random_result = env.incumbent_objs.cpu().squeeze().numpy()
+                    else:
+                        Random_result = env.current_objs.cpu().squeeze().numpy()
 
-                results.append(results_each_test_step)
-                inference_time.append(inference_time_each_test_step)
+                    t2_random = time.time()
+                    print('Random settings: test_step={}'.format(test_step))
+                    print('Random Gap:', ((Random_result - gap_against) / gap_against).mean())
+                    results_each_test_step.append(((Random_result - gap_against) / gap_against).mean())
+                    print('Random results takes: {:.4f} per instance.'.format((t2_random - t1_random) / inst.shape[0]))
+                    inference_time_each_test_step.append((t2_random - t1_random) / inst.shape[0])
+                    # print(Random_result)
+                    print()
+
+
+                    # rollout greedy
+                    random.seed(1)
+                    print('Starting rollout greedy policy...')
+                    support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
+                    best_improvement_result = []
+                    t1_best_improvement = time.time()
+                    for ins in inst:
+                        ins = np.array([ins])
+                        _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
+                        while env.itr < test_step:
+                            best_move = best_improvement_move(support_env=support_env,
+                                                              feasible_actions=feasible_actions[0],
+                                                              current_graph=env.current_graphs[0],
+                                                              current_tabu_list=env.tabu_lists[0],
+                                                              current_obj=env.current_objs[0],
+                                                              incumbent_obj=env.incumbent_objs[0],
+                                                              instance=env.instances[0],
+                                                              device=dev)
+                            _, _, feasible_actions, _ = env.step(best_move, dev)
+                        best_improvement_result.append(env.incumbent_objs.cpu().item())
+                    t2_best_improvement = time.time()
+                    best_improvement_result = np.array(best_improvement_result)
+                    print('Greedy settings: test_step={}'.format(test_step))
+                    print('Greedy Gap:', ((best_improvement_result - gap_against) / gap_against).mean())
+                    results_each_test_step.append(((best_improvement_result - gap_against) / gap_against).mean())
+                    print('Greedy results takes: {:.4f} per instance.'.format(
+                        (t2_best_improvement - t1_best_improvement) / inst.shape[0]))
+                    inference_time_each_test_step.append((t2_best_improvement - t1_best_improvement) / inst.shape[0])
+                    # print(best_improvement_result)
+                    print()
+
+                    results.append(results_each_test_step)
+                    inference_time.append(inference_time_each_test_step)
 
             np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
             np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))
-
 
 
 if __name__ == '__main__':

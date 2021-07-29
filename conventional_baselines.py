@@ -5,7 +5,6 @@ from env.env_batch import JsspN5
 import copy
 import random
 
-
 show = False
 
 # problem config
@@ -22,15 +21,14 @@ reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
 transit = 1000
 result_type = 'incumbent'  # 'current', 'incumbent'
 
-
 torch.manual_seed(1)
 np.random.seed(1)
 random.seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-def best_improvement_move(feasible_actions, current_graph, current_tabu_list, current_obj, incumbent_obj, instance, device):
-
+def best_improvement_move(support_env, feasible_actions, current_graph, current_tabu_list, current_obj, incumbent_obj,
+                          instance, device):
     # only support single instance, so env.inst.shape = [b=1, 2, j, m]
 
     n_feasible_actions = len(feasible_actions)
@@ -41,7 +39,6 @@ def best_improvement_move(feasible_actions, current_graph, current_tabu_list, cu
     duplicated_current_graphs = [copy.deepcopy(current_graph) for _ in range(n_feasible_actions)]
     duplicated_tabu_lists = [copy.copy(current_tabu_list) for _ in range(n_feasible_actions)]
 
-    support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type=reward_type)
     support_env.instances = duplicated_instances
     support_env.current_graphs = duplicated_current_graphs
     support_env.current_objs = duplicated_current_obj
@@ -59,8 +56,8 @@ def best_improvement_move(feasible_actions, current_graph, current_tabu_list, cu
     return best_move
 
 
-def tabu_move(feasible_actions, current_graph, current_tabu_list, current_obj, incumbent_obj, instance, device):
-
+def tabu_move(support_env, feasible_actions, current_graph, current_tabu_list, current_obj, incumbent_obj, instance,
+              device):
     # only support single instance, so env.inst.shape = [b=1, 2, j, m]
 
     n_feasible_actions = len(feasible_actions)
@@ -71,7 +68,6 @@ def tabu_move(feasible_actions, current_graph, current_tabu_list, current_obj, i
     duplicated_current_graphs = [copy.deepcopy(current_graph) for _ in range(n_feasible_actions)]
     duplicated_tabu_lists = [copy.copy(current_tabu_list) for _ in range(n_feasible_actions)]
 
-    support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type=reward_type)
     support_env.instances = duplicated_instances
     support_env.current_graphs = duplicated_current_graphs
     support_env.current_objs = duplicated_current_obj
@@ -92,6 +88,7 @@ def main():
     compare_against = np.load('./test_data/{}{}x{}_result.npy'.format(testing_type, p_j, p_m))
     print('compare against:', compare_against)
 
+    support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')  # reward_type doesn't matter
 
     # rollout best_improvement_move
     print('Starting rollout best_improvement_move policy...')
@@ -102,7 +99,8 @@ def main():
         _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
 
         while env.itr < transit:
-            best_move = best_improvement_move(feasible_actions=feasible_actions[0],
+            best_move = best_improvement_move(support_env=support_env,
+                                              feasible_actions=feasible_actions[0],
                                               current_graph=env.current_graphs[0],
                                               current_tabu_list=env.tabu_lists[0],
                                               current_obj=env.current_objs[0],
@@ -118,7 +116,6 @@ def main():
     print('Best_improvement_move results takes: {:.4f}s per instance.\n'.format(t2_greedy - t1_greedy), greedy_result)
     print('Gap:', ((greedy_result - compare_against) / compare_against).mean())
 
-
     # rollout tabu_move
     print('Starting rollout tabu_move policy...')
     t1_greedy = time.time()
@@ -128,7 +125,8 @@ def main():
         _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
 
         while env.itr < transit:
-            best_move = tabu_move(feasible_actions=feasible_actions[0],
+            best_move = tabu_move(support_env=support_env,
+                                  feasible_actions=feasible_actions[0],
                                   current_graph=env.current_graphs[0],
                                   current_tabu_list=env.tabu_lists[0],
                                   current_obj=env.current_objs[0],
@@ -143,8 +141,6 @@ def main():
     print(greedy_result)
     print('Tabu_move results takes: {:.4f}s per instance.\n'.format(t2_greedy - t1_greedy), greedy_result)
     print('Gap:', ((greedy_result - compare_against) / compare_against).mean())
-
-
 
 
 if __name__ == '__main__':

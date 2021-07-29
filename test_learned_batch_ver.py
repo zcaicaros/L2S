@@ -13,7 +13,6 @@ show = False
 # problem config
 l = 1
 h = 99
-n_generated_instances = 100
 init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
 testing_type = ['syn', 'tai']
 syn_problem_j = [10]

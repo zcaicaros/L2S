@@ -3,7 +3,7 @@ import numpy as np
 
 
 # problem config
-p_j = 20
+p_j = 50
 p_m = 20
 l = 1
 h = 99

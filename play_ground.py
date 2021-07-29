@@ -100,6 +100,7 @@ torch.manual_seed(1)
 embedding1 = GIN(in_dim=3, hidden_dim=64, layer_gin=4)'''
 
 from model.actor import GIN
+
 torch.manual_seed(1)
 embedding2 = GIN(in_dim=3, hidden_dim=64, layer_gin=4)
 # print([param for param in embedding.parameters()])
@@ -122,6 +123,7 @@ embedding2 = GIN(in_dim=3, hidden_dim=64, layer_gin=4)
 from model.actor import GIN
 from env.env_batch import BatchGraph
 import torch.optim as optim
+
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # grad_log = [torch.isnan(param.grad).sum() for param in embedding.parameters()]
@@ -141,19 +143,40 @@ p_m = 20
 tai_sota = np.array([5464, 5181, 5568, 5339, 5392, 5342, 5436, 5394, 5358, 5183], dtype=float)
 np.save('./test_data/tai{}x{}_SOTA_result.npy'.format(p_j, p_m), tai_sota)
 
-import pandas as pd
+from parameters import args
 
-results = 'results_tai20x15'
-inference_time = 'inference_time_tai20x15'
+init = args.init_type
+print('./saved_model/{}x{}[{},{}]_{}_{}_{}_'  # env parameters
+      '{}_{}_{}_'  # model parameters
+      '{}_{}_{}_{}_{}_{}_'  # training parameters
+      'incumbent.pth'  # saving model type
+      .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
+              args.hidden_dim, args.embedding_layer, args.policy_layer,
+              args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes, args.step_validation))
 
-## convert your array into a dataframe
-df = pd.DataFrame(np.load('{}.npy'.format(results)))
-## save to xlsx file
-filepath = 'result.xlsx'
-df.to_excel(filepath, index=False)
+print('./saved_model/{}x{}[{},{}]_{}_{}_{}_'  # env parameters
+      '{}_{}_{}_'  # model parameters
+      '{}_{}_{}_{}_{}_{}_'  # training parameters
+      'last_step.pth'  # saving model type
+      .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
+              args.hidden_dim, args.embedding_layer, args.policy_layer,
+              args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
+              args.step_validation))
 
-## convert your array into a dataframe
-df = pd.DataFrame(np.load('{}.npy'.format(inference_time)))
-## save to xlsx file
-filepath = 'inference_time.xlsx'
-df.to_excel(filepath, index=False)
+print('./log/training_log_'
+      '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
+      '{}_{}_{}_'  # model parameters
+      '{}_{}_{}_{}_{}_{}.npy'  # training parameters
+      .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
+              args.hidden_dim, args.embedding_layer, args.policy_layer,
+              args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
+              args.step_validation))
+
+print('./log/validation_log_'
+      '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
+      '{}_{}_{}_'  # model parameters
+      '{}_{}_{}_{}_{}_{}.npy'  # training parameters
+      .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
+              args.hidden_dim, args.embedding_layer, args.policy_layer,
+              args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
+              args.step_validation))

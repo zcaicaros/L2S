@@ -175,7 +175,10 @@ def main():
                                                               instance=env.instances[0],
                                                               device=dev)
                             _, _, feasible_actions, _ = env.step(best_move, dev)
-                        best_improvement_result.append(env.incumbent_objs.cpu().item())
+                        if result_type == 'incumbent':
+                            best_improvement_result.append(env.incumbent_objs.cpu().item())
+                        else:
+                            best_improvement_result.append(env.current_objs.cpu().item())
                     t2_best_improvement = time.time()
                     best_improvement_result = np.array(best_improvement_result)
                     print('Greedy settings: test_step={}'.format(test_step))

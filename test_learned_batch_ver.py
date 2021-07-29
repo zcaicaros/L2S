@@ -190,7 +190,10 @@ def main():
                         # if last_obj == env.incumbent_objs.cpu().item():
                         #     break
                         # last_obj = env.incumbent_objs.cpu().item()
-                    best_improvement_result.append(env.incumbent_objs.cpu().item())
+                    if result_type == 'incumbent':
+                        best_improvement_result.append(env.incumbent_objs.cpu().item())
+                    else:
+                        best_improvement_result.append(env.current_objs.cpu().item())
                 t2_best_improvement = time.time()
                 best_improvement_result = np.array(best_improvement_result)
                 print('Greedy settings: test_step={}'.format(test_step))

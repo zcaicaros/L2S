@@ -424,9 +424,6 @@ def main():
         t3 = time.time()
         states, feasible_actions, done = env.reset(instances=insts, init_type=init, device=device)
         batch_wrapper = BatchGraph()
-        # print(states[0].sum())
-        # print(states[1].sum())
-        # print(states[2].sum())
         # print(env.incumbent_objs)
 
         saved_acts = []
@@ -438,21 +435,6 @@ def main():
                 batch_wrapper.wrapper(*states)
                 actions, _ = actor(batch_wrapper, feasible_actions)
                 # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
-
-
-                # print(states[0].reshape(-1, n_nodes_per_graph, 3)[0])
-                # print(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph])
-                # print(actions[save_action_for_instance])
-                # print(done)
-                # print(done.sum())
-                # print(actions)
-                # saved_acts.append(actions[save_action_for_instance])
-                # print(done)
-                # torch.save(states[0].reshape(-1, n_nodes_per_graph, 3)[0], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
-                # torch.save(torch_geometric.utils.sort_edge_index(states[1])[0][:, :n_edges_per_graph],'C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
-                # torch.save(states[2], 'C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
-                # print(env.itr)
-
 
                 states, reward, feasible_actions, done = env.step(actions, device)
 

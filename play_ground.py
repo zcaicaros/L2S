@@ -106,12 +106,6 @@ embedding2 = GIN(in_dim=3, hidden_dim=64, layer_gin=4)
 # print([param for param in embedding.parameters()])
 
 
-# x = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/x.pt')
-# edge_index = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/edge_index.pt')
-# batch = torch.load('C:/Users/CONG030/Desktop/reinforce_debug/compare/batch.pt')
-
-# batch_data.wrap(x, edge_index, batch)
-# print(edge_index)
 
 
 # print(np.random.randint(low=1, high=4))

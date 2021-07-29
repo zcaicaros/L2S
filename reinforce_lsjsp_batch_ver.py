@@ -72,7 +72,7 @@ def main():
         instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(args.batch_size)])
         states, feasible_actions, dones = env.reset(instances=instances, init_type=init, device=dev)
 
-        # ep_reward_log = []
+        ep_reward_log = []
         rewards_buffer = []
         log_probs_buffer = []
         dones_buffer = [dones]
@@ -87,13 +87,13 @@ def main():
             log_probs_buffer.append(log_ps)
             dones_buffer.append(dones)
 
-            # logging...
+            # logging reward...
             # ep_reward_log.append(rewards)
 
             if env.itr % args.steps_learn == 0:
                 # training...
                 finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
-                # ep_reward_log = []
+                # clean training data
                 rewards_buffer = []
                 log_probs_buffer = []
                 dones_buffer = [dones]

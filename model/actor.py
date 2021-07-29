@@ -161,8 +161,9 @@ class Actor(nn.Module):
 
 
 if __name__ == '__main__':
-    from env.env_single import JsspN5
-    from torch_geometric.data import Batch
+    import random
+    from env.env_batch import JsspN5, BatchGraph
+    from env.generateJSP import uni_instance_gen
 
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -170,19 +171,28 @@ if __name__ == '__main__':
     n_m = 10
     l = 1
     h = 99
-    transition = 16
+    reward_type = 'yaoxin'
+    init_type = 'fdd-divide-mwkr'
+    b_size = 2
+    transit = 1
     n_workers = 5
     hid_dim = 4
 
-    env = JsspN5(n_job=n_j, n_mch=n_m, low=l, high=h, min_max=True, transition=transition)
+    torch.manual_seed(1)
+    np.random.seed(1)
+    random.seed(1)
+
+    env = JsspN5(n_job=n_j, n_mch=n_m, low=l, high=h, reward_type=reward_type)
+    batch_data = BatchGraph()
     embedding = GIN(in_dim=3, hidden_dim=hid_dim, layer_gin=3).to(dev)
     actor = Actor(3, hid_dim, gin_l=3, policy_l=3).to(dev)
 
-    # t1 = time.time()
-    init_s, feasible_a, _ = env.reset()
+    instances = np.array([uni_instance_gen(n_j=n_j, n_m=n_m, low=l, high=h) for _ in range(b_size)])
+    states, feasible_as, dones = env.reset(instances=instances, init_type=init_type, device=dev)
 
-    scores = embedding(Batch.from_data_list([init_s, init_s]).to(dev))
-    # actor(Batch.from_data_list([init_s,init_s]).to(dev), [feasible_a,feasible_a])
-    _, log_p = actor(Batch.from_data_list([init_s]).to(dev), [feasible_a])
-    grad = torch.autograd.grad(log_p.mean(), [param for param in actor.parameters()])
-    # print(grad)
+    while env.itr < transit:
+        batch_data.wrapper(*states)
+        actions, log_ps = actor(batch_data, feasible_as)
+        states, rewards, feasible_as, dones = env.step(actions, dev)
+
+        print(actions)

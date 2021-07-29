@@ -2,20 +2,42 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-show = True
-init = 'fdd-divide-mwkr'  # 'plist', 'spt', ...
+# env parameters
 j = 10
 m = 10
-episode = 128000
-training_episode_length = 256
-reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
-log_type = 'validation'  # 'validation', 'training'
+l = 1
+h = 99
+init_type = 'fdd-divide-mwkr'
+reward_type = 'yaoxin'
+gamma = 1
+# model parameters
+hidden_dim = 128
+embedding_layer = 4
+policy_layer = 4
+# training parameters
+lr = 1e-5
+steps_learn = 10
+transit = 500
+batch_size = 3
+episodes = 3
+step_validation = 1
+# plot parameters
+show = True
+log_type = 'validation'  # 'training', 'validation'
 plot_step_size_training = 1
-plot_step_size_validation = 4
+plot_step_size_validation = 1
 
 
-file = './log/batch_{}_log_{}x{}_{}w_{}_{}_{}_reward.npy'.format(log_type, j, m, str(episode/10000), init, training_episode_length, reward_type)
-log = np.load(file)
+
+
+log = np.load('./log/{}_log_'  # log type
+              '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
+              '{}_{}_{}_'  # model parameters
+              '{}_{}_{}_{}_{}_{}.npy'  # training parameters
+              .format(log_type, j, m, l, h, init_type, reward_type, gamma,
+                      hidden_dim, embedding_layer, policy_layer,
+                      lr, steps_learn, transit, batch_size, episodes,
+                      step_validation))
 
 if log_type == 'training':
     obj = log[:log.shape[0] // plot_step_size_training * plot_step_size_training].reshape(log.shape[0] // plot_step_size_training, -1).mean(axis=1)

@@ -24,8 +24,8 @@ tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 model_j = [10]
 model_m = [10]
 
-training_episode_length = [64, 128, 256]
-reward_type = ['yaoxin', 'consecutive']  # 'yaoxin', 'consecutive'
+training_episode_length = [500]
+reward_type = ['yaoxin']  # 'yaoxin', 'consecutive'
 model_type = ['incumbent', 'last_step']  # 'incumbent', 'last_step'
 
 # MDP config
@@ -140,7 +140,7 @@ def main():
                                 # print(DRL_result)
                                 print()
 
-                # rollout random policy
+                '''# rollout random policy
                 import random
                 random.seed(1)
                 print('Starting rollout random policy...')
@@ -208,7 +208,7 @@ def main():
                 inference_time.append(inference_time_each_test_step)
 
             np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
-            np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))
+            np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))'''
 
 
 

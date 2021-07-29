@@ -14,7 +14,7 @@ l = 1
 h = 99
 testing_type = 'tai'  # 'tai', 'syn'
 n_generated_instances = 100
-init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
+init = 'spt'  # 'fdd-divide-mwkr', 'spt', ...
 reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
 
 # MDP config

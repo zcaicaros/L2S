@@ -8,6 +8,8 @@ import torch.optim as optim
 from env.env_batch import JsspN5
 from model.actor import Actor
 from env.generateJSP import uni_instance_gen
+from pathlib import Path
+
 
 torch.manual_seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -54,15 +56,17 @@ def main():
     current_validation_result = np.inf
     log = []
     validation_log = []
-    # remember to generate validation data if size is not in {10x10, 15x15, 20x20, 30x20}
-    # np.random.seed(2)
-    # validation_data = np.array([uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(100)])
-    # np.save('./validation_data/validation_instance_{}x{}.npy'.format(args.j, args.m), validation_data)
-    validation_data = np.load('./validation_data/validation_instance_{}x{}.npy'.format(args.j, args.m))
-    np.random.seed(1)
 
-    # instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(args.batch_size)])  # fixed instances
-    # np.save('./instances.npy', instances)
+
+    validation_data_path = Path('./validation_data/validation_instance_{}x{}[{},{}].npy'.format(args.j, args.m, args.l, args.h))
+    if validation_data_path.is_file():
+        validation_data = np.load('./validation_data/validation_instance_{}x{}[{},{}].npy'.format(args.j, args.m, args.l, args.h))
+    else:
+        print('No validation data for {}x{}[{},{}], generating new one.'.format(args.j, args.m, args.l, args.h))
+        validation_data = np.array([uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(args.batch_size)])
+        np.save('./validation_data/validation_instance_{}x{}[{},{}].npy'.format(args.j, args.m, args.l, args.h), validation_data)
+
+    np.random.seed(1)
 
     print()
     for batch_i in range(1, args.episodes // args.batch_size + 1):

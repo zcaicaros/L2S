@@ -113,7 +113,7 @@ def main():
     t2_best_improvement = time.time()
     best_improvement_result = np.array(best_improvement_result)
     print(best_improvement_result)
-    print('Best_improvement_move results takes: {:.4f}s per instance.\n'.format((t2_best_improvement - t1_best_improvement)/inst.shape[0]), best_improvement_result)
+    print('Best_improvement_move results takes: {:.4f}s per instance.'.format((t2_best_improvement - t1_best_improvement)/inst.shape[0]))
     print('Gap:', ((best_improvement_result - compare_against) / compare_against).mean())
 
     # rollout tabu_move
@@ -139,7 +139,7 @@ def main():
     t2_tabu = time.time()
     tabu_result = np.array(tabu_result)
     print(tabu_result)
-    print('Tabu_move results takes: {:.4f}s per instance.\n'.format(t2_tabu - t1_tabu/inst.shape[0]), tabu_result)
+    print('Tabu_move results takes: {:.4f}s per instance.'.format(t2_tabu - t1_tabu/inst.shape[0]))
     print('Gap:', ((tabu_result - compare_against) / compare_against).mean())
 
 

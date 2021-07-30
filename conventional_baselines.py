@@ -17,7 +17,7 @@ init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
 reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
 
 # MDP config
-transit = 5000
+transit = 10000
 result_type = 'incumbent'  # 'current', 'incumbent'
 
 torch.manual_seed(1)
@@ -138,7 +138,7 @@ def main():
     t2_tabu = time.time()
     tabu_result = np.array(tabu_result)
     print(tabu_result)
-    print('Tabu_move results takes: {:.4f}s per instance.'.format(t2_tabu - t1_tabu/inst.shape[0]))
+    print('Tabu_move results takes: {:.4f}s per instance.'.format((t2_tabu - t1_tabu)/inst.shape[0]))
     print('Gap:', ((tabu_result - compare_against) / compare_against).mean())
 
 

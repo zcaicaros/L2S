@@ -113,12 +113,12 @@ def main():
     t2_greedy = time.time()
     greedy_result = np.array(greedy_result)
     print(greedy_result)
-    print('Best_improvement_move results takes: {:.4f}s per instance.\n'.format(t2_greedy - t1_greedy), greedy_result)
+    print('Best_improvement_move results takes: {:.4f}s per instance.\n'.format((t2_greedy - t1_greedy)/inst.shape[0]), greedy_result)
     print('Gap:', ((greedy_result - compare_against) / compare_against).mean())
 
     # rollout tabu_move
     print('Starting rollout tabu_move policy...')
-    t1_greedy = time.time()
+    t1_tabu = time.time()
     greedy_result = []
     for ins in inst[:]:
         ins = np.array([ins])
@@ -136,10 +136,10 @@ def main():
             _, _, feasible_actions, _ = env.step(best_move, dev)
         print(env.incumbent_objs.cpu().item())
         greedy_result.append(env.incumbent_objs.cpu().item())
-    t2_greedy = time.time()
+    t2_tabu = time.time()
     greedy_result = np.array(greedy_result)
     print(greedy_result)
-    print('Tabu_move results takes: {:.4f}s per instance.\n'.format(t2_greedy - t1_greedy), greedy_result)
+    print('Tabu_move results takes: {:.4f}s per instance.\n'.format(t2_tabu - t1_tabu/inst.shape[0]), greedy_result)
     print('Gap:', ((greedy_result - compare_against) / compare_against).mean())
 
 

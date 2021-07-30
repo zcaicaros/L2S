@@ -9,7 +9,7 @@ m = 10
 episode = 128000
 training_episode_length = 500
 reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
-log_type = 'validation'  # 'validation', 'training'
+log_type = 'training'  # 'validation', 'training'
 plot_step_size_training = 1
 plot_step_size_validation = 1
 

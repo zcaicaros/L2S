@@ -13,7 +13,7 @@ parser.add_argument('--hidden_dim', type=int, default=128)
 parser.add_argument('--embedding_layer', type=int, default=4)
 parser.add_argument('--policy_layer', type=int, default=4)
 # training parameters
-parser.add_argument('--lr', type=float, default=1e-4)
+parser.add_argument('--lr', type=float, default=5e-5)
 parser.add_argument('--gamma', type=float, default=1)
 parser.add_argument('--steps_learn', type=int, default=10)
 parser.add_argument('--transit', type=int, default=500)

@@ -15,12 +15,12 @@ hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
 # training parameters
-lr = 1e-5
+lr = 1e-4
 steps_learn = 10
 transit = 500
-batch_size = 3
-episodes = 3
-step_validation = 1
+batch_size = 256
+episodes = 128000
+step_validation = 10
 # plot parameters
 show = True
 log_type = 'validation'  # 'training', 'validation'

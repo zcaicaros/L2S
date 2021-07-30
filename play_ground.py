@@ -151,7 +151,7 @@ print('./saved_model/{}x{}[{},{}]_{}_{}_{}_'  # env parameters
 print('./saved_model/{}x{}[{},{}]_{}_{}_{}_'  # env parameters
       '{}_{}_{}_'  # model parameters
       '{}_{}_{}_{}_{}_{}_'  # training parameters
-      'last_step.pth'  # saving model type
+      'last-step.pth'  # saving model type
       .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
               args.hidden_dim, args.embedding_layer, args.policy_layer,
               args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,

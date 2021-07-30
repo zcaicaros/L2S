@@ -142,7 +142,7 @@ def main():
             if validation_result2 < current_validation_result:
                 print('Find better model w.r.t final step objs, saving model...')
                 torch.save(policy.state_dict(),
-                           './saved_model/last_step_'  # saved model type
+                           './saved_model/last-step_'  # saved model type
                            '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
                            '{}_{}_{}_'  # model parameters
                            '{}_{}_{}_{}_{}_{}'  # training parameters

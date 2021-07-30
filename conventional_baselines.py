@@ -13,12 +13,11 @@ p_m = 15
 l = 1
 h = 99
 testing_type = 'tai'  # 'tai', 'syn'
-n_generated_instances = 100
-init = 'spt'  # 'fdd-divide-mwkr', 'spt', ...
+init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
 reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
 
 # MDP config
-transit = 1000
+transit = 5000
 result_type = 'incumbent'  # 'current', 'incumbent'
 
 torch.manual_seed(1)

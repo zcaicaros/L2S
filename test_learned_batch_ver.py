@@ -26,7 +26,7 @@ model_m = [10]
 
 training_episode_length = [500]
 reward_type = ['yaoxin']  # 'yaoxin', 'consecutive'
-model_type = ['incumbent', 'last_step']  # 'incumbent', 'last_step'
+model_type = ['incumbent', 'last-step']  # 'incumbent', 'last-step'
 
 # MDP config
 transit = [500, 1000, 2000]  # [500, 1000, 2000]

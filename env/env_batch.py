@@ -32,7 +32,7 @@ class BatchGraph:
 
 
 class JsspN5:
-    def __init__(self, n_job, n_mch, low, high, reward_type):
+    def __init__(self, n_job, n_mch, low, high, reward_type, fea_norm_const=1000):
 
         self.n_job = n_job
         self.n_mch = n_mch
@@ -47,7 +47,7 @@ class JsspN5:
         self.tabu_lists = None
         self.incumbent_objs = None
         self.reward_type = reward_type
-        self.fea_norm_const = 1000
+        self.fea_norm_const = fea_norm_const
         self.eva = Evaluator()
 
     def _gen_moves(self, solution, mch_mat, tabu_list=None):

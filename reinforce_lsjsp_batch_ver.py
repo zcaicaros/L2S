@@ -129,7 +129,7 @@ def main():
             if validation_result1 < incumbent_validation_result:
                 print('Find better model w.r.t incumbent objs, saving model...')
                 torch.save(policy.state_dict(),
-                           './saved_model/incumbent_'  # saved model type
+                           './renamed_saved_model/incumbent_'  # saved model type
                            '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
                            '{}_{}_{}_'  # model parameters
                            '{}_{}_{}_{}_{}_{}'  # training parameters
@@ -142,7 +142,7 @@ def main():
             if validation_result2 < current_validation_result:
                 print('Find better model w.r.t final step objs, saving model...')
                 torch.save(policy.state_dict(),
-                           './saved_model/last-step_'  # saved model type
+                           './renamed_saved_model/last-step_'  # saved model type
                            '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
                            '{}_{}_{}_'  # model parameters
                            '{}_{}_{}_{}_{}_{}'  # training parameters
@@ -154,7 +154,7 @@ def main():
                 current_validation_result = validation_result2
 
             # saving log
-            np.save('./log/training_log_'
+            np.save('./renamed_log/training_log_'
                     '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
                     '{}_{}_{}_'  # model parameters
                     '{}_{}_{}_{}_{}_{}.npy'  # training parameters
@@ -164,7 +164,7 @@ def main():
                             args.step_validation),
                     np.array(log))
             validation_log.append([validation_result1, validation_result2])
-            np.save('./log/validation_log_'
+            np.save('./renamed_log/validation_log_'
                     '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
                     '{}_{}_{}_'  # model parameters
                     '{}_{}_{}_{}_{}_{}.npy'  # training parameters

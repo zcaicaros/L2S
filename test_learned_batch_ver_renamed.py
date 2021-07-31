@@ -18,7 +18,7 @@ dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 l = 1
 h = 99
 init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-testing_type = ['syn', 'tai']
+testing_type = ['tai']  # ['syn', 'tai']
 syn_problem_j = [10]
 syn_problem_m = [10]
 tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
@@ -28,17 +28,17 @@ tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 model_j = [10]
 model_m = [10]
 training_episode_length = [500]  # [64, 128, 256]
-reward_type = ['yaoxin', 'consecutive']  # 'yaoxin', 'consecutive'
-model_type = ['incumbent', 'last-step']  # 'incumbent', 'last-step'
+reward_type = ['yaoxin']  # ['yaoxin', 'consecutive']
+model_type = ['incumbent']  # ['incumbent', 'last-step']
 gamma = 1
 hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
-lr = 1e-5
+lr = 5e-5
 steps_learn = 10
-batch_size = 3
-episodes = 3
-step_validation = 1
+batch_size = 256
+episodes = 128000
+step_validation = 10
 
 
 # MDP config
@@ -132,7 +132,7 @@ def main():
                                     print()
 
 
-                    # rollout random policy
+                    '''# rollout random policy
                     import random
                     random.seed(1)
                     print('Starting rollout random policy...')
@@ -191,10 +191,10 @@ def main():
                     print()
 
                     results.append(results_each_test_step)
-                    inference_time.append(inference_time_each_test_step)
+                    inference_time.append(inference_time_each_test_step)'''
 
-            np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
-            np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))
+            # np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
+            # np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))
 
 
 if __name__ == '__main__':

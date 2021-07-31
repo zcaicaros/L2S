@@ -9,7 +9,7 @@ m = 10
 episode = 128000
 training_episode_length = 500
 reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
-log_type = 'training'  # 'validation', 'training'
+log_type = 'validation'  # 'validation', 'training'
 plot_step_size_training = 1
 plot_step_size_validation = 1
 
@@ -32,7 +32,7 @@ if log_type == 'training':
 else:
     obj_incumbent = log[:log.shape[0]//plot_step_size_validation*plot_step_size_validation, 0].reshape(log.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plot objective...
-    # print(obj_incumbent)
+    print(obj_incumbent)
     plt.xlabel('incumbent-iteration({})'.format(plot_step_size_validation))
     plt.ylabel('make span')
     plt.plot([_ for _ in range(obj_incumbent.shape[0])], obj_incumbent, color='tab:blue')

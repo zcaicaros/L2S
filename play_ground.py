@@ -174,3 +174,6 @@ print('./log/validation_log_'
               args.hidden_dim, args.embedding_layer, args.policy_layer,
               args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
               args.step_validation))
+
+ortools_res = np.load('test_data/syn15x15_result.npy')
+print(ortools_res)

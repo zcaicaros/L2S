@@ -30,13 +30,14 @@ model_m = [10]
 training_episode_length = [500]  # [64, 128, 256]
 reward_type = ['yaoxin']  # ['yaoxin', 'consecutive']
 model_type = ['incumbent']  # ['incumbent', 'last-step']
+embedding_type = ['gin']  # ['gin', 'dghan', 'gin+dghan']
 gamma = 1
 hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
 lr = 5e-5
 steps_learn = 10
-batch_size = 256
+batch_size = 512
 episodes = 128000
 step_validation = 10
 
@@ -92,44 +93,45 @@ def main():
                     inference_time_each_test_step = []
                     env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
                     print('Starting rollout DRL policy...')
-                    for r_type in reward_type:  # select reward type
-                        for training_length in training_episode_length:  # select training episode length
-                            for m_j, m_m in zip(model_j, model_m):  # select training model size
-                                for m_type in model_type:  # select training model type
-                                    torch.manual_seed(1)
-                                    saved_model_path = './renamed_saved_model/' \
-                                                       '{}_{}x{}[{},{}]_{}_{}_{}_' \
-                                                       '{}_{}_{}_' \
-                                                       '{}_{}_{}_{}_{}_{}' \
-                                                       '.pth'\
-                                        .format(m_type, m_j, m_m, l, h, init, r_type, gamma,
-                                                hidden_dim, embedding_layer, policy_layer,
-                                                lr, steps_learn, training_length, batch_size, episodes, step_validation)
-                                    print('loading model from:', saved_model_path)
-                                    policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
-                                    batch_data = BatchGraph()
-                                    # rollout network
-                                    t1_drl = time.time()
-                                    states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
-                                    while env.itr < test_step:
-                                        batch_data.wrapper(*states)
-                                        actions, _ = policy(batch_data, feasible_actions)
-                                        states, _, feasible_actions, _ = env.step(actions, dev)
-                                    if result_type == 'incumbent':
-                                        DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
-                                    else:
-                                        DRL_result = env.current_objs.cpu().squeeze().numpy()
-                                    t2_drl = time.time()
-                                    print(
-                                        'DRL settings: test_step={}, reward_type={}, model_type={}, model_training_length={}'.format(
-                                            test_step, r_type, m_type, training_length))
-                                    print('DRL Gap:', ((DRL_result - gap_against) / gap_against).mean())
-                                    results_each_test_step.append(((DRL_result - gap_against) / gap_against).mean())
-                                    print(
-                                        'DRL results takes: {:.4f} per instance.'.format((t2_drl - t1_drl) / inst.shape[0]))
-                                    inference_time_each_test_step.append((t2_drl - t1_drl) / inst.shape[0])
-                                    # print(DRL_result)
-                                    print()
+                    for embd_type in embedding_type:
+                        for r_type in reward_type:  # select reward type
+                            for training_length in training_episode_length:  # select training episode length
+                                for m_j, m_m in zip(model_j, model_m):  # select training model size
+                                    for m_type in model_type:  # select training model type
+                                        torch.manual_seed(1)
+                                        saved_model_path = './renamed_saved_model/' \
+                                                           '{}_{}_{}x{}[{},{}]_{}_{}_{}_' \
+                                                           '{}_{}_{}_' \
+                                                           '{}_{}_{}_{}_{}_{}' \
+                                                           '.pth'\
+                                            .format(m_type, embd_type, m_j, m_m, l, h, init, r_type, gamma,
+                                                    hidden_dim, embedding_layer, policy_layer,
+                                                    lr, steps_learn, training_length, batch_size, episodes, step_validation)
+                                        print('loading model from:', saved_model_path)
+                                        policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
+                                        batch_data = BatchGraph()
+                                        # rollout network
+                                        t1_drl = time.time()
+                                        states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
+                                        while env.itr < test_step:
+                                            batch_data.wrapper(*states)
+                                            actions, _ = policy(batch_data, feasible_actions)
+                                            states, _, feasible_actions, _ = env.step(actions, dev)
+                                        if result_type == 'incumbent':
+                                            DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
+                                        else:
+                                            DRL_result = env.current_objs.cpu().squeeze().numpy()
+                                        t2_drl = time.time()
+                                        print(
+                                            'DRL settings: test_step={}, reward_type={}, model_type={}, model_training_length={}'.format(
+                                                test_step, r_type, m_type, training_length))
+                                        print('DRL Gap:', ((DRL_result - gap_against) / gap_against).mean())
+                                        results_each_test_step.append(((DRL_result - gap_against) / gap_against).mean())
+                                        print(
+                                            'DRL results takes: {:.4f} per instance.'.format((t2_drl - t1_drl) / inst.shape[0]))
+                                        inference_time_each_test_step.append((t2_drl - t1_drl) / inst.shape[0])
+                                        # print(DRL_result)
+                                        print()
 
 
                     '''# rollout random policy

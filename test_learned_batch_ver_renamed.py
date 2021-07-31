@@ -129,8 +129,8 @@ def main():
                                             DRL_result = env.current_objs.cpu().squeeze().numpy()
                                         t2_drl = time.time()
                                         print(
-                                            'DRL settings: test_step={}, reward_type={}, model_type={}, model_training_length={}'.format(
-                                                test_step, r_type, m_type, training_length))
+                                            'DRL settings: {}{}x{}, {}, test_step={}, reward_type={}, model_type={}, model_training_length={}'.format(
+                                                test_t, p_j, p_m, init, test_step, r_type, m_type, training_length))
                                         print('DRL Gap:', ((DRL_result - gap_against) / gap_against).mean())
                                         results_each_test_step.append(((DRL_result - gap_against) / gap_against).mean())
                                         print(
@@ -155,7 +155,7 @@ def main():
                         Random_result = env.current_objs.cpu().squeeze().numpy()
 
                     t2_random = time.time()
-                    print('Random settings: test_step={}'.format(test_step))
+                    print('Random settings: {}{}x{}, {}, test_step={}'.format(test_t, p_j, p_m, init, test_step))
                     print('Random Gap:', ((Random_result - gap_against) / gap_against).mean())
                     results_each_test_step.append(((Random_result - gap_against) / gap_against).mean())
                     print('Random results takes: {:.4f} per instance.'.format((t2_random - t1_random) / inst.shape[0]))
@@ -189,7 +189,7 @@ def main():
                             best_improvement_result.append(env.current_objs.cpu().item())
                     t2_best_improvement = time.time()
                     best_improvement_result = np.array(best_improvement_result)
-                    print('Greedy settings: test_step={}'.format(test_step))
+                    print('Greedy settings: {}{}x{}, {}, test_step={}'.format(test_t, p_j, p_m, init, test_step))
                     print('Greedy Gap:', ((best_improvement_result - gap_against) / gap_against).mean())
                     results_each_test_step.append(((best_improvement_result - gap_against) / gap_against).mean())
                     print('Greedy results takes: {:.4f} per instance.'.format(

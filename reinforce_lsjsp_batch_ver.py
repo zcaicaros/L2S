@@ -131,11 +131,11 @@ def main():
                 torch.save(policy.state_dict(),
                            './renamed_saved_model/incumbent_'  # saved model type
                            '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
-                           '{}_{}_{}_'  # model parameters
+                           '{}_{}_{}_{}_'  # model parameters
                            '{}_{}_{}_{}_{}_{}'  # training parameters
                            '.pth'
                            .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
-                                   args.hidden_dim, args.embedding_layer, args.policy_layer,
+                                   args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
                                    args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
                                    args.step_validation))
                 incumbent_validation_result = validation_result1
@@ -144,11 +144,11 @@ def main():
                 torch.save(policy.state_dict(),
                            './renamed_saved_model/last-step_'  # saved model type
                            '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
-                           '{}_{}_{}_'  # model parameters
+                           '{}_{}_{}_{}_'  # model parameters
                            '{}_{}_{}_{}_{}_{}'  # training parameters
                            '.pth'
                            .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
-                                   args.hidden_dim, args.embedding_layer, args.policy_layer,
+                                   args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
                                    args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
                                    args.step_validation))
                 current_validation_result = validation_result2
@@ -156,20 +156,20 @@ def main():
             # saving log
             np.save('./renamed_log/training_log_'
                     '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
-                    '{}_{}_{}_'  # model parameters
+                    '{}_{}_{}_{}_'  # model parameters
                     '{}_{}_{}_{}_{}_{}.npy'  # training parameters
                     .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
-                            args.hidden_dim, args.embedding_layer, args.policy_layer,
+                            args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
                             args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
                             args.step_validation),
                     np.array(log))
             validation_log.append([validation_result1, validation_result2])
             np.save('./renamed_log/validation_log_'
                     '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
-                    '{}_{}_{}_'  # model parameters
+                    '{}_{}_{}_{}_'  # model parameters
                     '{}_{}_{}_{}_{}_{}.npy'  # training parameters
                     .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
-                            args.hidden_dim, args.embedding_layer, args.policy_layer,
+                            args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
                             args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
                             args.step_validation),
                     np.array(validation_log))

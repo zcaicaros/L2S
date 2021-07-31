@@ -24,19 +24,19 @@ episodes = 128000
 step_validation = 10
 # plot parameters
 show = True
-log_type = 'validation'  # 'training', 'validation'
+log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = 1
 plot_step_size_validation = 1
 
 
 
 
-log = np.load('./renamed_log/{}_{}_log_'  # log type
+log = np.load('./renamed_log/{}_log_'  # log type
               '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
-              '{}_{}_{}_'  # model parameters
+              '{}_{}_{}_{}_'  # model parameters
               '{}_{}_{}_{}_{}_{}.npy'  # training parameters
-              .format(log_type, embedding_type, j, m, l, h, init_type, reward_type, gamma,
-                      hidden_dim, embedding_layer, policy_layer,
+              .format(log_type, j, m, l, h, init_type, reward_type, gamma,
+                      hidden_dim, embedding_layer, policy_layer, embedding_type,
                       lr, steps_learn, transit, batch_size, episodes,
                       step_validation))
 

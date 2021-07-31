@@ -18,11 +18,15 @@ dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 l = 1
 h = 99
 init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-testing_type = ['tai']  # ['syn', 'tai']
-syn_problem_j = [10]  # [10, 15, 20, 30, 50, 100]
-syn_problem_m = [10]  # [10, 15, 20, 20, 20, 20]
-tai_problem_j = [15]  # [15, 20, 20, 30, 30, 50, 50, 100]
-tai_problem_m = [15]  # [15, 15, 20, 15, 20, 15, 20, 20]
+testing_type = ['syn', 'tai']  # ['syn', 'tai']
+syn_problem_j = [10]
+syn_problem_m = [10]
+# tai_problem_j = [15]
+# tai_problem_m = [15]
+# syn_problem_j = [10, 15, 20, 30, 50, 100]
+# syn_problem_m = [10, 15, 20, 20, 20, 20]
+tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
+tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 
 # model config
 model_j = [10]
@@ -43,8 +47,9 @@ step_validation = 10
 
 
 # MDP config
-transit = [500, 1000, 2000, 5000, 10000]  # [500, 1000, 2000, 5000, 10000]
+transit = [500, 1000, 2000, 5000]  # [500, 1000, 2000, 5000, 10000]
 result_type = 'incumbent'  # 'current', 'incumbent'
+fea_norm_const = 1000
 
 
 
@@ -91,7 +96,7 @@ def main():
                 for test_step in transit:  # select testing max itr
                     results_each_test_step = []
                     inference_time_each_test_step = []
-                    env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
+                    env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin', fea_norm_const=fea_norm_const)
                     print('Starting rollout DRL policy...')
                     for embd_type in embedding_type:
                         policy = Actor(3, 128, gin_l=4, policy_l=4, embedding_type=embd_type).to(dev)
@@ -101,12 +106,12 @@ def main():
                                     for m_type in model_type:  # select training model type
                                         torch.manual_seed(1)
                                         saved_model_path = './renamed_saved_model/' \
-                                                           '{}_{}_{}x{}[{},{}]_{}_{}_{}_' \
-                                                           '{}_{}_{}_' \
+                                                           '{}_{}x{}[{},{}]_{}_{}_{}_' \
+                                                           '{}_{}_{}_{}_' \
                                                            '{}_{}_{}_{}_{}_{}' \
                                                            '.pth'\
-                                            .format(m_type, embd_type, m_j, m_m, l, h, init, r_type, gamma,
-                                                    hidden_dim, embedding_layer, policy_layer,
+                                            .format(m_type, m_j, m_m, l, h, init, r_type, gamma,
+                                                    hidden_dim, embedding_layer, policy_layer, embd_type,
                                                     lr, steps_learn, training_length, batch_size, episodes, step_validation)
                                         print('loading model from:', saved_model_path)
                                         policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
@@ -135,7 +140,7 @@ def main():
                                         print()
 
 
-                    '''# rollout random policy
+                    # rollout random policy
                     import random
                     random.seed(1)
                     print('Starting rollout random policy...')
@@ -194,10 +199,10 @@ def main():
                     print()
 
                     results.append(results_each_test_step)
-                    inference_time.append(inference_time_each_test_step)'''
+                    inference_time.append(inference_time_each_test_step)
 
-            # np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
-            # np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))
+            np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
+            np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))
 
 
 if __name__ == '__main__':

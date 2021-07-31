@@ -10,7 +10,7 @@ parser.add_argument('--init_type', type=str, default='fdd-divide-mwkr')
 parser.add_argument('--reward_type', type=str, default='yaoxin')
 # model parameters
 parser.add_argument('--hidden_dim', type=int, default=128)
-parser.add_argument('--embedding_layer', type=int, default=4)
+parser.add_argument('--embedding_layer', type=int, default=3)
 parser.add_argument('--policy_layer', type=int, default=4)
 parser.add_argument('--embedding_type', type=str, default='gin')
 # training parameters

@@ -35,7 +35,7 @@ gamma = 1
 hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
-lr = 5e-5
+lr = 1e-5
 steps_learn = 10
 batch_size = 512
 episodes = 128000
@@ -82,7 +82,7 @@ def main():
                     gap_against = np.array(gap_against)
                     np.save('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m), gap_against)
 
-            policy = Actor(3, 128, gin_l=4, policy_l=4).to(dev)
+
 
             results = []  # save result for DRL and conventional heuristic
             inference_time = []  # save inference for DRL and conventional heuristic
@@ -94,6 +94,7 @@ def main():
                     env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
                     print('Starting rollout DRL policy...')
                     for embd_type in embedding_type:
+                        policy = Actor(3, 128, gin_l=4, policy_l=4, embedding_type=embd_type).to(dev)
                         for r_type in reward_type:  # select reward type
                             for training_length in training_episode_length:  # select training episode length
                                 for m_j, m_m in zip(model_j, model_m):  # select training model size

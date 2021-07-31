@@ -17,7 +17,7 @@ dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 init = args.init_type
 env = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, reward_type=args.reward_type)
 env_validation = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, reward_type=args.reward_type)
-policy = Actor(3, args.hidden_dim, gin_l=args.embedding_layer, policy_l=args.policy_layer).to(dev)
+policy = Actor(3, args.hidden_dim, gin_l=args.embedding_layer, policy_l=args.policy_layer, embedding_type=args.embedding_type).to(dev)
 
 optimizer = optim.Adam(policy.parameters(), lr=args.lr)
 eps = np.finfo(np.float32).eps.item()

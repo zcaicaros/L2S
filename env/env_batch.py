@@ -416,7 +416,7 @@ def main():
     # np.save('test_inst.npy', insts)
     # print(insts)
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, reward_type=reward_type)
-    actor = Actor(in_dim=3, hidden_dim=64).to(device)
+    actor = Actor(in_dim=3, hidden_dim=64, embedding_type='gin').to(device)
     # print([param for param in actor.parameters()])
 
     for b_i in range(n_batch):

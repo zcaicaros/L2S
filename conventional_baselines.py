@@ -20,9 +20,9 @@ reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
 transit = 10000
 result_type = 'incumbent'  # 'current', 'incumbent'
 
-torch.manual_seed(1)
-np.random.seed(1)
-random.seed(1)
+# torch.manual_seed(1)
+# np.random.seed(1)
+
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
@@ -94,6 +94,7 @@ def main():
     t1_best_improvement = time.time()
     best_improvement_result = []
     for ins in inst[:]:
+        random.seed(1)
         ins = np.array([ins])
         _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
 
@@ -120,6 +121,7 @@ def main():
     t1_tabu = time.time()
     tabu_result = []
     for ins in inst[:]:
+        random.seed(1)
         ins = np.array([ins])
         _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
 

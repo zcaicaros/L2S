@@ -14,19 +14,19 @@ show = False
 l = 1
 h = 99
 init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
-testing_type = ['syn', 'tai']
+testing_type = ['tai']  # ['syn', 'tai']
 syn_problem_j = [10]
 syn_problem_m = [10]
-tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
-tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
+tai_problem_j = [15]  # [15, 20, 20, 30, 30, 50, 50, 100]
+tai_problem_m = [15]  # [15, 15, 20, 15, 20, 15, 20, 20]
 
 # model config
-model_j = [10]
-model_m = [10]
+model_j = [15]
+model_m = [15]
 
 training_episode_length = [500]
-reward_type = ['yaoxin']  # 'yaoxin', 'consecutive'
-model_type = ['incumbent', 'last-step']  # 'incumbent', 'last-step'
+reward_type = ['yaoxin']  # ['yaoxin', 'consecutive']
+model_type = ['incumbent']  # ['incumbent', 'last-step']
 
 # MDP config
 transit = [500, 1000, 2000]  # [500, 1000, 2000]

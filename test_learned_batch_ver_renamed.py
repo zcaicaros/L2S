@@ -166,7 +166,7 @@ def main():
 
                     # rollout greedy
                     random.seed(1)
-                    print('Starting rollout greedy policy...')
+                    print('Starting rollout best_improvement_move policy...')
                     support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
                     best_improvement_result = []
                     t1_best_improvement = time.time()

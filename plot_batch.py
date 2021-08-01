@@ -12,7 +12,7 @@ reward_type = 'yaoxin'
 gamma = 1
 # model parameters
 hidden_dim = 128
-embedding_layer = 4
+embedding_layer = 3
 policy_layer = 4
 embedding_type = 'gin'
 # training parameters

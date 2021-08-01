@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 show = True
 init = 'fdd-divide-mwkr'  # 'plist', 'spt', ...
-j = 10
-m = 10
+j = 15
+m = 15
 episode = 128000
 training_episode_length = 500
 reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'

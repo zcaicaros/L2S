@@ -189,10 +189,10 @@ def main():
                             best_improvement_result.append(env.current_objs.cpu().item())
                     t2_best_improvement = time.time()
                     best_improvement_result = np.array(best_improvement_result)
-                    print('Greedy settings: {}{}x{}, {}, test_step={}'.format(test_t, p_j, p_m, init, test_step))
-                    print('Greedy Gap:', ((best_improvement_result - gap_against) / gap_against).mean())
+                    print('Best_improvement_move settings: {}{}x{}, {}, test_step={}'.format(test_t, p_j, p_m, init, test_step))
+                    print('Best_improvement_move Gap:', ((best_improvement_result - gap_against) / gap_against).mean())
                     results_each_test_step.append(((best_improvement_result - gap_against) / gap_against).mean())
-                    print('Greedy results takes: {:.4f} per instance.'.format(
+                    print('Best_improvement_move results takes: {:.4f} per instance.'.format(
                         (t2_best_improvement - t1_best_improvement) / inst.shape[0]))
                     inference_time_each_test_step.append((t2_best_improvement - t1_best_improvement) / inst.shape[0])
                     # print(best_improvement_result)

@@ -24,7 +24,8 @@ class DGHANlayer(torch.nn.Module):
         self.opsgrp_conv = GATConv(in_chnl, out_chnl, heads=heads, dropout=dropout, concat=concat)
         self.mchgrp_conv = GATConv(in_chnl, out_chnl, heads=heads, dropout=dropout, concat=concat)
 
-    def forward(self, node_h, edge_index):
+    def forward(self, node_h, pc_edge_index, m_edge_index):
+        print(pc_edge_index)
 
         return node_h
 
@@ -180,10 +181,10 @@ if __name__ == '__main__':
     from env.env_batch import JsspN5, BatchGraph
     from env.generateJSP import uni_instance_gen
 
-    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+    dev = 'cpu' if torch.cuda.is_available() else 'cpu'
 
-    n_j = 10
-    n_m = 10
+    n_j = 3
+    n_m = 3
     l = 1
     h = 99
     reward_type = 'yaoxin'
@@ -209,5 +210,23 @@ if __name__ == '__main__':
         batch_data.wrapper(*states)
         actions, log_ps = actor(batch_data, feasible_as)
         states, rewards, feasible_as, dones = env.step(actions, dev)
+        # print(actions)
 
-        print(actions)
+    edge_index = states[1]
+    print(edge_index[0])
+    print(edge_index[1])
+    print(torch.where(edge_index[0]+1 == edge_index[1])[0])
+    pc_nei_index = torch.where(edge_index[0]+1 == edge_index[1])[0]
+    print(edge_index[:, pc_nei_index])
+
+    n_nodes_each_graph = instances.shape[1] * instances.shape[2] + 2
+    n_nodes = instances.shape[0] * n_nodes_each_graph
+
+    index_S = torch.from_numpy(np.arange(n_nodes // n_nodes_each_graph, dtype=int) * n_nodes_each_graph).to(dev)
+    index_T = torch.from_numpy(np.cumsum(np.ones(shape=[n_nodes // n_nodes_each_graph], dtype=int) * n_nodes_each_graph) - 1).to(dev)
+
+    # S_to = edge_index[edge_index[0] == index_S]
+    print(edge_index[0] == index_S)
+
+    print(edge_index[:, index_S])
+    print(index_T)

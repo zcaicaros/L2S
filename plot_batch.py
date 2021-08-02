@@ -12,7 +12,7 @@ reward_type = 'yaoxin'
 gamma = 1
 # model parameters
 hidden_dim = 128
-embedding_layer = 3
+embedding_layer = 5
 policy_layer = 4
 embedding_type = 'gin'
 # training parameters
@@ -56,6 +56,7 @@ if log_type == 'training':
 else:
     obj_incumbent = log[:log.shape[0]//plot_step_size_validation*plot_step_size_validation, 0].reshape(log.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plot objective...
+    # print(obj_incumbent)
     # print(obj_incumbent.min())
     # print(obj_incumbent.max())
     plt.xlabel('incumbent-iteration({})'.format(plot_step_size_validation))
@@ -67,13 +68,14 @@ else:
         plt.show()
     plt.close()
 
-    obj_current = log[:log.shape[0] // plot_step_size_validation * plot_step_size_validation, 1].reshape(log.shape[0] // plot_step_size_validation, -1).mean(axis=1)
+    obj_last_step = log[:log.shape[0] // plot_step_size_validation * plot_step_size_validation, 1].reshape(log.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plot objective...
+    # print(obj_last_step)
     # print(obj_current.min())
     # print(obj_current.max())
     plt.xlabel('current-iteration({})'.format(plot_step_size_validation))
     plt.ylabel('make span')
-    plt.plot([_ for _ in range(obj_current.shape[0])], obj_current, color='tab:blue')
+    plt.plot([_ for _ in range(obj_last_step.shape[0])], obj_last_step, color='tab:blue')
     plt.grid()
     plt.tight_layout()
     if show:

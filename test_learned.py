@@ -89,8 +89,8 @@ def main():
 
 
 
-            results = []  # save result for DRL and conventional heuristic
-            inference_time = []  # save inference for DRL and conventional heuristic
+            results = []  # save result
+            inference_time = []  # save inference time
 
             for init in init_type:
                 for test_step in transit:  # select testing max itr
@@ -138,7 +138,8 @@ def main():
                                         inference_time_each_test_step.append((t2_drl - t1_drl) / inst.shape[0])
                                         # print(DRL_result)
                                         print()
-
+                    results.append(results_each_test_step)
+                    inference_time.append(inference_time_each_test_step)
 
             # np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
             # np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))

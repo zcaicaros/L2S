@@ -226,8 +226,8 @@ def main():
                     results.append(results_each_test_step)
                     inference_time.append(inference_time_each_test_step)
 
-            # np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
-            # np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))
+            # np.save('test_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
+            # np.save('test_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))
 
 
 if __name__ == '__main__':

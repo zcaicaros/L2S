@@ -34,8 +34,7 @@ file = '{}x{}[{},{}]_{}_{}_{}_' \
        '{}_{}_{}_{}_{}_{}' \
     .format(j, m, l, h, init_type, reward_type, gamma,
             hidden_dim, embedding_layer, policy_layer, embedding_type,
-            lr, steps_learn, transit, batch_size, episodes,
-            step_validation)
+            lr, steps_learn, transit, batch_size, episodes, step_validation)
 
 log = np.load('./log/{}_log_'
               .format(log_type)  # log type

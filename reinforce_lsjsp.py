@@ -102,7 +102,7 @@ def main():
                 log_probs_buffer = []
                 dones_buffer = [dones]
 
-        # finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])  # old-school training scheme
+        # learn(rewards_buffer, log_probs_buffer, dones_buffer[:-1])  # old-school training scheme
 
         t2 = time.time()
         print('Batch {} training takes: {:.2f}'.format(batch_i, t2 - t1),

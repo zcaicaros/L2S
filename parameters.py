@@ -18,7 +18,7 @@ parser.add_argument('--lr', type=float, default=5e-5)
 parser.add_argument('--gamma', type=float, default=1)
 parser.add_argument('--steps_learn', type=int, default=10)
 parser.add_argument('--transit', type=int, default=500)
-parser.add_argument('--batch_size', type=int, default=256)
+parser.add_argument('--batch_size', type=int, default=64)
 parser.add_argument('--episodes', type=int, default=128000)
 parser.add_argument('--step_validation', type=int, default=10)
 

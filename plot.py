@@ -12,7 +12,7 @@ reward_type = 'yaoxin'
 gamma = 1
 # model parameters
 hidden_dim = 128
-embedding_layer = 5
+embedding_layer = 4
 policy_layer = 4
 embedding_type = 'gin'
 # training parameters
@@ -25,7 +25,7 @@ step_validation = 10
 # plot parameters
 show = True
 save = False
-log_type = 'training'  # 'training', 'validation'
+log_type = 'validation'  # 'training', 'validation'
 plot_step_size_training = 1
 plot_step_size_validation = 1
 

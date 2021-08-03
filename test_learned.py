@@ -37,11 +37,11 @@ model_type = ['incumbent']  # ['incumbent', 'last-step']
 embedding_type = ['gin']  # ['gin', 'dghan', 'gin+dghan']
 gamma = 1
 hidden_dim = 128
-embedding_layer = 5
+embedding_layer = 4
 policy_layer = 4
 lr = 5e-5
 steps_learn = 10
-batch_size = 256
+batch_size = 64
 episodes = 128000
 step_validation = 10
 

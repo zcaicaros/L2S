@@ -2,14 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-show = True
+show = False
+save = True
 init = 'fdd-divide-mwkr'  # 'plist', 'spt', ...
 j = 15
 m = 15
 episode = 128000
 training_episode_length = 500
 reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
-log_type = 'validation'  # 'validation', 'training'
+log_type = 'training'  # 'validation', 'training'
 plot_step_size_training = 1
 plot_step_size_validation = 1
 
@@ -25,6 +26,8 @@ if log_type == 'training':
     plt.plot([_ for _ in range(obj.shape[0])], obj, color='tab:blue')
     plt.grid()
     plt.tight_layout()
+    if save:
+        plt.savefig('./curves/{}_{}x{}.png'.format(log_type, j, m))
     if show:
         plt.show()
     plt.close()
@@ -38,6 +41,8 @@ else:
     plt.plot([_ for _ in range(obj_incumbent.shape[0])], obj_incumbent, color='tab:blue')
     plt.grid()
     plt.tight_layout()
+    if save:
+        plt.savefig('./curves/{}_{}x{}.png'.format(log_type, j, m))
     if show:
         plt.show()
     plt.close()
@@ -49,6 +54,8 @@ else:
     plt.plot([_ for _ in range(obj_current.shape[0])], obj_current, color='tab:blue')
     plt.grid()
     plt.tight_layout()
+    if save:
+        plt.savefig('./curves/{}_{}x{}.png'.format(log_type, j, m))
     if show:
         plt.show()
     plt.close()

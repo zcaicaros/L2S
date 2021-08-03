@@ -23,7 +23,8 @@ batch_size = 256
 episodes = 128000
 step_validation = 10
 # plot parameters
-show = True
+show = False
+save = True
 log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = 1
 plot_step_size_validation = 1
@@ -49,6 +50,8 @@ if log_type == 'training':
     plt.plot([_ for _ in range(obj.shape[0])], obj, color='tab:blue')
     plt.grid()
     plt.tight_layout()
+    if save:
+        plt.savefig('./curves/{}_{}x{}.png'.format(log_type, j, m))
     if show:
         plt.show()
     plt.close()
@@ -64,6 +67,8 @@ else:
     plt.plot([_ for _ in range(obj_incumbent.shape[0])], obj_incumbent, color='tab:blue')
     plt.grid()
     plt.tight_layout()
+    if save:
+        plt.savefig('./curves/{}_{}x{}.png'.format(log_type, j, m))
     if show:
         plt.show()
     plt.close()
@@ -71,13 +76,15 @@ else:
     obj_last_step = log[:log.shape[0] // plot_step_size_validation * plot_step_size_validation, 1].reshape(log.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plot objective...
     # print(obj_last_step)
-    # print(obj_current.min())
-    # print(obj_current.max())
+    # print(obj_last_step.min())
+    # print(obj_last_step.max())
     plt.xlabel('current-iteration({})'.format(plot_step_size_validation))
     plt.ylabel('make span')
     plt.plot([_ for _ in range(obj_last_step.shape[0])], obj_last_step, color='tab:blue')
     plt.grid()
     plt.tight_layout()
+    if save:
+        plt.savefig('./curves/{}_{}x{}.png'.format(log_type, j, m))
     if show:
         plt.show()
     plt.close()

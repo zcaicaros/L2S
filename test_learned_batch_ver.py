@@ -14,9 +14,9 @@ show = False
 l = 1
 h = 99
 init = 'fdd-divide-mwkr'  # 'fdd-divide-mwkr', 'spt', ...
-testing_type = ['tai']  # ['syn', 'tai']
-syn_problem_j = [10]
-syn_problem_m = [10]
+testing_type = ['syn']  # ['syn', 'tai']
+syn_problem_j = [15]
+syn_problem_m = [15]
 tai_problem_j = [15]  # [15, 20, 20, 30, 30, 50, 50, 100]
 tai_problem_m = [15]  # [15, 15, 20, 15, 20, 15, 20, 20]
 
@@ -85,7 +85,7 @@ def main():
                 from pathlib import Path
                 ortools_path = Path('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
                 if ortools_path.is_file():
-                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
+                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))[:, 1]
                 else:
                     gap_against = []
                     print('Starting Ortools...')
@@ -140,7 +140,7 @@ def main():
                                 # print(DRL_result)
                                 print()
 
-                '''# rollout random policy
+                # rollout random policy
                 import random
                 random.seed(1)
                 print('Starting rollout random policy...')
@@ -207,8 +207,8 @@ def main():
                 results.append(results_each_test_step)
                 inference_time.append(inference_time_each_test_step)
 
-            np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
-            np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))'''
+            # np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
+            # np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))
 
 
 

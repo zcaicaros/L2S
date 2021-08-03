@@ -18,15 +18,15 @@ dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 l = 1
 h = 99
 init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-testing_type = ['syn', 'tai']  # ['syn', 'tai']
+testing_type = ['tai']  # ['syn', 'tai']
 syn_problem_j = [10]
 syn_problem_m = [10]
-# tai_problem_j = [15]
-# tai_problem_m = [15]
+tai_problem_j = [100]
+tai_problem_m = [20]
 # syn_problem_j = [10, 15, 20, 30, 50, 100]
 # syn_problem_m = [10, 15, 20, 20, 20, 20]
-tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
-tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
+# tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
+# tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 
 # model config
 model_j = [10]
@@ -140,7 +140,7 @@ def main():
                                         print()
 
 
-                    # rollout random policy
+                    '''# rollout random policy
                     import random
                     random.seed(1)
                     print('Starting rollout random policy...')
@@ -202,7 +202,7 @@ def main():
                     inference_time.append(inference_time_each_test_step)
 
             np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
-            np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))
+            np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))'''
 
 
 if __name__ == '__main__':

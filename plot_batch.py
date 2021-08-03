@@ -32,7 +32,7 @@ plot_step_size_validation = 1
 
 
 
-log = np.load('./renamed_log/{}_log_'  # log type
+log = np.load('./log/{}_log_'  # log type
               '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
               '{}_{}_{}_{}_'  # model parameters
               '{}_{}_{}_{}_{}_{}.npy'  # training parameters

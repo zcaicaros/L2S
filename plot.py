@@ -25,7 +25,7 @@ step_validation = 10
 # plot parameters
 show = False
 save = True
-log_type = 'training'  # 'training', 'validation'
+log_type = 'validation'  # 'training', 'validation'
 plot_step_size_training = 1
 plot_step_size_validation = 1
 
@@ -68,7 +68,7 @@ else:
     plt.grid()
     plt.tight_layout()
     if save:
-        plt.savefig('./curves/{}_{}x{}.png'.format(log_type, j, m))
+        plt.savefig('./curves/{}_incumbent_{}x{}.png'.format(log_type, j, m))
     if show:
         plt.show()
     plt.close()
@@ -78,13 +78,13 @@ else:
     # print(obj_last_step)
     # print(obj_last_step.min())
     # print(obj_last_step.max())
-    plt.xlabel('current-iteration({})'.format(plot_step_size_validation))
+    plt.xlabel('last-step-iteration({})'.format(plot_step_size_validation))
     plt.ylabel('make span')
     plt.plot([_ for _ in range(obj_last_step.shape[0])], obj_last_step, color='tab:blue')
     plt.grid()
     plt.tight_layout()
     if save:
-        plt.savefig('./curves/{}_{}x{}.png'.format(log_type, j, m))
+        plt.savefig('./curves/{}_last-step_{}x{}.png'.format(log_type, j, m))
     if show:
         plt.show()
     plt.close()

@@ -81,14 +81,14 @@ class Actor(nn.Module):
     def __init__(self,
                  in_dim,
                  hidden_dim,
-                 gin_l=4,
+                 embedding_l=4,
                  policy_l=3,
                  embedding_type='gin'):
         super(Actor, self).__init__()
         # self.gin_l = gin_l
         self.policy_l = policy_l
 
-        self.embedding = GIN(in_dim=in_dim, hidden_dim=hidden_dim, layer_gin=gin_l)
+        self.embedding = GIN(in_dim=in_dim, hidden_dim=hidden_dim, layer_gin=embedding_l)
 
         # policy
         self.policy = torch.nn.ModuleList()
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     env = JsspN5(n_job=n_j, n_mch=n_m, low=l, high=h, reward_type=reward_type)
     batch_data = BatchGraph()
     embedding = GIN(in_dim=3, hidden_dim=hid_dim, layer_gin=3).to(dev)
-    actor = Actor(3, hid_dim, gin_l=3, policy_l=3).to(dev)
+    actor = Actor(3, hid_dim, embedding_l=3, policy_l=3).to(dev)
 
     instances = np.array([uni_instance_gen(n_j=n_j, n_m=n_m, low=l, high=h) for _ in range(b_size)])
     states, feasible_as, dones = env.reset(instances=instances, init_type=init_type, device=dev)

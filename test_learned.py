@@ -21,12 +21,12 @@ init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
 testing_type = ['tai']  # ['syn', 'tai']
 syn_problem_j = [10]
 syn_problem_m = [10]
-tai_problem_j = [100]
-tai_problem_m = [20]
 # syn_problem_j = [10, 15, 20, 30, 50, 100]
 # syn_problem_m = [10, 15, 20, 20, 20, 20]
-# tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
-# tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
+# tai_problem_j = [15]
+# tai_problem_m = [15]
+tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
+tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 
 # model config
 model_j = [10]
@@ -37,7 +37,7 @@ model_type = ['incumbent']  # ['incumbent', 'last-step']
 embedding_type = ['gin']  # ['gin', 'dghan', 'gin+dghan']
 gamma = 1
 hidden_dim = 128
-embedding_layer = 4
+embedding_layer = 5
 policy_layer = 4
 lr = 5e-5
 steps_learn = 10
@@ -47,7 +47,7 @@ step_validation = 10
 
 
 # MDP config
-transit = [500, 1000, 2000, 5000]  # [500, 1000, 2000, 5000, 10000]
+transit = [500, 1000, 2000]  # [500, 1000, 2000, 5000, 10000]
 result_type = 'incumbent'  # 'current', 'incumbent'
 fea_norm_const = 1000
 
@@ -99,7 +99,7 @@ def main():
                     env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin', fea_norm_const=fea_norm_const)
                     print('Starting rollout DRL policy...')
                     for embd_type in embedding_type:
-                        policy = Actor(3, 128, gin_l=4, policy_l=4, embedding_type=embd_type).to(dev)
+                        policy = Actor(3, 128, embedding_l=embedding_layer, policy_l=policy_layer, embedding_type=embd_type).to(dev)
                         for r_type in reward_type:  # select reward type
                             for training_length in training_episode_length:  # select training episode length
                                 for m_j, m_m in zip(model_j, model_m):  # select training model size
@@ -140,69 +140,8 @@ def main():
                                         print()
 
 
-                    '''# rollout random policy
-                    import random
-                    random.seed(1)
-                    print('Starting rollout random policy...')
-                    t1_random = time.time()
-                    states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
-                    while env.itr < test_step:
-                        actions = [random.choice(feasible_action) for feasible_action in feasible_actions]
-                        states, _, feasible_actions, _ = env.step(actions, dev)
-                    if result_type == 'incumbent':
-                        Random_result = env.incumbent_objs.cpu().squeeze().numpy()
-                    else:
-                        Random_result = env.current_objs.cpu().squeeze().numpy()
-
-                    t2_random = time.time()
-                    print('Random settings: {}{}x{}, {}, test_step={}'.format(test_t, p_j, p_m, init, test_step))
-                    print('Random Gap:', ((Random_result - gap_against) / gap_against).mean())
-                    results_each_test_step.append(((Random_result - gap_against) / gap_against).mean())
-                    print('Random results takes: {:.4f} per instance.'.format((t2_random - t1_random) / inst.shape[0]))
-                    inference_time_each_test_step.append((t2_random - t1_random) / inst.shape[0])
-                    # print(Random_result)
-                    print()
-
-
-                    # rollout greedy
-                    random.seed(1)
-                    print('Starting rollout best_improvement_move policy...')
-                    support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
-                    best_improvement_result = []
-                    t1_best_improvement = time.time()
-                    for ins in inst:
-                        ins = np.array([ins])
-                        _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
-                        while env.itr < test_step:
-                            best_move = best_improvement_move(support_env=support_env,
-                                                              feasible_actions=feasible_actions[0],
-                                                              current_graph=env.current_graphs[0],
-                                                              current_tabu_list=env.tabu_lists[0],
-                                                              current_obj=env.current_objs[0],
-                                                              incumbent_obj=env.incumbent_objs[0],
-                                                              instance=env.instances[0],
-                                                              device=dev)
-                            _, _, feasible_actions, _ = env.step(best_move, dev)
-                        if result_type == 'incumbent':
-                            best_improvement_result.append(env.incumbent_objs.cpu().item())
-                        else:
-                            best_improvement_result.append(env.current_objs.cpu().item())
-                    t2_best_improvement = time.time()
-                    best_improvement_result = np.array(best_improvement_result)
-                    print('Best_improvement_move settings: {}{}x{}, {}, test_step={}'.format(test_t, p_j, p_m, init, test_step))
-                    print('Best_improvement_move Gap:', ((best_improvement_result - gap_against) / gap_against).mean())
-                    results_each_test_step.append(((best_improvement_result - gap_against) / gap_against).mean())
-                    print('Best_improvement_move results takes: {:.4f} per instance.'.format(
-                        (t2_best_improvement - t1_best_improvement) / inst.shape[0]))
-                    inference_time_each_test_step.append((t2_best_improvement - t1_best_improvement) / inst.shape[0])
-                    # print(best_improvement_result)
-                    print()
-
-                    results.append(results_each_test_step)
-                    inference_time.append(inference_time_each_test_step)
-
-            np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
-            np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))'''
+            # np.save('testing_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
+            # np.save('testing_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))
 
 
 if __name__ == '__main__':

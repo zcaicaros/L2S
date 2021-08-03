@@ -23,7 +23,7 @@ optimizer = optim.Adam(policy.parameters(), lr=args.lr)
 eps = np.finfo(np.float32).eps.item()
 
 
-def finish_episode(rewards, log_probs, dones):
+def learn(rewards, log_probs, dones):
     R = torch.zeros_like(rewards[0], dtype=torch.float, device=rewards[0].device)
     returns = []
     for r in rewards[::-1]:
@@ -96,7 +96,7 @@ def main():
 
             if env.itr % args.steps_learn == 0:
                 # training...
-                finish_episode(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
+                learn(rewards_buffer, log_probs_buffer, dones_buffer[:-1])
                 # clean training data
                 rewards_buffer = []
                 log_probs_buffer = []

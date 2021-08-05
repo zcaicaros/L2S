@@ -50,11 +50,6 @@ class GIN(torch.nn.Module):
     def forward(self, batch_states):
 
         x, edge_index, batch = batch_states.x, batch_states.edge_index, batch_states.batch
-        # x, edge_index, batch = batch_states[0], batch_states[1], batch_states[2]
-
-        # print(x)
-        # print(torch_geometric.utils.sort_edge_index(edge_index)[0])
-        # print(batch)
 
         hidden_rep = []
         node_pool_over_layer = 0
@@ -85,9 +80,9 @@ class Actor(nn.Module):
                  policy_l=3,
                  embedding_type='gin'):
         super(Actor, self).__init__()
-        # self.gin_l = gin_l
+        self.embedding_l = embedding_l
         self.policy_l = policy_l
-
+        self.embedding_type = embedding_type
         self.embedding = GIN(in_dim=in_dim, hidden_dim=hidden_dim, layer_gin=embedding_l)
 
         # policy
@@ -113,7 +108,6 @@ class Actor(nn.Module):
     def forward(self, batch_states, feasible_actions):
 
         node_embed, graph_embed = self.embedding(batch_states)
-
 
         device = node_embed.device
         batch_size = graph_embed.shape[0]
@@ -145,10 +139,6 @@ class Actor(nn.Module):
         action_score.masked_fill_(mask, -np.inf)
         action_score_flat = action_score.reshape(batch_size, 1, -1)
         pi = F.softmax(action_score_flat, dim=-1)
-
-        # print(torch.where(pi[0] != 0))
-        # print(pi[0][torch.where(pi[0] != 0)])
-        # print(feasible_actions[0])
 
         dist = Categorical(probs=pi)
         actions_id = dist.sample()

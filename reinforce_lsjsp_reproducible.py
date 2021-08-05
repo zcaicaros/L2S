@@ -9,6 +9,7 @@ from model.actor import Actor
 from env.generateJSP import uni_instance_gen
 from pathlib import Path
 
+args.batch_size = 8
 
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 

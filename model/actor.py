@@ -52,10 +52,10 @@ class GIN(torch.nn.Module):
         x, edge_index, batch = batch_states.x, batch_states.edge_index, batch_states.batch
 
         hidden_rep = []
-        node_pool_over_layer = 0
+        # node_pool_over_layer = 0
         # initial layer forward
         h = self.GIN_layers[0](x, edge_index)
-        node_pool_over_layer += h
+        node_pool_over_layer = h
         hidden_rep.append(h)
         # rest layers forward
         for layer in range(1, self.layer_gin):

@@ -19,15 +19,15 @@ embedding_type = 'gin'
 lr = 5e-5
 steps_learn = 10
 transit = 500
-batch_size = 64
+batch_size = 128
 episodes = 128000
-step_validation = 10
+step_validation = 5
 # plot parameters
 show = True
 save = False
-log_type = 'training'  # 'training', 'validation'
-plot_step_size_training = 5
-plot_step_size_validation = 2
+log_type = 'validation'  # 'training', 'validation'
+plot_step_size_training = 1
+plot_step_size_validation = 1
 
 file = '{}x{}[{},{}]_{}_{}_{}_' \
        '{}_{}_{}_{}_' \

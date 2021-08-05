@@ -1,24 +1,23 @@
 import numpy as np
 import torch
 import time
-import copy
-import random
 from env.env_batch import JsspN5
 from model.actor import Actor
 from ortools_baseline import MinimalJobshopSat
 from env.env_batch import BatchGraph
-from conventional_baselines import best_improvement_move
+
+seed = 3
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
 
 show = False
-# torch.manual_seed(1)
-# np.random.seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # benchmark config
 l = 1
 h = 99
 init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-testing_type = ['syn', 'tai']  # ['syn', 'tai']
+testing_type = ['tai']  # ['syn', 'tai']
 syn_problem_j = [10]
 syn_problem_m = [10]
 # syn_problem_j = [10, 15, 20, 30, 50, 100]
@@ -104,8 +103,6 @@ def main():
                             for training_length in training_episode_length:  # select training episode length
                                 for m_j, m_m in zip(model_j, model_m):  # select training model size
                                     for m_type in model_type:  # select training model type
-                                        torch.manual_seed(1)
-                                        torch.cuda.manual_seed(1)
                                         saved_model_path = './saved_model/' \
                                                            '{}_{}x{}[{},{}]_{}_{}_{}_' \
                                                            '{}_{}_{}_{}_' \

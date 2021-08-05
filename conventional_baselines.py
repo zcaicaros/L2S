@@ -71,15 +71,15 @@ init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
 testing_type = ['syn', 'tai']  # ['syn', 'tai']
 syn_problem_j = [10]
 syn_problem_m = [10]
-# tai_problem_j = [15]
-# tai_problem_m = [15]
 # syn_problem_j = [10, 15, 20, 30, 50, 100]
 # syn_problem_m = [10, 15, 20, 20, 20, 20]
+# tai_problem_j = [15]
+# tai_problem_m = [15]
 tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
 tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 
 # MDP config
-transit = [500, 1000, 2000, 5000]  # [500, 1000, 2000, 5000, 10000]
+transit = [500, 1000, 2000]  # [500, 1000, 2000, 5000, 10000]
 result_type = 'incumbent'  # 'current', 'incumbent'
 fea_norm_const = 1000
 
@@ -131,7 +131,6 @@ def main():
                     env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin', fea_norm_const=fea_norm_const)
 
                     # rollout random policy
-                    import random
                     random.seed(1)
                     print('Starting rollout random policy...')
                     t1_random = time.time()

@@ -1,8 +1,7 @@
 import time
-
+import random
 import numpy as np
 from parameters import args
-
 import torch
 import torch.optim as optim
 from env.env_batch import JsspN5
@@ -10,8 +9,10 @@ from model.actor import Actor
 from env.generateJSP import uni_instance_gen
 from pathlib import Path
 
-
+random.seed(1)
 torch.manual_seed(1)
+torch.cuda.manual_seed(1)
+np.random.seed(1)
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 init = args.init_type
@@ -66,7 +67,6 @@ def main():
         validation_data = np.array([uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(args.batch_size)])
         np.save('./validation_data/validation_instance_{}x{}[{},{}].npy'.format(args.j, args.m, args.l, args.h), validation_data)
 
-    np.random.seed(1)
 
     print()
     for batch_i in range(1, args.episodes // args.batch_size + 1):

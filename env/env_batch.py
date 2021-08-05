@@ -398,6 +398,7 @@ def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     random.seed(1)
     torch.manual_seed(1)
+    torch.cuda.manual_seed(1)
     np.random.seed(3)  # 123456324
 
     j = 10

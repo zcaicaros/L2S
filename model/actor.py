@@ -168,6 +168,7 @@ if __name__ == '__main__':
     hid_dim = 4
 
     torch.manual_seed(1)
+    torch.cuda.manual_seed(1)
     np.random.seed(1)
     random.seed(1)
 

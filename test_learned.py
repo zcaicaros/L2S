@@ -105,6 +105,7 @@ def main():
                                 for m_j, m_m in zip(model_j, model_m):  # select training model size
                                     for m_type in model_type:  # select training model type
                                         torch.manual_seed(1)
+                                        torch.cuda.manual_seed(1)
                                         saved_model_path = './saved_model/' \
                                                            '{}_{}x{}[{},{}]_{}_{}_{}_' \
                                                            '{}_{}_{}_{}_' \

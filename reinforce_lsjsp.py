@@ -12,12 +12,6 @@ from pathlib import Path
 
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-random.seed(1)
-torch.manual_seed(1)
-torch.cuda.manual_seed(1)
-np.random.seed(1)
-
-
 init = args.init_type
 env = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, reward_type=args.reward_type)
 env_validation = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, reward_type=args.reward_type)
@@ -52,6 +46,11 @@ def learn(rewards, log_probs, dones):
 
 
 def main():
+
+    random.seed(1)
+    torch.manual_seed(1)
+    torch.cuda.manual_seed(1)
+    np.random.seed(1)
 
     batch_data = BatchGraph()
     validation_batch_data = BatchGraph()

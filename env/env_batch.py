@@ -12,6 +12,8 @@ from env.permissible_LS import permissibleLeftShift
 from env.message_passing_evl import Evaluator
 import matplotlib.pyplot as plt
 import time
+import random
+from model.actor import Actor
 
 
 class BatchGraph:
@@ -322,8 +324,8 @@ class JsspN5:
             if plot:
                 self.show_state(G)
 
-    def step(self, actions, device):
-        self.change_nxgraph_topology(actions)  # change graph topology
+    def step(self, actions, device, plot=False):
+        self.change_nxgraph_topology(actions, plot=plot)  # change graph topology
         x, edge_indices, batch, makespan = self.dag2pyg(self.instances, self.current_graphs, device)  # generate new state data
         if self.reward_type == 'consecutive':
             reward = self.current_objs - makespan
@@ -391,15 +393,8 @@ class JsspN5:
 
 
 def main():
-    import time
-    import random
-    from model.actor import Actor
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    random.seed(1)
-    torch.manual_seed(1)
-    torch.cuda.manual_seed(1)
-    np.random.seed(3)  # 123456324
 
     j = 10
     m = 10
@@ -456,6 +451,10 @@ def main():
 
 
 if __name__ == '__main__':
+    random.seed(1)
+    torch.manual_seed(1)
+    torch.cuda.manual_seed(1)
+    np.random.seed(3)  # 123456324
 
     t1 = time.time()
     main()

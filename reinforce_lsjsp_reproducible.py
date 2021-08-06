@@ -11,12 +11,7 @@ from pathlib import Path
 
 args.batch_size = 8
 
-dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-random.seed(1)
-torch.manual_seed(1)
-torch.cuda.manual_seed(1)
-np.random.seed(1)
+dev = 'cpu' if torch.cuda.is_available() else 'cpu'
 
 
 init = args.init_type
@@ -53,6 +48,12 @@ def learn(rewards, log_probs, dones):
 
 
 def main():
+
+    random.seed(1)
+    torch.manual_seed(1)
+    torch.cuda.manual_seed(1)
+    np.random.seed(1)
+    torch.use_deterministic_algorithms(True)
 
     batch_data = BatchGraph()
     validation_batch_data = BatchGraph()
@@ -186,4 +187,5 @@ def main():
 
 
 if __name__ == '__main__':
+
     main()

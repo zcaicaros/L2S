@@ -1,58 +1,56 @@
 import numpy as np
 import torch
 import time
-from env.env_batch import JsspN5
+from env.env_batch import JsspN5, BatchGraph
 from model.actor import Actor
 from ortools_baseline import MinimalJobshopSat
-from env.env_batch import BatchGraph
-
-seed = 1
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)
-
-show = False
-dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-# benchmark config
-l = 1
-h = 99
-init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-testing_type = ['tai']  # ['syn', 'tai']
-syn_problem_j = [10]
-syn_problem_m = [10]
-# syn_problem_j = [10, 15, 20, 30, 50, 100]
-# syn_problem_m = [10, 15, 20, 20, 20, 20]
-# tai_problem_j = [15]
-# tai_problem_m = [15]
-tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
-tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
-
-# model config
-model_j = [10]
-model_m = [10]
-training_episode_length = [500]  # [64, 128, 256]
-reward_type = ['yaoxin']  # ['yaoxin', 'consecutive']
-model_type = ['incumbent']  # ['incumbent', 'last-step']
-embedding_type = ['gin']  # ['gin', 'dghan', 'gin+dghan']
-gamma = 1
-hidden_dim = 128
-embedding_layer = 4
-policy_layer = 4
-lr = 5e-5
-steps_learn = 10
-batch_size = 64
-episodes = 128000
-step_validation = 10
-
-
-# MDP config
-transit = [500, 1000, 2000]  # [500, 1000, 2000, 5000, 10000]
-result_type = 'incumbent'  # 'current', 'incumbent'
-fea_norm_const = 1000
-
 
 
 def main():
+    seed = 1
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # torch.use_deterministic_algorithms(True)
+
+    show = False
+    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    # benchmark config
+    l = 1
+    h = 99
+    init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
+    testing_type = ['tai']  # ['syn', 'tai']
+    syn_problem_j = [10]
+    syn_problem_m = [10]
+    # syn_problem_j = [10, 15, 20, 30, 50, 100]
+    # syn_problem_m = [10, 15, 20, 20, 20, 20]
+    # tai_problem_j = [15]
+    # tai_problem_m = [15]
+    tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
+    tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
+
+    # model config
+    model_j = [10]
+    model_m = [10]
+    training_episode_length = [500]  # [64, 128, 256]
+    reward_type = ['yaoxin']  # ['yaoxin', 'consecutive']
+    model_type = ['incumbent']  # ['incumbent', 'last-step']
+    embedding_type = ['gin']  # ['gin', 'dghan', 'gin+dghan']
+    gamma = 1
+    hidden_dim = 128
+    embedding_layer = 4
+    policy_layer = 4
+    lr = 5e-5
+    steps_learn = 10
+    batch_size = 64
+    episodes = 128000
+    step_validation = 10
+
+    # MDP config
+    transit = [500, 1000, 2000]  # [500, 1000, 2000, 5000, 10000]
+    result_type = 'incumbent'  # 'current', 'incumbent'
+    fea_norm_const = 1000
+
     for test_t in testing_type:  # select benchmark
         if test_t == 'syn':
             problem_j, problem_m = syn_problem_j, syn_problem_m
@@ -116,11 +114,11 @@ def main():
                                         batch_data = BatchGraph()
                                         # rollout network
                                         t1_drl = time.time()
-                                        states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
+                                        states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev, plot=show)
                                         while env.itr < test_step:
                                             batch_data.wrapper(*states)
                                             actions, _ = policy(batch_data, feasible_actions)
-                                            states, _, feasible_actions, _ = env.step(actions, dev)
+                                            states, _, feasible_actions, _ = env.step(actions, dev, plot=show)
                                         if result_type == 'incumbent':
                                             DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
                                         else:
@@ -144,4 +142,5 @@ def main():
 
 
 if __name__ == '__main__':
+
     main()

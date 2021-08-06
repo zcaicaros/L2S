@@ -407,14 +407,14 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    j = 3
-    m = 3
+    j = 100
+    m = 20
     h = 99
     l = 1
     transit = 128
-    batch_size = 2
+    batch_size = 10
     n_batch = 1
-    init = 'spt'
+    init = 'fdd-divide-mwkr'
     reward_type = 'yaoxin'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
@@ -440,6 +440,8 @@ def main():
         n_edges_per_graph = j*(m-1) + m*(j-1) + j*m+2 + j*2
         with torch.no_grad():
             while env.itr < transit:
+                # print(states[2])
+                # print(states[1])
                 # print(*states)
                 batch_wrapper.wrapper(*states)
                 # actions, _ = actor(batch_wrapper, feasible_actions)
@@ -457,8 +459,8 @@ def main():
 
         t4 = time.time()
 
-        # print(t4 - t3)
-        # print(env.incumbent_objs)
+        print(t4 - t3)
+        print(env.incumbent_objs)
 
         # print(torch.count_nonzero(torch.cat(returns, dim=-1), dim=-1))
 

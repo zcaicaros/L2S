@@ -396,15 +396,14 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    j = 10
-    m = 10
+    j = 100
+    m = 20
     h = 99
     l = 1
     transit = 128
     batch_size = 10
     n_batch = 1
-    save_action_for_instance = 6
-    init = 'plist'
+    init = 'fdd-divide-mwkr'
     reward_type = 'yaoxin'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
@@ -445,9 +444,9 @@ def main():
         t4 = time.time()
 
         print(t4 - t3)
-        # print(env.incumbent_objs)
+        print(env.incumbent_objs)
 
-        print(torch.count_nonzero(torch.cat(returns, dim=-1), dim=-1))
+        # print(torch.count_nonzero(torch.cat(returns, dim=-1), dim=-1))
 
 
 if __name__ == '__main__':

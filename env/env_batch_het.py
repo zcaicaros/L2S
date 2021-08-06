@@ -54,6 +54,18 @@ class JsspN5:
         self.reward_type = reward_type
         self.fea_norm_const = fea_norm_const
         self.eva = Evaluator()
+        self.adj_mat_pc = self._adj_mat_pc()
+
+
+    def _adj_mat_pc(self):
+        adj_mat_pc = np.eye(self.n_oprs, k=-1, dtype=int)  # Create adjacent matrix for precedence constraints
+        adj_mat_pc[np.arange(start=0, stop=self.n_oprs, step=1).reshape(self.n_job, -1)[:, 0]] = 0  # first column does not have upper stream conj_nei
+        adj_mat_pc = np.pad(adj_mat_pc, 1, 'constant', constant_values=0)  # pad dummy S and T nodes
+        adj_mat_pc[[i for i in range(1, self.n_job * self.n_mch + 2 - 1, self.n_mch)], 0] = 1  # connect S with 1st operation of each job
+        adj_mat_pc[-1, [i for i in range(self.n_mch, self.n_job * self.n_mch + 2 - 1, self.n_mch)]] = 1  # connect last operation of each job to T
+        adj_mat_pc = np.transpose(adj_mat_pc)  # convert input adj from column pointing to row, to, row pointing to column
+        return adj_mat_pc
+
 
     def _gen_moves(self, solution, mch_mat, tabu_list=None):
         """
@@ -141,13 +153,6 @@ class JsspN5:
             # prepare NIPS adj
             ops_mat = np.arange(0, n_operations).reshape(mch_mat.shape).tolist()  # Init operations mat
             list_for_latest_task_onMachine = [None] * n_machines  # Init list_for_latest_task_onMachine
-            adj_mat_pc = np.eye(n_operations, k=-1, dtype=int)  # Create adjacent matrix for precedence constraints
-            adj_mat_pc[np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:, 0]] = 0  # first column does not have upper stream conj_nei
-            adj_mat_pc = np.pad(adj_mat_pc, 1, 'constant', constant_values=0)  # pad dummy S and T nodes
-            adj_mat_pc[[i for i in range(1, n_jobs * n_machines + 2 - 1, n_machines)], 0] = 1  # connect S with 1st operation of each job
-            adj_mat_pc[-1, [i for i in range(n_machines, n_jobs * n_machines + 2 - 1, n_machines)]] = 1  # connect last operation of each job to T
-            adj_mat_pc = np.transpose(adj_mat_pc)  # convert input adj from column pointing to row, to, row pointing to column
-
 
             adj_mat_mc = np.zeros(shape=[n_operations, n_operations], dtype=int)  # Create adjacent matrix for machine clique
             # Construct NIPS adjacent matrix
@@ -162,16 +167,15 @@ class JsspN5:
             adj_mat_mc = np.transpose(adj_mat_mc)  # convert input adj from column pointing to row, to, row pointing to column
             dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(
                 n_jobs * n_machines + 2, axis=1)
-            edge_weight = np.multiply((adj_mat_pc + adj_mat_mc), dur_mat)
+            edge_weight = np.multiply((self.adj_mat_pc + adj_mat_mc), dur_mat)
             G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
             G.add_weighted_edges_from([(0, i, 0) for i in range(1, n_jobs * n_machines + 2 - 1,
                                                                 n_machines)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
             if plot:
                 self.show_state(G)
 
-            edge_indices_pc.append((torch.nonzero(torch.from_numpy(adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
-            edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
-
+            edge_indices_pc.append((torch.nonzero(torch.tensor(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
+            edge_indices_mc.append((torch.nonzero(torch.tensor(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
 
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
             current_graphs.append(G)
@@ -194,7 +198,8 @@ class JsspN5:
     def _rules_solver(self, args, plot=False):
         instances, device, rule_type = args[0], args[1], args[2]
 
-        edge_indices = []
+        edge_indices_pc = []
+        edge_indices_mc = []
         durations = []
         current_graphs = []
         for i, instance in enumerate(instances):
@@ -202,13 +207,9 @@ class JsspN5:
             n_jobs, n_machines = dur_mat.shape[0], dur_mat.shape[1]
             n_operations = n_jobs * n_machines
             last_col = np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:, -1]
-            first_col = np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:, 0]
-            candidate_oprs = np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:,
-                             0]  # initialize action space: [n_jobs, 1], the first column
+            candidate_oprs = np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:,0]  # initialize action space: [n_jobs, 1], the first column
             mask = np.zeros(shape=n_jobs, dtype=bool)  # initialize the mask: [n_jobs, 1]
-            conj_nei_up_stream = np.eye(n_operations, k=-1, dtype=np.single)  # initialize adj matrix
-            conj_nei_up_stream[first_col] = 0  # first column does not have upper stream conj_nei
-            adj_mat = conj_nei_up_stream
+            adj_mat_mc = np.zeros(shape=[n_operations, n_operations], dtype=int)  # Create adjacent matrix for machine clique
 
             gant_chart = -self.high * np.ones_like(dur_mat.transpose(), dtype=np.int32)
             opIDsOnMchs = -n_jobs * np.ones_like(dur_mat.transpose(), dtype=np.int32)
@@ -245,62 +246,61 @@ class JsspN5:
                 finished_mark[action // n_machines, action % n_machines] = 1
 
             for _ in range(opIDsOnMchs.shape[1] - 1):
-                adj_mat[opIDsOnMchs[:, _ + 1], opIDsOnMchs[:, _]] = 1
+                adj_mat_mc[opIDsOnMchs[:, _ + 1], opIDsOnMchs[:, _]] = 1
 
             # prepare augmented adj, augmented dur, and G
-            adj_mat = np.pad(adj_mat, 1, 'constant', constant_values=0)  # pad dummy S and T nodes
-            adj_mat[[i for i in range(1, n_jobs * n_machines + 2 - 1,
-                                      n_machines)], 0] = 1  # connect S with 1st operation of each job
-            adj_mat[-1, [i for i in range(n_machines, n_jobs * n_machines + 2 - 1,
-                                          n_machines)]] = 1  # connect last operation of each job to T
-            adj_mat = np.transpose(adj_mat)  # convert input adj from column pointing to row, to, row pointing to column
-            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(
-                n_jobs * n_machines + 2, axis=1)
-            edge_weight = np.multiply(adj_mat, dur_mat)
+            adj_mat_mc = np.pad(adj_mat_mc, ((1, 1), (1, 1)), 'constant',
+                                constant_values=0)  # add S and T to machine clique adj
+            adj_mat_mc = np.transpose(adj_mat_mc)  # convert input adj from column pointing to row, to, row pointing to column
+            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(n_jobs * n_machines + 2, axis=1)
+            edge_weight = np.multiply((self.adj_mat_pc + adj_mat_mc), dur_mat)
             G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
             G.add_weighted_edges_from([(0, i, 0) for i in range(1, n_jobs * n_machines + 2 - 1,
                                                                 n_machines)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
             if plot:
                 self.show_state(G)
 
-            edge_indices.append((torch.nonzero(torch.from_numpy(adj_mat)).t().contiguous()) + (n_operations + 2) * i)
+            edge_indices_pc.append((torch.nonzero(torch.tensor(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
+            edge_indices_mc.append((torch.nonzero(torch.tensor(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
             current_graphs.append(G)
 
-        edge_indices = torch.cat(edge_indices, dim=-1).to(device)
+        edge_indices_pc = torch.cat(edge_indices_pc, dim=-1).to(device)
+        edge_indices_mc = torch.cat(edge_indices_mc, dim=-1).to(device)
         durations = torch.cat(durations, dim=0).reshape(-1, 1)
-        est, lst, make_span = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=self.n_job, n_m=self.n_mch)
+        est, lst, make_span = self.eva.forward(edge_index=torch.cat([edge_indices_pc, edge_indices_mc], dim=-1), duration=durations, n_j=self.n_job, n_m=self.n_mch)
 
         # prepare x
         x = torch.cat([durations / self.high, est / self.fea_norm_const, lst / self.fea_norm_const], dim=-1)
         # prepare batch
-        batch = torch.from_numpy(
-            np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
+        batch = torch.from_numpy(np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
 
-        return (x, add_self_loops(edge_indices)[0], batch), current_graphs, make_span
+        return (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, make_span
 
     def dag2pyg(self, instances, nx_graphs, device):
         n_jobs, n_machines = instances[0][0].shape
         n_operations = n_jobs * n_machines
 
-        edge_indices = []
+        edge_indices_pc = []
+        edge_indices_mc = []
         durations = []
         for i, (instance, G) in enumerate(zip(instances, nx_graphs)):
             durations.append(np.pad(instance[0].reshape(-1), (1, 1), 'constant', constant_values=0))
-            adj = nx.to_numpy_matrix(G)
-            adj[0, [i for i in range(1, n_operations + 2 - 1, n_machines)]] = 1
-            edge_indices.append((torch.nonzero(torch.from_numpy(adj)).t().contiguous()) + (n_operations + 2) * i)
+            adj_all = nx.adjacency_matrix(G, weight=None).todense()
+            adj_mat_mc = adj_all - self.adj_mat_pc
+            edge_indices_pc.append((torch.nonzero(torch.tensor(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
+            edge_indices_mc.append((torch.nonzero(torch.tensor(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
 
-        edge_indices = torch.cat(edge_indices, dim=-1).to(device)
+        edge_indices_pc = torch.cat(edge_indices_pc, dim=-1).to(device)
+        edge_indices_mc = torch.cat(edge_indices_mc, dim=-1).to(device)
         durations = torch.from_numpy(np.concatenate(durations)).reshape(-1, 1).to(device)
-        est, lst, make_span = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=n_jobs, n_m=n_machines)
+        est, lst, make_span = self.eva.forward(edge_index=torch.cat([edge_indices_pc, edge_indices_mc], dim=-1), duration=durations, n_j=n_jobs, n_m=n_machines)
         # prepare x
         x = torch.cat([durations / self.high, est / self.fea_norm_const, lst / self.fea_norm_const], dim=-1)
         # prepare batch
-        batch = torch.from_numpy(
-            np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=n_jobs * n_machines + 2)).to(device)
+        batch = torch.from_numpy(np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=n_jobs * n_machines + 2)).to(device)
 
-        return x, add_self_loops(edge_indices)[0], batch, make_span
+        return x, edge_indices_pc, edge_indices_mc, batch, make_span
 
     def change_nxgraph_topology(self, actions, plot=False):
         n_jobs, n_machines = self.instances[0][0].shape
@@ -337,7 +337,7 @@ class JsspN5:
 
     def step(self, actions, device, plot=False):
         self.change_nxgraph_topology(actions, plot=plot)  # change graph topology
-        x, edge_indices, batch, makespan = self.dag2pyg(self.instances, self.current_graphs, device)  # generate new state data
+        x, edge_indices_pc, edge_indices_mc, batch, makespan = self.dag2pyg(self.instances, self.current_graphs, device)  # generate new state data
         if self.reward_type == 'consecutive':
             reward = self.current_objs - makespan
         elif self.reward_type == 'yaoxin':
@@ -366,7 +366,7 @@ class JsspN5:
 
         feasible_actions, flag = self.feasible_actions(device)  # new feasible actions w.r.t updated tabu list
 
-        return (x, edge_indices, batch), reward, feasible_actions, ~flag
+        return (x, edge_indices_pc, edge_indices_mc, batch), reward, feasible_actions, ~flag
 
     def reset(self, instances, init_type, device, plot=False):
         self.instances = instances
@@ -407,15 +407,14 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    j = 10
-    m = 10
+    j = 3
+    m = 3
     h = 99
     l = 1
     transit = 128
-    batch_size = 10
+    batch_size = 2
     n_batch = 1
-    save_action_for_instance = 6
-    init = 'plist'
+    init = 'spt'
     reward_type = 'yaoxin'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
@@ -433,13 +432,15 @@ def main():
         batch_wrapper = BatchGraph()
         # print(env.incumbent_objs)
 
+        # print(env.adj_mat_pc)
+
         saved_acts = []
         returns = []
         n_nodes_per_graph = j * m + 2
         n_edges_per_graph = j*(m-1) + m*(j-1) + j*m+2 + j*2
         with torch.no_grad():
             while env.itr < transit:
-                print(*states)
+                # print(*states)
                 batch_wrapper.wrapper(*states)
                 # actions, _ = actor(batch_wrapper, feasible_actions)
                 actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
@@ -456,10 +457,10 @@ def main():
 
         t4 = time.time()
 
-        print(t4 - t3)
+        # print(t4 - t3)
         # print(env.incumbent_objs)
 
-        print(torch.count_nonzero(torch.cat(returns, dim=-1), dim=-1))
+        # print(torch.count_nonzero(torch.cat(returns, dim=-1), dim=-1))
 
 
 if __name__ == '__main__':

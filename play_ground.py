@@ -177,3 +177,9 @@ print('./log/validation_log_'
 
 ortools_res = np.load('test_data/syn15x15_result.npy')
 print(ortools_res)
+
+arr = np.array([1, 2, 3], dtype=int)
+tsr = torch.tensor(arr)
+print(tsr)
+arr[1] = 1
+print(tsr)

@@ -276,8 +276,7 @@ class JsspN5:
         durations = []
         for i, (instance, G) in enumerate(zip(instances, nx_graphs)):
             durations.append(np.pad(instance[0].reshape(-1), (1, 1), 'constant', constant_values=0))
-            adj = nx.to_numpy_matrix(G)
-            adj[0, [i for i in range(1, n_operations + 2 - 1, n_machines)]] = 1
+            adj = nx.adjacency_matrix(G, weight=None).todense()
             edge_indices.append((torch.nonzero(torch.from_numpy(adj)).t().contiguous()) + (n_operations + 2) * i)
 
         edge_indices = torch.cat(edge_indices, dim=-1).to(device)
@@ -400,7 +399,7 @@ def main():
     m = 20
     h = 99
     l = 1
-    transit = 10
+    transit = 100
     batch_size = 10
     n_batch = 1
     init = 'fdd-divide-mwkr'
@@ -455,6 +454,6 @@ if __name__ == '__main__':
     torch.cuda.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    t1 = time.time()
-    main()
-    # print('main() function running time:', time.time() - t1)
+    # main()
+    import cProfile
+    cProfile.run('main()', filename='./restats')

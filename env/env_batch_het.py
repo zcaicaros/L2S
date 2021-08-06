@@ -122,11 +122,15 @@ class JsspN5:
                     pass
         return pairs
 
-    def show_state(self, G):
-        x_axis = np.pad(np.tile(np.arange(1, self.n_mch + 1, 1), self.n_job), (1, 1), 'constant',
-                        constant_values=[0, self.n_mch + 1])
-        y_axis = np.pad(np.arange(self.n_job, 0, -1).repeat(self.n_mch), (1, 1), 'constant',
-                        constant_values=np.median(np.arange(self.n_job, 0, -1)))
+    def show_state(self, adj_mat_pc, adj_mat_mc, dur_mat):
+
+        dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(self.n_oprs + 2, axis=1)
+        edge_weight = np.multiply((adj_mat_pc + adj_mat_mc), dur_mat)
+        G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
+        G.add_weighted_edges_from([(0, i, 0) for i in range(1, self.n_oprs + 2 - 1, self.n_mch)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
+
+        x_axis = np.pad(np.tile(np.arange(1, self.n_mch + 1, 1), self.n_job), (1, 1), 'constant', constant_values=[0, self.n_mch + 1])
+        y_axis = np.pad(np.arange(self.n_job, 0, -1).repeat(self.n_mch), (1, 1), 'constant', constant_values=np.median(np.arange(self.n_job, 0, -1)))
         pos = dict((n, (x, y)) for n, x, y in zip(G.nodes(), x_axis, y_axis))
         plt.figure(figsize=(15, 10))
         plt.tight_layout()
@@ -165,18 +169,15 @@ class JsspN5:
                 ops_mat[job_id].pop(0)
             adj_mat_mc = np.pad(adj_mat_mc, ((1, 1), (1, 1)), 'constant', constant_values=0)  # add S and T to machine clique adj
             adj_mat_mc = np.transpose(adj_mat_mc)  # convert input adj from column pointing to row, to, row pointing to column
-            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(
-                n_jobs * n_machines + 2, axis=1)
-            edge_weight = np.multiply((self.adj_mat_pc + adj_mat_mc), dur_mat)
-            G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
-            G.add_weighted_edges_from([(0, i, 0) for i in range(1, n_jobs * n_machines + 2 - 1,
-                                                                n_machines)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
+
+            G = nx.from_numpy_matrix(adj_mat_mc, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
+
             if plot:
-                self.show_state(G)
+                self.show_state(self.adj_mat_pc, adj_mat_mc, dur_mat)
 
             edge_indices_pc.append((torch.nonzero(torch.from_numpy(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
             edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
-
+            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(n_jobs * n_machines + 2, axis=1)
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
             current_graphs.append(G)
 
@@ -252,16 +253,15 @@ class JsspN5:
             adj_mat_mc = np.pad(adj_mat_mc, ((1, 1), (1, 1)), 'constant',
                                 constant_values=0)  # add S and T to machine clique adj
             adj_mat_mc = np.transpose(adj_mat_mc)  # convert input adj from column pointing to row, to, row pointing to column
-            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(n_jobs * n_machines + 2, axis=1)
-            edge_weight = np.multiply((self.adj_mat_pc + adj_mat_mc), dur_mat)
-            G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
-            G.add_weighted_edges_from([(0, i, 0) for i in range(1, n_jobs * n_machines + 2 - 1,
-                                                                n_machines)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
+
+            G = nx.from_numpy_matrix(adj_mat_mc, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
+
             if plot:
-                self.show_state(G)
+                self.show_state(self.adj_mat_pc, adj_mat_mc, dur_mat)
 
             edge_indices_pc.append((torch.nonzero(torch.from_numpy(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
             edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
+            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(n_jobs * n_machines + 2, axis=1)
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
             current_graphs.append(G)
 
@@ -277,7 +277,7 @@ class JsspN5:
 
         return (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, make_span
 
-    def dag2pyg(self, instances, nx_graphs, device):
+    def dag2pyg(self, instances, nx_graphs, device, plot=False):
         n_jobs, n_machines = instances[0][0].shape
         n_operations = n_jobs * n_machines
 
@@ -286,10 +286,12 @@ class JsspN5:
         durations = []
         for i, (instance, G) in enumerate(zip(instances, nx_graphs)):
             durations.append(np.pad(instance[0].reshape(-1), (1, 1), 'constant', constant_values=0))
-            adj_all = nx.adjacency_matrix(G, weight=None).todense()
-            adj_mat_mc = adj_all - self.adj_mat_pc
+            adj_mat_mc = nx.adjacency_matrix(G, weight=None).todense()
             edge_indices_pc.append((torch.nonzero(torch.from_numpy(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
             edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
+
+            if plot:
+                self.show_state(self.adj_mat_pc, adj_mat_mc, instance[0])
 
         edge_indices_pc = torch.cat(edge_indices_pc, dim=-1).to(device)
         edge_indices_mc = torch.cat(edge_indices_mc, dim=-1).to(device)
@@ -302,7 +304,7 @@ class JsspN5:
 
         return x, edge_indices_pc, edge_indices_mc, batch, make_span
 
-    def change_nxgraph_topology(self, actions, plot=False):
+    def change_nxgraph_topology(self, actions):
         n_jobs, n_machines = self.instances[0][0].shape
         n_operations = n_jobs * n_machines
 
@@ -332,12 +334,10 @@ class JsspN5:
                 # reverse edge connecting selected pair
                 G.remove_edge(action[0], action[1])
                 G.add_edge(action[1], action[0], weight=np.take(instance[0], action[1] - 1))
-            if plot:
-                self.show_state(G)
 
     def step(self, actions, device, plot=False):
-        self.change_nxgraph_topology(actions, plot=plot)  # change graph topology
-        x, edge_indices_pc, edge_indices_mc, batch, makespan = self.dag2pyg(self.instances, self.current_graphs, device)  # generate new state data
+        self.change_nxgraph_topology(actions)  # change graph topology
+        x, edge_indices_pc, edge_indices_mc, batch, makespan = self.dag2pyg(self.instances, self.current_graphs, device, plot=plot)  # generate new state data
         if self.reward_type == 'consecutive':
             reward = self.current_objs - makespan
         elif self.reward_type == 'yaoxin':
@@ -411,7 +411,7 @@ def main():
     m = 20
     h = 99
     l = 1
-    transit = 10
+    transit = 100
     batch_size = 10
     n_batch = 1
     init = 'fdd-divide-mwkr'
@@ -471,6 +471,6 @@ if __name__ == '__main__':
     torch.cuda.manual_seed(1)
     np.random.seed(3)  # 123456324
 
-    t1 = time.time()
-    main()
-    # print('main() function running time:', time.time() - t1)
+    # main()
+    import cProfile
+    cProfile.run('main()', filename='./restats_het')

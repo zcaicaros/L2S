@@ -26,7 +26,7 @@ step_validation = 5
 show = True
 save = False
 log_type = 'training'  # 'training', 'validation'
-plot_step_size_training = 5
+plot_step_size_training = 1
 plot_step_size_validation = 1
 
 file = '{}x{}[{},{}]_{}_{}_{}_' \

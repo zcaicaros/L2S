@@ -1,7 +1,7 @@
 import os
 import sys
 
-import torch_geometric.utils
+from torch_geometric.utils import add_self_loops
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import torch
@@ -19,17 +19,20 @@ from model.actor import Actor
 class BatchGraph:
     def __init__(self):
         self.x = None
-        self.edge_index = None
+        self.edge_index_pc = None
+        self.edge_index_mc = None
         self.batch = None
 
-    def wrapper(self, x, edge_index, batch):
+    def wrapper(self, x, edge_index_pc, edge_index_mc, batch):
         self.x = x
-        self.edge_index = edge_index
+        self.edge_index_pc = edge_index_pc
+        self.edge_index_mc = edge_index_mc
         self.batch = batch
 
     def clean(self):
         self.x = None
-        self.edge_index = None
+        self.edge_index_pc = None
+        self.edge_index_mc = None
         self.batch = None
 
 
@@ -125,7 +128,8 @@ class JsspN5:
     def _p_list_solver(self, args, plot=False):
         instances, priority_lists, device = args[0], args[1], args[2]
 
-        edge_indices = []
+        edge_indices_pc = []
+        edge_indices_mc = []
         durations = []
         current_graphs = []
         for i, (instance, priority_list) in enumerate(zip(instances, priority_lists)):
@@ -137,48 +141,55 @@ class JsspN5:
             # prepare NIPS adj
             ops_mat = np.arange(0, n_operations).reshape(mch_mat.shape).tolist()  # Init operations mat
             list_for_latest_task_onMachine = [None] * n_machines  # Init list_for_latest_task_onMachine
-            adj_mat = np.eye(n_operations, k=-1, dtype=int)  # Create adjacent matrix for the corresponding action list
-            adj_mat[np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:,
-                    0]] = 0  # first column does not have upper stream conj_nei
+            adj_mat_pc = np.eye(n_operations, k=-1, dtype=int)  # Create adjacent matrix for precedence constraints
+            adj_mat_pc[np.arange(start=0, stop=n_operations, step=1).reshape(n_jobs, -1)[:, 0]] = 0  # first column does not have upper stream conj_nei
+            adj_mat_pc = np.pad(adj_mat_pc, 1, 'constant', constant_values=0)  # pad dummy S and T nodes
+            adj_mat_pc[[i for i in range(1, n_jobs * n_machines + 2 - 1, n_machines)], 0] = 1  # connect S with 1st operation of each job
+            adj_mat_pc[-1, [i for i in range(n_machines, n_jobs * n_machines + 2 - 1, n_machines)]] = 1  # connect last operation of each job to T
+            adj_mat_pc = np.transpose(adj_mat_pc)  # convert input adj from column pointing to row, to, row pointing to column
+
+
+            adj_mat_mc = np.zeros(shape=[n_operations, n_operations], dtype=int)  # Create adjacent matrix for machine clique
             # Construct NIPS adjacent matrix
             for job_id in priority_list:
                 op_id = ops_mat[job_id][0]
                 m_id_for_action = mch_mat[op_id // n_machines, op_id % n_machines] - 1
                 if list_for_latest_task_onMachine[m_id_for_action] is not None:
-                    adj_mat[op_id, list_for_latest_task_onMachine[m_id_for_action]] = 1
+                    adj_mat_mc[op_id, list_for_latest_task_onMachine[m_id_for_action]] = 1
                 list_for_latest_task_onMachine[m_id_for_action] = op_id
                 ops_mat[job_id].pop(0)
-
-            # prepare augmented adj, augmented dur, and G
-            adj_mat = np.pad(adj_mat, 1, 'constant', constant_values=0)  # pad dummy S and T nodes
-            adj_mat[[i for i in range(1, n_jobs * n_machines + 2 - 1,
-                                      n_machines)], 0] = 1  # connect S with 1st operation of each job
-            adj_mat[-1, [i for i in range(n_machines, n_jobs * n_machines + 2 - 1,
-                                          n_machines)]] = 1  # connect last operation of each job to T
-            adj_mat = np.transpose(adj_mat)  # convert input adj from column pointing to row, to, row pointing to column
+            adj_mat_mc = np.pad(adj_mat_mc, ((1, 1), (1, 1)), 'constant', constant_values=0)  # add S and T to machine clique adj
+            adj_mat_mc = np.transpose(adj_mat_mc)  # convert input adj from column pointing to row, to, row pointing to column
             dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(
                 n_jobs * n_machines + 2, axis=1)
-            edge_weight = np.multiply(adj_mat, dur_mat)
+            edge_weight = np.multiply((adj_mat_pc + adj_mat_mc), dur_mat)
             G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
             G.add_weighted_edges_from([(0, i, 0) for i in range(1, n_jobs * n_machines + 2 - 1,
                                                                 n_machines)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
             if plot:
                 self.show_state(G)
 
-            edge_indices.append((torch.nonzero(torch.from_numpy(adj_mat)).t().contiguous()) + (n_operations + 2) * i)
+            edge_indices_pc.append((torch.nonzero(torch.from_numpy(adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
+            edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
+
+
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
             current_graphs.append(G)
 
-        edge_indices = torch.cat(edge_indices, dim=-1).to(device)
+        edge_indices_pc = torch.cat(edge_indices_pc, dim=-1).to(device)
+        edge_indices_mc = torch.cat(edge_indices_mc, dim=-1).to(device)
+
         durations = torch.cat(durations, dim=0).reshape(-1, 1)
-        est, lst, make_span = self.eva.forward(edge_index=edge_indices, duration=durations, n_j=self.n_job, n_m=self.n_mch)
+        est, lst, make_span = self.eva.forward(edge_index=torch.cat([edge_indices_pc, edge_indices_mc], dim=-1), duration=durations, n_j=self.n_job, n_m=self.n_mch)
 
         # prepare x
         x = torch.cat([durations / self.high, est / self.fea_norm_const, lst / self.fea_norm_const], dim=-1)
         # prepare batch
         batch = torch.from_numpy(
             np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
-        return (x, torch_geometric.utils.add_self_loops(edge_indices)[0], batch), current_graphs, make_span
+
+        return (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, make_span
+
 
     def _rules_solver(self, args, plot=False):
         instances, device, rule_type = args[0], args[1], args[2]
@@ -266,7 +277,7 @@ class JsspN5:
         batch = torch.from_numpy(
             np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
 
-        return (x, torch_geometric.utils.add_self_loops(edge_indices)[0], batch), current_graphs, make_span
+        return (x, add_self_loops(edge_indices)[0], batch), current_graphs, make_span
 
     def dag2pyg(self, instances, nx_graphs, device):
         n_jobs, n_machines = instances[0][0].shape
@@ -289,7 +300,7 @@ class JsspN5:
         batch = torch.from_numpy(
             np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=n_jobs * n_machines + 2)).to(device)
 
-        return x, torch_geometric.utils.add_self_loops(edge_indices)[0], batch, make_span
+        return x, add_self_loops(edge_indices)[0], batch, make_span
 
     def change_nxgraph_topology(self, actions, plot=False):
         n_jobs, n_machines = self.instances[0][0].shape
@@ -361,11 +372,11 @@ class JsspN5:
         self.instances = instances
         if init_type == 'plist':
             random_plist = np.repeat(np.arange(self.n_job).repeat(self.n_mch).reshape(1, -1), repeats=self.instances.shape[0], axis=0)  # fixed priority list: [0, 0, 0, ..., n-1, n-1, n-1]
-            (x, edge_indices, batch), current_graphs, make_span = self._p_list_solver(args=[self.instances, random_plist, device], plot=plot)
+            (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, make_span = self._p_list_solver(args=[self.instances, random_plist, device], plot=plot)
         elif init_type == 'spt':
-            (x, edge_indices, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'spt'], plot=plot)
+            (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'spt'], plot=plot)
         elif init_type == 'fdd-divide-mwkr':
-            (x, edge_indices, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'fdd-divide-mwkr'], plot=plot)
+            (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'fdd-divide-mwkr'], plot=plot)
         else:
             assert False, 'Initial solution type = "p_list", "spt", "fdd-divide-mwkr".'
 
@@ -376,7 +387,7 @@ class JsspN5:
         self.tabu_lists = [[] for _ in range(instances.shape[0])]
         feasible_actions, flag = self.feasible_actions(device)
 
-        return (x, edge_indices, batch), feasible_actions, ~flag
+        return (x, edge_indices_pc, edge_indices_mc, batch), feasible_actions, ~flag
 
     def feasible_actions(self, device):
         actions = []
@@ -404,7 +415,7 @@ def main():
     batch_size = 10
     n_batch = 1
     save_action_for_instance = 6
-    init = 'fdd-divide-mwkr'
+    init = 'plist'
     reward_type = 'yaoxin'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
@@ -428,9 +439,10 @@ def main():
         n_edges_per_graph = j*(m-1) + m*(j-1) + j*m+2 + j*2
         with torch.no_grad():
             while env.itr < transit:
+                print(*states)
                 batch_wrapper.wrapper(*states)
-                actions, _ = actor(batch_wrapper, feasible_actions)
-                # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
+                # actions, _ = actor(batch_wrapper, feasible_actions)
+                actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
 
                 states, reward, feasible_actions, done = env.step(actions, device)
 

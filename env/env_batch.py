@@ -404,7 +404,7 @@ def main():
     batch_size = 10
     n_batch = 1
     save_action_for_instance = 6
-    init = 'fdd-divide-mwkr'
+    init = 'plist'
     reward_type = 'yaoxin'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
@@ -429,8 +429,8 @@ def main():
         with torch.no_grad():
             while env.itr < transit:
                 batch_wrapper.wrapper(*states)
-                actions, _ = actor(batch_wrapper, feasible_actions)
-                # actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
+                # actions, _ = actor(batch_wrapper, feasible_actions)
+                actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
 
                 states, reward, feasible_actions, done = env.step(actions, device)
 

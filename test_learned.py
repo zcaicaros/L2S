@@ -42,9 +42,9 @@ def main():
     policy_layer = 4
     lr = 5e-5
     steps_learn = 10
-    batch_size = 64
+    batch_size = 128
     episodes = 128000
-    step_validation = 10
+    step_validation = 5
 
     # MDP config
     transit = [500, 1000, 2000]  # [500, 1000, 2000, 5000, 10000]

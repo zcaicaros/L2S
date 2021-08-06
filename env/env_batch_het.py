@@ -174,8 +174,8 @@ class JsspN5:
             if plot:
                 self.show_state(G)
 
-            edge_indices_pc.append((torch.nonzero(torch.tensor(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
-            edge_indices_mc.append((torch.nonzero(torch.tensor(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
+            edge_indices_pc.append((torch.nonzero(torch.from_numpy(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
+            edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
 
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
             current_graphs.append(G)
@@ -260,8 +260,8 @@ class JsspN5:
             if plot:
                 self.show_state(G)
 
-            edge_indices_pc.append((torch.nonzero(torch.tensor(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
-            edge_indices_mc.append((torch.nonzero(torch.tensor(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
+            edge_indices_pc.append((torch.nonzero(torch.from_numpy(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
+            edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
             current_graphs.append(G)
 
@@ -288,8 +288,8 @@ class JsspN5:
             durations.append(np.pad(instance[0].reshape(-1), (1, 1), 'constant', constant_values=0))
             adj_all = nx.adjacency_matrix(G, weight=None).todense()
             adj_mat_mc = adj_all - self.adj_mat_pc
-            edge_indices_pc.append((torch.nonzero(torch.tensor(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
-            edge_indices_mc.append((torch.nonzero(torch.tensor(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
+            edge_indices_pc.append((torch.nonzero(torch.from_numpy(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
+            edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
 
         edge_indices_pc = torch.cat(edge_indices_pc, dim=-1).to(device)
         edge_indices_mc = torch.cat(edge_indices_mc, dim=-1).to(device)
@@ -411,7 +411,7 @@ def main():
     m = 20
     h = 99
     l = 1
-    transit = 128
+    transit = 10
     batch_size = 10
     n_batch = 1
     init = 'fdd-divide-mwkr'

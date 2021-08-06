@@ -400,7 +400,7 @@ def main():
     m = 20
     h = 99
     l = 1
-    transit = 128
+    transit = 10
     batch_size = 10
     n_batch = 1
     init = 'fdd-divide-mwkr'

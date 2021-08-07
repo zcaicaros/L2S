@@ -10,7 +10,7 @@ def main():
     seed = 1
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    # torch.use_deterministic_algorithms(True)
+    # torch.use_deterministic_algorithms(True)  # bug, refer to https://github.com/pytorch/pytorch/issues/61032
 
     show = False
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -42,9 +42,9 @@ def main():
     policy_layer = 4
     lr = 5e-5
     steps_learn = 10
-    batch_size = 128
+    batch_size = 256
     episodes = 128000
-    step_validation = 5
+    step_validation = 10
 
     # MDP config
     transit = [500, 1000, 2000]  # [500, 1000, 2000, 5000, 10000]

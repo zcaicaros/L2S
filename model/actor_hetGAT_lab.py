@@ -204,7 +204,6 @@ class Actor(nn.Module):
 
         # augment node embedding with graph embedding then forwarding policy
         node_embed_augmented = torch.cat([node_embed, graph_embed.repeat_interleave(repeats=n_nodes_per_state, dim=0)], dim=-1).reshape(batch_size, n_nodes_per_state, -1)
-        print(node_embed_augmented.shape)
         for layer in range(self.policy_l):
             node_embed_augmented = self.policy[layer](node_embed_augmented)
 

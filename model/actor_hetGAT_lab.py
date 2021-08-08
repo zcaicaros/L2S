@@ -31,6 +31,7 @@ class DGHAN(torch.nn.Module):
     def __init__(self, in_dim, hidden_dim, dropout, layer_dghan=4, heads=2):
         super(DGHAN, self).__init__()
         self.layer_dghan = layer_dghan
+        self.hidden_dim = hidden_dim
 
         ## DGHAN conv layers
         self.DGHAN_layers = torch.nn.ModuleList()
@@ -48,12 +49,14 @@ class DGHAN(torch.nn.Module):
             # last DGHAN layer
             self.DGHAN_layers.append(DGHANlayer(heads * hidden_dim, hidden_dim, dropout, concat=False, heads=1))
 
-    def forward(self, x, edge_index_pc, edge_index_mc, batch):
+    def forward(self, x, edge_index_pc, edge_index_mc, batch_size):
 
         # initial layer forward
-        h = self.DGHAN_layers[0](x, edge_index_pc, edge_index_mc)
-        h = self.DGHAN_layers[1](h, edge_index_pc, edge_index_mc)
-        print(h.shape)
+        h_node = self.DGHAN_layers[0](x, edge_index_pc, edge_index_mc)
+        for layer in range(1, self.layer_dghan):
+            h_node = self.DGHAN_layers[layer](h_node, edge_index_pc, edge_index_mc)
+
+        return h_node, torch.mean(h_node.reshape(batch_size, -1, self.hidden_dim), dim=1)
 
 
 class GIN(torch.nn.Module):
@@ -127,22 +130,40 @@ class Actor(nn.Module):
         self.embedding_type = embedding_type
         if self.embedding_type == 'gin':
             self.embedding = GIN(in_dim=in_dim, hidden_dim=hidden_dim, layer_gin=embedding_l)
-
+        elif self.embedding_type == 'dghan':
+            self.embedding = DGHAN(in_dim=in_dim, hidden_dim=hidden_dim, dropout=0.6, layer_dghan=embedding_l, heads=4)
+        elif self.embedding_type == 'gin+dghan':
+            self.embedding_gin = GIN(in_dim=in_dim, hidden_dim=hidden_dim, layer_gin=embedding_l)
+            self.embedding_dghan = DGHAN(in_dim=in_dim, hidden_dim=hidden_dim, dropout=0.6, layer_dghan=embedding_l, heads=4)
+        else:
+            raise Exception('embedding type should be either "gin", "dghan", or "gin+dghan".')
 
         # policy
         self.policy = torch.nn.ModuleList()
         if policy_l == 1:
-            self.policy.append(Sequential(Linear(hidden_dim * 2, hidden_dim),
-                                          # torch.nn.BatchNorm1d(hidden_dim),
-                                          torch.nn.Tanh(),
-                                          Linear(hidden_dim, hidden_dim)))
+            if self.embedding_type == 'gin+dghan':
+                self.policy.append(Sequential(Linear(hidden_dim * 4, hidden_dim),
+                                              # torch.nn.BatchNorm1d(hidden_dim),
+                                              torch.nn.Tanh(),
+                                              Linear(hidden_dim, hidden_dim)))
+            else:
+                self.policy.append(Sequential(Linear(hidden_dim * 2, hidden_dim),
+                                              # torch.nn.BatchNorm1d(hidden_dim),
+                                              torch.nn.Tanh(),
+                                              Linear(hidden_dim, hidden_dim)))
         else:
             for layer in range(policy_l):
                 if layer == 0:
-                    self.policy.append(Sequential(Linear(hidden_dim * 2, hidden_dim),
-                                                  # torch.nn.BatchNorm1d(hidden_dim),
-                                                  torch.nn.Tanh(),
-                                                  Linear(hidden_dim, hidden_dim)))
+                    if self.embedding_type == 'gin+dghan':
+                        self.policy.append(Sequential(Linear(hidden_dim * 4, hidden_dim),
+                                                      # torch.nn.BatchNorm1d(hidden_dim),
+                                                      torch.nn.Tanh(),
+                                                      Linear(hidden_dim, hidden_dim)))
+                    else:
+                        self.policy.append(Sequential(Linear(hidden_dim * 2, hidden_dim),
+                                                      # torch.nn.BatchNorm1d(hidden_dim),
+                                                      torch.nn.Tanh(),
+                                                      Linear(hidden_dim, hidden_dim)))
                 else:
                     self.policy.append(Sequential(Linear(hidden_dim, hidden_dim),
                                                   # torch.nn.BatchNorm1d(hidden_dim),
@@ -152,16 +173,30 @@ class Actor(nn.Module):
     def forward(self, batch_states, feasible_actions):
 
         if self.embedding_type == 'gin':
-            x = batch_states.x
-            edge_index = add_self_loops(torch.cat([batch_states.edge_index_pc, batch_states.edge_index_mc], dim=-1))[0]
-            batch = batch_states.batch
-            node_embed, graph_embed = self.embedding(x, edge_index, batch)
-        elif self.embedding_type == 'gat':
-            print('not implemented yet')
-            node_embed, graph_embed = None, None
+            node_embed, graph_embed = self.embedding(batch_states.x,
+                                                     add_self_loops(torch.cat([batch_states.edge_index_pc,
+                                                                               batch_states.edge_index_mc],
+                                                                              dim=-1))[0],
+                                                     batch_states.batch)
+        elif self.embedding_type == 'dghan':
+            node_embed, graph_embed = self.embedding(batch_states.x,
+                                                     add_self_loops(batch_data.edge_index_pc)[0],
+                                                     add_self_loops(batch_data.edge_index_mc)[0],
+                                                     len(feasible_actions))
+        elif self.embedding_type == 'gin+dghan':
+            node_embed_gin, graph_embed_gin = self.embedding_gin(batch_states.x,
+                                                                 add_self_loops(torch.cat([batch_states.edge_index_pc,
+                                                                                           batch_states.edge_index_mc],
+                                                                                          dim=-1))[0],
+                                                                 batch_states.batch)
+            node_embed_dghan, graph_embed_dghan = self.embedding_dghan(batch_states.x,
+                                                                       add_self_loops(batch_data.edge_index_pc)[0],
+                                                                       add_self_loops(batch_data.edge_index_mc)[0],
+                                                                       len(feasible_actions))
+            node_embed = torch.cat([node_embed_gin, node_embed_dghan], dim=-1)
+            graph_embed = torch.cat([graph_embed_gin, graph_embed_dghan], dim=-1)
         else:
-            print('not implemented yet')
-            node_embed, graph_embed = None, None
+            raise Exception('embedding type should be either "gin", "dghan", or "gin+dghan".')
 
         device = node_embed.device
         batch_size = graph_embed.shape[0]
@@ -169,6 +204,7 @@ class Actor(nn.Module):
 
         # augment node embedding with graph embedding then forwarding policy
         node_embed_augmented = torch.cat([node_embed, graph_embed.repeat_interleave(repeats=n_nodes_per_state, dim=0)], dim=-1).reshape(batch_size, n_nodes_per_state, -1)
+        print(node_embed_augmented.shape)
         for layer in range(self.policy_l):
             node_embed_augmented = self.policy[layer](node_embed_augmented)
 
@@ -229,19 +265,11 @@ if __name__ == '__main__':
     instances = np.array([uni_instance_gen(n_j=n_j, n_m=n_m, low=l, high=h) for _ in range(b_size)])
     states, feasible_as, dones = env.reset(instances=instances, init_type=init_type, device=dev)
 
-    '''embedding = GIN(in_dim=3, hidden_dim=hid_dim, layer_gin=3).to(dev)
-    actor = Actor(3, hid_dim, embedding_l=3, policy_l=3).to(dev)
+    actor = Actor(3, hid_dim, embedding_l=3, policy_l=3, embedding_type='gin+dghan').to(dev)
     while env.itr < transit:
         batch_data.wrapper(*states)
         actions, log_ps = actor(batch_data, feasible_as)
         states, rewards, feasible_as, dones = env.step(actions, dev)
-        # print(actions)'''
+        # print(actions)
 
-    # test dghan
-    embedding = DGHAN(in_dim=3, hidden_dim=128, dropout=0.6, layer_dghan=2, heads=2).to(dev)
-    batch_data.wrapper(*states)
-    x = batch_data.x
-    edge_idx_pc = add_self_loops(batch_data.edge_index_pc)[0]
-    edge_idx_mc = add_self_loops(batch_data.edge_index_mc)[0]
-    btch = batch_data.batch
-    embedding(x, edge_idx_pc, edge_idx_mc, btch)
+    # grad = torch.autograd.grad(log_ps.sum(), [param for param in actor.parameters()])

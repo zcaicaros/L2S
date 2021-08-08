@@ -80,6 +80,9 @@ class JsspN5:
 
     @staticmethod
     def _get_pairs(cb, cb_op, tabu_list=None):
+        # print(cb)
+        # print(cb_op)
+        # print(tabu_list)
         pairs = []
         rg = cb[:-1].shape[0]  # sliding window of 2
         for i in range(rg):
@@ -122,12 +125,9 @@ class JsspN5:
                     pass
         return pairs
 
-    def show_state(self, adj_mat_pc, adj_mat_mc, dur_mat):
+    def show_state(self, G):
 
-        dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(self.n_oprs + 2, axis=1)
-        edge_weight = np.multiply((adj_mat_pc + adj_mat_mc), dur_mat)
-        G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
-        G.add_weighted_edges_from([(0, i, 0) for i in range(1, self.n_oprs + 2 - 1, self.n_mch)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
+
 
         x_axis = np.pad(np.tile(np.arange(1, self.n_mch + 1, 1), self.n_job), (1, 1), 'constant', constant_values=[0, self.n_mch + 1])
         y_axis = np.pad(np.arange(self.n_job, 0, -1).repeat(self.n_mch), (1, 1), 'constant', constant_values=np.median(np.arange(self.n_job, 0, -1)))
@@ -170,14 +170,17 @@ class JsspN5:
             adj_mat_mc = np.pad(adj_mat_mc, ((1, 1), (1, 1)), 'constant', constant_values=0)  # add S and T to machine clique adj
             adj_mat_mc = np.transpose(adj_mat_mc)  # convert input adj from column pointing to row, to, row pointing to column
 
-            G = nx.from_numpy_matrix(adj_mat_mc, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
+            adj_all = self.adj_mat_pc + adj_mat_mc
+            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(self.n_oprs + 2, axis=1)
+            edge_weight = np.multiply(adj_all, dur_mat)
+            G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
+            G.add_weighted_edges_from([(0, i, 0) for i in range(1, self.n_oprs + 2 - 1, self.n_mch)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
 
             if plot:
-                self.show_state(self.adj_mat_pc, adj_mat_mc, dur_mat)
+                self.show_state(G)
 
             edge_indices_pc.append((torch.nonzero(torch.from_numpy(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
             edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
-            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(n_jobs * n_machines + 2, axis=1)
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
             current_graphs.append(G)
 
@@ -250,18 +253,19 @@ class JsspN5:
                 adj_mat_mc[opIDsOnMchs[:, _ + 1], opIDsOnMchs[:, _]] = 1
 
             # prepare augmented adj, augmented dur, and G
-            adj_mat_mc = np.pad(adj_mat_mc, ((1, 1), (1, 1)), 'constant',
-                                constant_values=0)  # add S and T to machine clique adj
+            adj_mat_mc = np.pad(adj_mat_mc, ((1, 1), (1, 1)), 'constant', constant_values=0)  # add S and T to machine clique adj
             adj_mat_mc = np.transpose(adj_mat_mc)  # convert input adj from column pointing to row, to, row pointing to column
-
-            G = nx.from_numpy_matrix(adj_mat_mc, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
+            adj_all = self.adj_mat_pc + adj_mat_mc
+            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(self.n_oprs + 2, axis=1)
+            edge_weight = np.multiply(adj_all, dur_mat)
+            G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
+            G.add_weighted_edges_from([(0, i, 0) for i in range(1, self.n_oprs + 2 - 1, self.n_mch)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
 
             if plot:
-                self.show_state(self.adj_mat_pc, adj_mat_mc, dur_mat)
+                self.show_state(G)
 
             edge_indices_pc.append((torch.nonzero(torch.from_numpy(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
             edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
-            dur_mat = np.pad(dur_mat.reshape(-1, 1), ((1, 1), (0, 0)), 'constant', constant_values=0).repeat(n_jobs * n_machines + 2, axis=1)
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
             current_graphs.append(G)
 
@@ -291,7 +295,7 @@ class JsspN5:
             edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
 
             if plot:
-                self.show_state(self.adj_mat_pc, adj_mat_mc, instance[0])
+                self.show_state(G)
 
         edge_indices_pc = torch.cat(edge_indices_pc, dim=-1).to(device)
         edge_indices_mc = torch.cat(edge_indices_mc, dim=-1).to(device)
@@ -394,6 +398,7 @@ class JsspN5:
         feasible_actions_flag = []  # False for no feasible operation pairs
         for i, (current_graph, instance, tabu_list) in enumerate(zip(self.current_graphs, self.instances, self.tabu_lists)):
             action = self._gen_moves(solution=current_graph, mch_mat=instance[1], tabu_list=tabu_list)
+            # print(action)
             if len(action) != 0:
                 actions.append(action)
                 feasible_actions_flag.append(True)
@@ -445,6 +450,7 @@ def main():
                 # print(*states)
                 batch_wrapper.wrapper(*states)
                 # actions, _ = actor(batch_wrapper, feasible_actions)
+                # print(feasible_actions)
                 actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
 
                 states, reward, feasible_actions, done = env.step(actions, device)

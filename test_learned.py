@@ -30,8 +30,8 @@ def main():
     tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 
     # model config
-    model_j = [10]
-    model_m = [10]
+    model_j = [15]
+    model_m = [15]
     training_episode_length = [500]  # [64, 128, 256]
     reward_type = ['yaoxin']  # ['yaoxin', 'consecutive']
     model_type = ['incumbent']  # ['incumbent', 'last-step']
@@ -42,7 +42,7 @@ def main():
     policy_layer = 4
     lr = 5e-5
     steps_learn = 10
-    batch_size = 256
+    batch_size = 64
     episodes = 128000
     step_validation = 10
 

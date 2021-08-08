@@ -393,6 +393,8 @@ class JsspN5:
 
 def main():
 
+    # from env_batch_het import JsspN5
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     j = 100
@@ -428,6 +430,7 @@ def main():
             while env.itr < transit:
                 batch_wrapper.wrapper(*states)
                 # actions, _ = actor(batch_wrapper, feasible_actions)
+                # print(feasible_actions)
                 actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
 
                 states, reward, feasible_actions, done = env.step(actions, device)

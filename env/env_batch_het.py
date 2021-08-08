@@ -1,7 +1,7 @@
 import os
 import sys
 
-from torch_geometric.utils import add_self_loops
+from torch_geometric.utils import add_self_loops, sort_edge_index
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import torch
@@ -81,9 +81,6 @@ class JsspN5:
 
     @staticmethod
     def _get_pairs(cb, cb_op, tabu_list=None):
-        # print(cb)
-        # print(cb_op)
-        # print(tabu_list)
         pairs = []
         rg = cb[:-1].shape[0]  # sliding window of 2
         for i in range(rg):
@@ -127,9 +124,6 @@ class JsspN5:
         return pairs
 
     def show_state(self, G):
-
-
-
         x_axis = np.pad(np.tile(np.arange(1, self.n_mch + 1, 1), self.n_job), (1, 1), 'constant', constant_values=[0, self.n_mch + 1])
         y_axis = np.pad(np.arange(self.n_job, 0, -1).repeat(self.n_mch), (1, 1), 'constant', constant_values=np.median(np.arange(self.n_job, 0, -1)))
         pos = dict((n, (x, y)) for n, x, y in zip(G.nodes(), x_axis, y_axis))
@@ -324,10 +318,6 @@ class JsspN5:
                 s = S[0] if len(S) != 0 else None
                 t = T[0] if len(T) != 0 else None
 
-                # print(action)
-                # self.show_state(G_mc)
-                # self.show_state(G)
-
                 if s is not None:  # connect s with action[1]
                     G.remove_edge(s, action[0])
                     G.add_edge(s, action[1], weight=np.take(instance[0], s - 1))
@@ -396,7 +386,7 @@ class JsspN5:
         elif init_type == 'fdd-divide-mwkr':
             (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, sub_graphs_mc, make_span = self._rules_solver(args=[self.instances, device, 'fdd-divide-mwkr'], plot=plot)
         else:
-            assert False, 'Initial solution type = "p_list", "spt", "fdd-divide-mwkr".'
+            assert False, 'Initial solution type = "plist", "spt", "fdd-divide-mwkr".'
 
         self.sub_graphs_mc = sub_graphs_mc
         self.current_graphs = current_graphs
@@ -427,14 +417,14 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    j = 100
-    m = 20
+    j = 6
+    m = 6
     h = 99
     l = 1
     transit = 100
     batch_size = 10
     n_batch = 1
-    init = 'plist'
+    init = 'fdd-divide-mwkr'
     reward_type = 'yaoxin'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
@@ -464,6 +454,9 @@ def main():
                 # print(states[1])
                 # print(*states)
                 batch_wrapper.wrapper(*states)
+                # print(batch_wrapper.x)
+                # merged_index = sort_edge_index(add_self_loops(torch.cat([batch_wrapper.edge_index_pc, batch_wrapper.edge_index_mc], dim=-1))[0])[0]
+                # print(merged_index)
                 # actions, _ = actor(batch_wrapper, feasible_actions)
                 # print(feasible_actions)
                 actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]

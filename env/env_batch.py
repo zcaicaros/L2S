@@ -366,7 +366,7 @@ class JsspN5:
         elif init_type == 'fdd-divide-mwkr':
             (x, edge_indices, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'fdd-divide-mwkr'], plot=plot)
         else:
-            assert False, 'Initial solution type = "p_list", "spt", "fdd-divide-mwkr".'
+            assert False, 'Initial solution type = "plist", "spt", "fdd-divide-mwkr".'
 
         self.current_graphs = current_graphs
         self.current_objs = make_span
@@ -397,14 +397,14 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    j = 100
-    m = 20
+    j = 6
+    m = 6
     h = 99
     l = 1
     transit = 100
     batch_size = 10
     n_batch = 1
-    init = 'plist'
+    init = 'fdd-divide-mwkr'
     reward_type = 'yaoxin'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
@@ -429,6 +429,8 @@ def main():
         with torch.no_grad():
             while env.itr < transit:
                 batch_wrapper.wrapper(*states)
+                # print(batch_wrapper.x)
+                # print(torch_geometric.utils.sort_edge_index(batch_wrapper.edge_index)[0])
                 # actions, _ = actor(batch_wrapper, feasible_actions)
                 # print(feasible_actions)
                 actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]

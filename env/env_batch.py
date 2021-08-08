@@ -397,8 +397,8 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    j = 6
-    m = 6
+    j = 100
+    m = 20
     h = 99
     l = 1
     transit = 100

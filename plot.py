@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 
 # env parameters
-j = 10
-m = 10
+j = 15
+m = 15
 l = 1
 h = 99
 init_type = 'fdd-divide-mwkr'
@@ -19,14 +19,14 @@ embedding_type = 'gin'
 lr = 5e-5
 steps_learn = 10
 transit = 500
-batch_size = 128
+batch_size = 64
 episodes = 128000
-step_validation = 5
+step_validation = 10
 # plot parameters
 show = True
 save = False
-log_type = 'training'  # 'training', 'validation'
-plot_step_size_training = 1
+log_type = 'validation'  # 'training', 'validation'
+plot_step_size_training = 10
 plot_step_size_validation = 1
 
 file = '{}x{}[{},{}]_{}_{}_{}_' \

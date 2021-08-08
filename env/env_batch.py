@@ -404,7 +404,7 @@ def main():
     transit = 100
     batch_size = 10
     n_batch = 1
-    init = 'fdd-divide-mwkr'
+    init = 'plist'
     reward_type = 'yaoxin'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]

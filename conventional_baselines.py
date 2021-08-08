@@ -20,7 +20,7 @@ def best_improvement_move(support_env, feasible_actions, current_graph, current_
     duplicated_tabu_lists = [copy.copy(current_tabu_list) for _ in range(n_feasible_actions)]
 
     support_env.instances = duplicated_instances
-    support_env.current_graphs = duplicated_current_graphs
+    support_env.sub_graphs_mc = duplicated_current_graphs
     support_env.current_objs = duplicated_current_obj
     support_env.tabu_lists = duplicated_tabu_lists
     support_env.incumbent_objs = duplicated_incumbent_obj
@@ -49,7 +49,7 @@ def tabu_move(support_env, feasible_actions, current_graph, current_tabu_list, c
     duplicated_tabu_lists = [copy.copy(current_tabu_list) for _ in range(n_feasible_actions)]
 
     support_env.instances = duplicated_instances
-    support_env.current_graphs = duplicated_current_graphs
+    support_env.sub_graphs_mc = duplicated_current_graphs
     support_env.current_objs = duplicated_current_obj
     support_env.tabu_lists = duplicated_tabu_lists
     support_env.incumbent_objs = duplicated_incumbent_obj

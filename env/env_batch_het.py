@@ -46,6 +46,7 @@ class JsspN5:
         self.high = high
         self.itr = 0
         self.instances = None
+        self.sub_graphs_mc = None
         self.current_graphs = None
         self.current_objs = None
         self.tabu_size = 1
@@ -148,6 +149,7 @@ class JsspN5:
         edge_indices_mc = []
         durations = []
         current_graphs = []
+        sub_graphs_mc = []
         for i, (instance, priority_list) in enumerate(zip(instances, priority_lists)):
             dur_mat, mch_mat = instance[0], instance[1]
             n_jobs = mch_mat.shape[0]
@@ -159,7 +161,7 @@ class JsspN5:
             list_for_latest_task_onMachine = [None] * n_machines  # Init list_for_latest_task_onMachine
 
             adj_mat_mc = np.zeros(shape=[n_operations, n_operations], dtype=int)  # Create adjacent matrix for machine clique
-            # Construct NIPS adjacent matrix
+            # Construct NIPS adjacent matrix only for machine cliques
             for job_id in priority_list:
                 op_id = ops_mat[job_id][0]
                 m_id_for_action = mch_mat[op_id // n_machines, op_id % n_machines] - 1
@@ -175,6 +177,9 @@ class JsspN5:
             edge_weight = np.multiply(adj_all, dur_mat)
             G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
             G.add_weighted_edges_from([(0, i, 0) for i in range(1, self.n_oprs + 2 - 1, self.n_mch)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
+            current_graphs.append(G)
+            G_mc = nx.from_numpy_matrix(adj_mat_mc, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
+            sub_graphs_mc.append(G_mc)
 
             if plot:
                 self.show_state(G)
@@ -182,7 +187,6 @@ class JsspN5:
             edge_indices_pc.append((torch.nonzero(torch.from_numpy(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
             edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
-            current_graphs.append(G)
 
         edge_indices_pc = torch.cat(edge_indices_pc, dim=-1).to(device)
         edge_indices_mc = torch.cat(edge_indices_mc, dim=-1).to(device)
@@ -193,10 +197,9 @@ class JsspN5:
         # prepare x
         x = torch.cat([durations / self.high, est / self.fea_norm_const, lst / self.fea_norm_const], dim=-1)
         # prepare batch
-        batch = torch.from_numpy(
-            np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
+        batch = torch.from_numpy(np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
 
-        return (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, make_span
+        return (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, sub_graphs_mc, make_span
 
 
     def _rules_solver(self, args, plot=False):
@@ -206,6 +209,7 @@ class JsspN5:
         edge_indices_mc = []
         durations = []
         current_graphs = []
+        sub_graphs_mc = []
         for i, instance in enumerate(instances):
             dur_mat, dur_cp, mch_mat = instance[0], np.copy(instance[0]), instance[1]
             n_jobs, n_machines = dur_mat.shape[0], dur_mat.shape[1]
@@ -260,6 +264,9 @@ class JsspN5:
             edge_weight = np.multiply(adj_all, dur_mat)
             G = nx.from_numpy_matrix(edge_weight, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
             G.add_weighted_edges_from([(0, i, 0) for i in range(1, self.n_oprs + 2 - 1, self.n_mch)])  # add release time, here all jobs are available at t=0. This is the only way to add release date. And if you do not add release date, startime computation will return wired value
+            current_graphs.append(G)
+            G_mc = nx.from_numpy_matrix(adj_mat_mc, parallel_edges=False, create_using=nx.DiGraph)  # create nx.DiGraph
+            sub_graphs_mc.append(G_mc)
 
             if plot:
                 self.show_state(G)
@@ -267,7 +274,6 @@ class JsspN5:
             edge_indices_pc.append((torch.nonzero(torch.from_numpy(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
             edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
             durations.append(torch.from_numpy(dur_mat[:, 0]).to(device))
-            current_graphs.append(G)
 
         edge_indices_pc = torch.cat(edge_indices_pc, dim=-1).to(device)
         edge_indices_mc = torch.cat(edge_indices_mc, dim=-1).to(device)
@@ -279,23 +285,20 @@ class JsspN5:
         # prepare batch
         batch = torch.from_numpy(np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
 
-        return (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, make_span
+        return (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, sub_graphs_mc, make_span
 
-    def dag2pyg(self, instances, nx_graphs, device, plot=False):
+    def dag2pyg(self, instances, nx_graphs, device):
         n_jobs, n_machines = instances[0][0].shape
         n_operations = n_jobs * n_machines
 
         edge_indices_pc = []
         edge_indices_mc = []
         durations = []
-        for i, (instance, G) in enumerate(zip(instances, nx_graphs)):
+        for i, (instance, G_mc) in enumerate(zip(instances, nx_graphs)):
             durations.append(np.pad(instance[0].reshape(-1), (1, 1), 'constant', constant_values=0))
-            adj_mat_mc = nx.adjacency_matrix(G, weight=None).todense()
+            adj_mat_mc = nx.adjacency_matrix(G_mc, weight=None).todense()
             edge_indices_pc.append((torch.nonzero(torch.from_numpy(self.adj_mat_pc)).t().contiguous()) + (n_operations + 2) * i)
             edge_indices_mc.append((torch.nonzero(torch.from_numpy(adj_mat_mc)).t().contiguous()) + (n_operations + 2) * i)
-
-            if plot:
-                self.show_state(G)
 
         edge_indices_pc = torch.cat(edge_indices_pc, dim=-1).to(device)
         edge_indices_mc = torch.cat(edge_indices_mc, dim=-1).to(device)
@@ -308,40 +311,51 @@ class JsspN5:
 
         return x, edge_indices_pc, edge_indices_mc, batch, make_span
 
-    def change_nxgraph_topology(self, actions):
+    def change_nxgraph_topology(self, actions, plot=False):
         n_jobs, n_machines = self.instances[0][0].shape
         n_operations = n_jobs * n_machines
 
-        for i, (action, G, instance) in enumerate(zip(actions, self.current_graphs, self.instances)):
+        for i, (action, G, G_mc, instance) in enumerate(zip(actions, self.current_graphs, self.sub_graphs_mc, self.instances)):
             if action == [0, 0]:  # if dummy action then do not transit
                 pass
             else:  # change nx graph topology
-                S = [s for s in G.predecessors(action[0]) if
-                     int((s - 1) // n_machines) != int((action[0] - 1) // n_machines) and s != 0]
-                T = [t for t in G.successors(action[1]) if
-                     int((t - 1) // n_machines) != int((action[1] - 1) // n_machines) and t != n_operations + 1]
+                S = [s for s in G.predecessors(action[0]) if int((s - 1) // n_machines) != int((action[0] - 1) // n_machines) and s != 0]
+                T = [t for t in G.successors(action[1]) if int((t - 1) // n_machines) != int((action[1] - 1) // n_machines) and t != n_operations + 1]
                 s = S[0] if len(S) != 0 else None
                 t = T[0] if len(T) != 0 else None
+
+                # print(action)
+                # self.show_state(G_mc)
+                # self.show_state(G)
 
                 if s is not None:  # connect s with action[1]
                     G.remove_edge(s, action[0])
                     G.add_edge(s, action[1], weight=np.take(instance[0], s - 1))
+                    G_mc.remove_edge(s, action[0])
+                    G_mc.add_edge(s, action[1], weight=np.take(instance[0], s - 1))
                 else:
                     pass
 
                 if t is not None:  # connect action[0] with t
                     G.remove_edge(action[1], t)
                     G.add_edge(action[0], t, weight=np.take(instance[0], action[0] - 1))
+                    G_mc.remove_edge(action[1], t)
+                    G_mc.add_edge(action[0], t, weight=np.take(instance[0], action[0] - 1))
                 else:
                     pass
 
                 # reverse edge connecting selected pair
                 G.remove_edge(action[0], action[1])
                 G.add_edge(action[1], action[0], weight=np.take(instance[0], action[1] - 1))
+                G_mc.remove_edge(action[0], action[1])
+                G_mc.add_edge(action[1], action[0], weight=np.take(instance[0], action[1] - 1))
+
+            if plot:
+                self.show_state(G)
 
     def step(self, actions, device, plot=False):
-        self.change_nxgraph_topology(actions)  # change graph topology
-        x, edge_indices_pc, edge_indices_mc, batch, makespan = self.dag2pyg(self.instances, self.current_graphs, device, plot=plot)  # generate new state data
+        self.change_nxgraph_topology(actions, plot)  # change graph topology
+        x, edge_indices_pc, edge_indices_mc, batch, makespan = self.dag2pyg(self.instances, self.sub_graphs_mc, device)  # generate new state data
         if self.reward_type == 'consecutive':
             reward = self.current_objs - makespan
         elif self.reward_type == 'yaoxin':
@@ -376,14 +390,15 @@ class JsspN5:
         self.instances = instances
         if init_type == 'plist':
             random_plist = np.repeat(np.arange(self.n_job).repeat(self.n_mch).reshape(1, -1), repeats=self.instances.shape[0], axis=0)  # fixed priority list: [0, 0, 0, ..., n-1, n-1, n-1]
-            (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, make_span = self._p_list_solver(args=[self.instances, random_plist, device], plot=plot)
+            (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, sub_graphs_mc, make_span = self._p_list_solver(args=[self.instances, random_plist, device], plot=plot)
         elif init_type == 'spt':
-            (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'spt'], plot=plot)
+            (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, sub_graphs_mc, make_span = self._rules_solver(args=[self.instances, device, 'spt'], plot=plot)
         elif init_type == 'fdd-divide-mwkr':
-            (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, make_span = self._rules_solver(args=[self.instances, device, 'fdd-divide-mwkr'], plot=plot)
+            (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, sub_graphs_mc, make_span = self._rules_solver(args=[self.instances, device, 'fdd-divide-mwkr'], plot=plot)
         else:
             assert False, 'Initial solution type = "p_list", "spt", "fdd-divide-mwkr".'
 
+        self.sub_graphs_mc = sub_graphs_mc
         self.current_graphs = current_graphs
         self.current_objs = make_span
         self.incumbent_objs = make_span
@@ -396,8 +411,8 @@ class JsspN5:
     def feasible_actions(self, device):
         actions = []
         feasible_actions_flag = []  # False for no feasible operation pairs
-        for i, (current_graph, instance, tabu_list) in enumerate(zip(self.current_graphs, self.instances, self.tabu_lists)):
-            action = self._gen_moves(solution=current_graph, mch_mat=instance[1], tabu_list=tabu_list)
+        for i, (G, instance, tabu_list) in enumerate(zip(self.current_graphs, self.instances, self.tabu_lists)):
+            action = self._gen_moves(solution=G, mch_mat=instance[1], tabu_list=tabu_list)
             # print(action)
             if len(action) != 0:
                 actions.append(action)
@@ -419,7 +434,7 @@ def main():
     transit = 100
     batch_size = 10
     n_batch = 1
-    init = 'fdd-divide-mwkr'
+    init = 'plist'
     reward_type = 'yaoxin'
 
     # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]

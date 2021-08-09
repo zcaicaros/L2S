@@ -10,10 +10,12 @@ parser.add_argument('--init_type', type=str, default='fdd-divide-mwkr')
 parser.add_argument('--reward_type', type=str, default='yaoxin')
 parser.add_argument('--gamma', type=float, default=1)
 # model parameters
+parser.add_argument('--embedding_type', type=str, default='gin')
 parser.add_argument('--hidden_dim', type=int, default=128)
 parser.add_argument('--embedding_layer', type=int, default=4)
 parser.add_argument('--policy_layer', type=int, default=4)
-parser.add_argument('--embedding_type', type=str, default='gin')
+parser.add_argument('--heads', type=int, default=4)  # dghan parameters
+parser.add_argument('--drop_out', type=float, default=0.6)  # dghan parameters
 # training parameters
 parser.add_argument('--lr', type=float, default=5e-5)
 parser.add_argument('--steps_learn', type=int, default=10)

@@ -123,7 +123,9 @@ class Actor(nn.Module):
                  hidden_dim,
                  embedding_l=4,
                  policy_l=3,
-                 embedding_type='gin'):
+                 embedding_type='gin',
+                 heads=4,
+                 dropout=0.6):
         super(Actor, self).__init__()
         self.embedding_l = embedding_l
         self.policy_l = policy_l
@@ -131,10 +133,10 @@ class Actor(nn.Module):
         if self.embedding_type == 'gin':
             self.embedding = GIN(in_dim=in_dim, hidden_dim=hidden_dim, layer_gin=embedding_l)
         elif self.embedding_type == 'dghan':
-            self.embedding = DGHAN(in_dim=in_dim, hidden_dim=hidden_dim, dropout=0.6, layer_dghan=embedding_l, heads=4)
+            self.embedding = DGHAN(in_dim=in_dim, hidden_dim=hidden_dim, dropout=dropout, layer_dghan=embedding_l, heads=heads)
         elif self.embedding_type == 'gin+dghan':
             self.embedding_gin = GIN(in_dim=in_dim, hidden_dim=hidden_dim, layer_gin=embedding_l)
-            self.embedding_dghan = DGHAN(in_dim=in_dim, hidden_dim=hidden_dim, dropout=0.6, layer_dghan=embedding_l, heads=4)
+            self.embedding_dghan = DGHAN(in_dim=in_dim, hidden_dim=hidden_dim, dropout=dropout, layer_dghan=embedding_l, heads=heads)
         else:
             raise Exception('embedding type should be either "gin", "dghan", or "gin+dghan".')
 

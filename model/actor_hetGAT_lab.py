@@ -180,8 +180,8 @@ class Actor(nn.Module):
                                                      batch_states.batch)
         elif self.embedding_type == 'dghan':
             node_embed, graph_embed = self.embedding(batch_states.x,
-                                                     add_self_loops(batch_data.edge_index_pc)[0],
-                                                     add_self_loops(batch_data.edge_index_mc)[0],
+                                                     add_self_loops(batch_states.edge_index_pc)[0],
+                                                     add_self_loops(batch_states.edge_index_mc)[0],
                                                      len(feasible_actions))
         elif self.embedding_type == 'gin+dghan':
             node_embed_gin, graph_embed_gin = self.embedding_gin(batch_states.x,
@@ -190,8 +190,8 @@ class Actor(nn.Module):
                                                                                           dim=-1))[0],
                                                                  batch_states.batch)
             node_embed_dghan, graph_embed_dghan = self.embedding_dghan(batch_states.x,
-                                                                       add_self_loops(batch_data.edge_index_pc)[0],
-                                                                       add_self_loops(batch_data.edge_index_mc)[0],
+                                                                       add_self_loops(batch_states.edge_index_pc)[0],
+                                                                       add_self_loops(batch_states.edge_index_mc)[0],
                                                                        len(feasible_actions))
             node_embed = torch.cat([node_embed_gin, node_embed_dghan], dim=-1)
             graph_embed = torch.cat([graph_embed_gin, graph_embed_dghan], dim=-1)

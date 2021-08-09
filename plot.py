@@ -25,7 +25,7 @@ step_validation = 10
 # plot parameters
 show = True
 save = False
-log_type = 'validation'  # 'training', 'validation'
+log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = 10
 plot_step_size_validation = 1
 
@@ -44,6 +44,7 @@ if log_type == 'training':
     obj = log[:log.shape[0] // plot_step_size_training * plot_step_size_training].reshape(log.shape[0] // plot_step_size_training, -1).mean(axis=1)
     # plot objective...
     # print(obj.min())
+    # print(obj[:100])
     plt.xlabel('iteration({})'.format(plot_step_size_training))
     plt.ylabel('make span')
     plt.plot([_ for _ in range(obj.shape[0])], obj, color='tab:blue')

@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 
 # env parameters
-j = 15
-m = 15
+j = 10
+m = 10
 l = 1
 h = 99
 init_type = 'fdd-divide-mwkr'
@@ -14,7 +14,7 @@ gamma = 1
 hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
-embedding_type = 'gin'
+embedding_type = 'gin+dghan'
 # training parameters
 lr = 5e-5
 steps_learn = 10

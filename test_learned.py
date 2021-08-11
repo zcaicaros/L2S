@@ -2,8 +2,8 @@ import numpy as np
 import torch
 import time
 import random
-from env.env_batch_het import JsspN5, BatchGraph
-from model.actor_hetGAT_lab import Actor
+from env.env_batch import JsspN5, BatchGraph
+from model.actor import Actor
 from ortools_baseline import MinimalJobshopSat
 
 

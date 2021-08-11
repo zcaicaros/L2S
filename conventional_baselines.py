@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import time
-from env.env_batch_het import JsspN5
+from env.env_batch import JsspN5
 import copy
 import random
 from ortools_baseline import MinimalJobshopSat

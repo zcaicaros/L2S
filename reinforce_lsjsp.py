@@ -63,9 +63,9 @@ class RL2S4JSSP:
     def validation(self, policy, dev):
 
         # fixed seed for fair validation: validation improve not because of different critical path
-        random.seed(1)
-        np.random.seed(1)
-        torch.manual_seed(1)
+        # random.seed(1)
+        # np.random.seed(1)
+        # torch.manual_seed(1)
 
         # validating...
         validation_start = time.time()
@@ -123,6 +123,8 @@ class RL2S4JSSP:
         dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         torch.manual_seed(1)
+        random.seed(1)
+        np.random.seed(1)
 
         policy = Actor(in_dim=3,
                        hidden_dim=args.hidden_dim,
@@ -142,9 +144,6 @@ class RL2S4JSSP:
         for batch_i in range(1, args.episodes // args.batch_size + 1):
 
             t1 = time.time()
-
-            random.seed(batch_i)
-            np.random.seed(batch_i)
 
             instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(args.batch_size)])
             states, feasible_actions, dones = self.env_training.reset(instances=instances, init_type=args.init_type, device=dev)

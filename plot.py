@@ -34,7 +34,7 @@ step_validation = 10
 show = True
 save = False
 log_type = 'validation'  # 'training', 'validation'
-plot_step_size_training = 10
+plot_step_size_training = 1
 plot_step_size_validation = 1
 
 file = '{}x{}[{},{}]_{}_{}_{}_' \
@@ -44,7 +44,7 @@ file = '{}x{}[{},{}]_{}_{}_{}_' \
             hidden_dim, embedding_layer, policy_layer, embedding_type, dghan_param_for_saved_model,
             lr, steps_learn, transit, batch_size, episodes, step_validation)
 
-log = np.load('./log/{}_log_'
+log = np.load('./log/OLD_{}_log_'
               .format(log_type)  # log type
               + file + '.npy')
 
@@ -52,7 +52,7 @@ if log_type == 'training':
     obj = log[:log.shape[0] // plot_step_size_training * plot_step_size_training].reshape(log.shape[0] // plot_step_size_training, -1).mean(axis=1)
     # plot objective...
     # print(obj.min())
-    # print(obj[900:1000])
+    # print(obj[0:100])
     # print(obj)
     plt.xlabel('iteration(stride-{})'.format(plot_step_size_training))
     plt.ylabel('make span')
@@ -70,7 +70,7 @@ if log_type == 'training':
 else:
     obj_incumbent = log[:log.shape[0]//plot_step_size_validation*plot_step_size_validation, 0].reshape(log.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plot objective...
-    # print(obj_incumbent)
+    print(obj_incumbent)
     # print(obj_incumbent.min())
     # print(obj_incumbent.max())
     plt.xlabel('incumbent-iteration(stride-{})'.format(plot_step_size_validation))

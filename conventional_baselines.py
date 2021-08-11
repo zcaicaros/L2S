@@ -79,41 +79,35 @@ def tabu_move(support_env,
     return tabu_mv
 
 
-
-
-
-
-
 def main():
-
-
+    seed = 1
+    random.seed(seed)
+    np.random.seed(seed)
+    # torch.use_deterministic_algorithms(True)  # bug, refer to https://github.com/pytorch/pytorch/issues/61032
 
     show = False
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+
     # benchmark config
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
     testing_type = ['tai']  # ['syn', 'tai']
-    syn_problem_j = [10]
-    syn_problem_m = [10]
+    syn_problem_j = [15]
+    syn_problem_m = [15]
     # syn_problem_j = [10, 15, 20, 30, 50, 100]
     # syn_problem_m = [10, 15, 20, 20, 20, 20]
-    tai_problem_j = [15]
-    tai_problem_m = [15]
-    # tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
-    # tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
+    # tai_problem_j = [15]
+    # tai_problem_m = [15]
+    tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
+    tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 
     # MDP config
-    transit = [500]  # [500, 1000, 2000, 5000, 10000]
+    cap_horizon = 2000
+    transit = [500, 1000, 2000]  # [500, 1000, 2000]
     result_type = 'incumbent'  # 'current', 'incumbent'
     fea_norm_const = 1000
 
-
-
-    # seed
-    random.seed(1)
-    np.random.seed(1)
     for test_t in testing_type:  # select benchmark
         if test_t == 'syn':
             problem_j, problem_m = syn_problem_j, syn_problem_m
@@ -123,7 +117,7 @@ def main():
         for p_j, p_m in zip(problem_j, problem_m):  # select problem size
 
             inst = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))
-            print('\nStart testing {}{}x{}...\n'.format(test_t, p_j, p_m))
+            print('\nStart testing {}{}x{}...'.format(test_t, p_j, p_m))
 
             # read saved gap_against or use ortools to solve it.
             if test_t == 'tai':
@@ -147,124 +141,103 @@ def main():
                     gap_against = np.array(gap_against)
                     np.save('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m), gap_against)
 
-
-
-            results = []  # save result for DRL and conventional heuristic
-            inference_time = []  # save inference for DRL and conventional heuristic
+            env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin', fea_norm_const=fea_norm_const)
+            support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin',
+                                 fea_norm_const=fea_norm_const)
 
             for init in init_type:
-                for test_step in transit:  # select testing max itr
-                    results_each_test_step = []
-                    inference_time_each_test_step = []
-                    env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin', fea_norm_const=fea_norm_const)
 
-                    # rollout random policy
-                    # random.seed(1)
-                    print('Starting rollout random policy...')
-                    t1_random = time.time()
-                    states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
-                    saved_actions = np.load('saved_actions.npy')
-                    for i in range(test_step):
-                        actions = [random.choice(feasible_action) for feasible_action in feasible_actions]
-                        # actions = saved_actions[i].tolist()
-                        # print(feasible_actions)
-                        # print(actions)
-                        # print()
-                        states, _, feasible_actions, _ = env.step(actions, dev)
-                        # print(states[1].shape, states[2].shape)
-                    if result_type == 'incumbent':
-                        Random_result = env.incumbent_objs.cpu().squeeze().numpy()
-                    else:
-                        Random_result = env.current_objs.cpu().squeeze().numpy()
+                print('Starting rollout Random policy...')
+                random_result = []
+                random_time = []
+                states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev, plot=show)
+                random_start = time.time()
+                while env.itr < cap_horizon:
+                    actions = [random.choice(feasible_action) for feasible_action in feasible_actions]
+                    states, _, feasible_actions, _ = env.step(actions, dev, plot=show)
+                    for log_horizon in transit:
+                        if env.itr == log_horizon:
+                            if result_type == 'incumbent':
+                                RD_result = env.incumbent_objs.cpu().squeeze().numpy()
+                            else:
+                                RD_result = env.current_objs.cpu().squeeze().numpy()
+                            random_result.append(RD_result)
+                            random_time.append(time.time() - random_start)
+                random_result = np.array(random_result)
+                random_time = np.array(random_time)
+                print(random_result.mean(axis=1))
+                print(random_time.mean(axis=1))
 
-                    t2_random = time.time()
-                    print('Random settings: {}{}x{}, {}, test_step={}'.format(test_t, p_j, p_m, init, test_step))
-                    print('Random Gap:', ((Random_result - gap_against) / gap_against).mean())
-                    results_each_test_step.append(((Random_result - gap_against) / gap_against).mean())
-                    print('Random results takes: {:.4f} per instance.'.format((t2_random - t1_random) / inst.shape[0]))
-                    inference_time_each_test_step.append((t2_random - t1_random) / inst.shape[0])
-                    # print(Random_result)
-                    print()
+                print('Starting rollout Best-Improvement policy...')
+                best_improvement_result = []
+                best_improvement_time = []
+                for ins in inst:
+                    best_improvement_result_per_instance = []
+                    best_improvement_time_per_instance = []
+                    ins = np.array([ins])
+                    BI_start_per_instance = time.time()
+                    _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev, plot=show)
+                    while env.itr < cap_horizon:
+                        best_actions = best_improvement_move(support_env=support_env,
+                                                             feasible_actions=feasible_actions[0],
+                                                             current_graph=env.current_graphs[0],
+                                                             current_sub_graphs_mc=env.sub_graphs_mc[0],
+                                                             current_tabu_list=env.tabu_lists[0],
+                                                             current_obj=env.current_objs[0],
+                                                             incumbent_obj=env.incumbent_objs[0],
+                                                             instance=env.instances[0],
+                                                             device=dev)
+                        states, _, feasible_actions, _ = env.step(best_actions, dev, plot=show)
+                        for log_horizon in transit:
+                            if env.itr == log_horizon:
+                                if result_type == 'incumbent':
+                                    BI_result = env.incumbent_objs.cpu().squeeze().numpy()
+                                else:
+                                    BI_result = env.current_objs.cpu().squeeze().numpy()
+                                best_improvement_result_per_instance.append(BI_result)
+                                best_improvement_time_per_instance.append(time.time() - BI_start_per_instance)
+                    best_improvement_result.append(best_improvement_result_per_instance)
+                    best_improvement_time.append(best_improvement_time_per_instance)
+                best_improvement_result = np.array(best_improvement_result)
+                best_improvement_time = np.array(best_improvement_time)
+                print(best_improvement_result.mean(axis=0))
+                print(best_improvement_time.mean(axis=0))
 
-
-                    '''# rollout best_improvement_move
-                    # random.seed(1)
-                    print('Starting rollout best_improvement_move policy...')
-                    support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
-                    best_improvement_result = []
-                    t1_best_improvement = time.time()
-                    for ins in inst:
-                        ins = np.array([ins])
-                        _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
-                        while env.itr < test_step:
-                            best_move = best_improvement_move(support_env=support_env,
-                                                              feasible_actions=feasible_actions[0],
-                                                              current_graph=env.current_graphs[0],
-                                                              current_sub_graphs_mc=env.sub_graphs_mc[0],
-                                                              current_tabu_list=env.tabu_lists[0],
-                                                              current_obj=env.current_objs[0],
-                                                              incumbent_obj=env.incumbent_objs[0],
-                                                              instance=env.instances[0],
-                                                              device=dev)
-                            _, _, feasible_actions, _ = env.step(best_move, dev)
-                        if result_type == 'incumbent':
-                            best_improvement_result.append(env.incumbent_objs.cpu().item())
-                        else:
-                            best_improvement_result.append(env.current_objs.cpu().item())
-                    t2_best_improvement = time.time()
-                    best_improvement_result = np.array(best_improvement_result)
-                    print('Best_improvement_move settings: {}{}x{}, {}, test_step={}'.format(test_t, p_j, p_m, init, test_step))
-                    print('Best_improvement_move Gap:', ((best_improvement_result - gap_against) / gap_against).mean())
-                    results_each_test_step.append(((best_improvement_result - gap_against) / gap_against).mean())
-                    print('Best_improvement_move results takes: {:.4f} per instance.'.format(
-                        (t2_best_improvement - t1_best_improvement) / inst.shape[0]))
-                    inference_time_each_test_step.append((t2_best_improvement - t1_best_improvement) / inst.shape[0])
-                    # print(best_improvement_result)
-                    print()
-                    results.append(results_each_test_step)
-                    inference_time.append(inference_time_each_test_step)
-
-                    # rollout tabu_move
-                    # random.seed(1)
-                    print('Starting rollout tabu_move policy...')
-                    support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
-                    tabu_result = []
-                    t1_tabu = time.time()
-                    for ins in inst:
-                        ins = np.array([ins])
-                        _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev)
-                        while env.itr < test_step:
-                            best_move = tabu_move(support_env=support_env,
-                                                  feasible_actions=feasible_actions[0],
-                                                  current_graph=env.current_graphs[0],
-                                                  current_sub_graphs_mc=env.sub_graphs_mc[0],
-                                                  current_tabu_list=env.tabu_lists[0],
-                                                  current_obj=env.current_objs[0],
-                                                  incumbent_obj=env.incumbent_objs[0],
-                                                  instance=env.instances[0],
-                                                  device=dev)
-                            _, _, feasible_actions, _ = env.step(best_move, dev)
-                        if result_type == 'incumbent':
-                            tabu_result.append(env.incumbent_objs.cpu().item())
-                        else:
-                            tabu_result.append(env.current_objs.cpu().item())
-                    t2_tabu = time.time()
-                    tabu_result = np.array(tabu_result)
-                    print('Tabu_move settings: {}{}x{}, {}, test_step={}'.format(test_t, p_j, p_m, init, test_step))
-                    print('Tabu_move Gap:', ((tabu_result - gap_against) / gap_against).mean())
-                    results_each_test_step.append(((tabu_result - gap_against) / gap_against).mean())
-                    print('Tabu_move results takes: {:.4f} per instance.'.format(
-                        (t2_tabu - t1_tabu) / inst.shape[0]))
-                    inference_time_each_test_step.append((t2_tabu - t1_tabu) / inst.shape[0])
-                    # print(best_improvement_result)
-                    print()
-                    results.append(results_each_test_step)
-                    inference_time.append(inference_time_each_test_step)
-
-            # np.save('test_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
-            # np.save('test_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))'''
+                print('Starting rollout TABU policy...')
+                tabu_result = []
+                tabu_time = []
+                for ins in inst:
+                    tabu_result_per_instance = []
+                    tabu_time_per_instance = []
+                    ins = np.array([ins])
+                    TABU_start_per_instance = time.time()
+                    _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev, plot=show)
+                    while env.itr < cap_horizon:
+                        tabu_actions = tabu_move(support_env=support_env,
+                                                 feasible_actions=feasible_actions[0],
+                                                 current_graph=env.current_graphs[0],
+                                                 current_sub_graphs_mc=env.sub_graphs_mc[0],
+                                                 current_tabu_list=env.tabu_lists[0],
+                                                 current_obj=env.current_objs[0],
+                                                 incumbent_obj=env.incumbent_objs[0],
+                                                 instance=env.instances[0],
+                                                 device=dev)
+                        states, _, feasible_actions, _ = env.step(tabu_actions, dev, plot=show)
+                        for log_horizon in transit:
+                            if env.itr == log_horizon:
+                                if result_type == 'incumbent':
+                                    tb_result = env.incumbent_objs.cpu().squeeze().numpy()
+                                else:
+                                    tb_result = env.current_objs.cpu().squeeze().numpy()
+                                tabu_result_per_instance.append(tb_result)
+                                tabu_time_per_instance.append(time.time() - TABU_start_per_instance)
+                    tabu_result.append(tabu_result_per_instance)
+                    tabu_time.append(tabu_time_per_instance)
+                tabu_result = np.array(tabu_result)
+                tabu_time = np.array(tabu_time)
+                print(tabu_result.mean(axis=0))
+                print(tabu_time.mean(axis=0))
 
 
 if __name__ == '__main__':
-
     main()

@@ -16,13 +16,17 @@ class RL2S4JSSP:
         self.env_training = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, reward_type=args.reward_type)
         self.env_validation = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, reward_type=args.reward_type)
         self.eps = np.finfo(np.float32).eps.item()
-        validation_data_path = Path('./validation_data/validation_instance_{}x{}[{},{}].npy'.format(args.j, args.m, args.l, args.h))
+        validation_data_path = Path(
+            './validation_data/validation_instance_{}x{}[{},{}].npy'.format(args.j, args.m, args.l, args.h))
         if validation_data_path.is_file():
-            self.validation_data = np.load('./validation_data/validation_instance_{}x{}[{},{}].npy'.format(args.j, args.m, args.l, args.h))
+            self.validation_data = np.load(
+                './validation_data/validation_instance_{}x{}[{},{}].npy'.format(args.j, args.m, args.l, args.h))
         else:
             print('No validation data for {}x{}[{},{}], generating new one.'.format(args.j, args.m, args.l, args.h))
-            self.validation_data = np.array([uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(args.batch_size)])
-            np.save('./validation_data/validation_instance_{}x{}[{},{}].npy'.format(args.j, args.m, args.l, args.h), self.validation_data)
+            self.validation_data = np.array(
+                [uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(args.batch_size)])
+            np.save('./validation_data/validation_instance_{}x{}[{},{}].npy'.format(args.j, args.m, args.l, args.h),
+                    self.validation_data)
         self.incumbent_validation_result = np.inf
         self.current_validation_result = np.inf
 
@@ -32,7 +36,6 @@ class RL2S4JSSP:
             self.dghan_param_for_saved_model = '{}_{}'.format(args.heads, args.drop_out)
         else:
             raise Exception('embedding_type should be one of "gin", "dghan", or "gin+dghan".')
-
 
     def learn(self, rewards, log_probs, dones, optimizer):
         R = torch.zeros_like(rewards[0], dtype=torch.float, device=rewards[0].device)
@@ -56,7 +59,6 @@ class RL2S4JSSP:
         mean_loss = torch.stack(losses).mean()
         mean_loss.backward()
         optimizer.step()
-
 
     def validation(self, policy, dev):
 
@@ -89,7 +91,8 @@ class RL2S4JSSP:
                        '{}_{}_{}_{}_{}_{}'  # training parameters
                        '.pth'
                        .format(args.j, args.m, args.l, args.h, args.init_type, args.reward_type, args.gamma,
-                               args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type, self.dghan_param_for_saved_model,
+                               args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
+                               self.dghan_param_for_saved_model,
                                args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
                                args.step_validation))
             self.incumbent_validation_result = validation_result1
@@ -102,113 +105,112 @@ class RL2S4JSSP:
                        '{}_{}_{}_{}_{}_{}'  # training parameters
                        '.pth'
                        .format(args.j, args.m, args.l, args.h, args.init_type, args.reward_type, args.gamma,
-                               args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type, self.dghan_param_for_saved_model,
+                               args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
+                               self.dghan_param_for_saved_model,
                                args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
                                args.step_validation))
             self.current_validation_result = validation_result2
 
         validation_end = time.time()
 
-        print('Incumbent objs and final step objs for validation are: {:.2f}  {:.2f}'.format(validation_result1, validation_result2),
+        print('Incumbent objs and final step objs for validation are: {:.2f}  {:.2f}'.format(validation_result1,
+                                                                                             validation_result2),
               'validation takes:{:.2f}'.format(validation_end - validation_start))
 
         return validation_result1, validation_result2
 
-
     def train(self):
+        dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+        init = args.init_type
 
-            dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-            init = args.init_type
+        torch.manual_seed(1)
 
-            torch.manual_seed(1)
+        policy = Actor(in_dim=3,
+                       hidden_dim=args.hidden_dim,
+                       embedding_l=args.embedding_layer,
+                       policy_l=args.policy_layer,
+                       embedding_type=args.embedding_type,
+                       heads=args.heads,
+                       dropout=args.drop_out).to(dev)
 
-            policy = Actor(in_dim=3,
-                           hidden_dim=args.hidden_dim,
-                           embedding_l=args.embedding_layer,
-                           policy_l=args.policy_layer,
-                           embedding_type=args.embedding_type,
-                           heads=args.heads,
-                           dropout=args.drop_out).to(dev)
+        optimizer = optim.Adam(policy.parameters(), lr=args.lr)
 
-            optimizer = optim.Adam(policy.parameters(), lr=args.lr)
+        batch_data = BatchGraph()
+        log = []
+        validation_log = []
 
-            batch_data = BatchGraph()
-            log = []
-            validation_log = []
+        print()
+        for batch_i in range(1, args.episodes // args.batch_size + 1):
 
-            print()
-            for batch_i in range(1, args.episodes // args.batch_size + 1):
+            t1 = time.time()
 
-                t1 = time.time()
+            random.seed(batch_i)
+            np.random.seed(batch_i)
 
-                random.seed(batch_i)
-                np.random.seed(batch_i)
+            instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(args.batch_size)])
+            states, feasible_actions, dones = self.env_training.reset(instances=instances, init_type=init, device=dev)
+            # print(instances)
 
+            reward_log = []
+            rewards_buffer = []
+            log_probs_buffer = []
+            dones_buffer = [dones]
 
-                instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(args.batch_size)])
-                states, feasible_actions, dones = self.env_training.reset(instances=instances, init_type=init, device=dev)
-                # print(instances)
+            while self.env_training.itr < args.transit:
+                batch_data.wrapper(*states)
+                actions, log_ps = policy(batch_data, feasible_actions)
+                states, rewards, feasible_actions, dones = self.env_training.step(actions, dev)
 
-                reward_log = []
-                rewards_buffer = []
-                log_probs_buffer = []
-                dones_buffer = [dones]
+                # store training data
+                rewards_buffer.append(rewards)
+                log_probs_buffer.append(log_ps)
+                dones_buffer.append(dones)
 
-                while self.env_training.itr < args.transit:
-                    batch_data.wrapper(*states)
-                    actions, log_ps = policy(batch_data, feasible_actions)
-                    states, rewards, feasible_actions, dones = self.env_training.step(actions, dev)
+                # logging reward...
+                # reward_log.append(rewards)
 
-                    # store training data
-                    rewards_buffer.append(rewards)
-                    log_probs_buffer.append(log_ps)
-                    dones_buffer.append(dones)
+                if self.env_training.itr % args.steps_learn == 0:
+                    # training...
+                    self.learn(rewards_buffer, log_probs_buffer, dones_buffer[:-1], optimizer)
+                    # clean training data
+                    rewards_buffer = []
+                    log_probs_buffer = []
+                    dones_buffer = [dones]
 
-                    # logging reward...
-                    # reward_log.append(rewards)
+            # learn(rewards_buffer, log_probs_buffer, dones_buffer[:-1])  # old-school training scheme
 
-                    if self.env_training.itr % args.steps_learn == 0:
-                        # training...
-                        self.learn(rewards_buffer, log_probs_buffer, dones_buffer[:-1], optimizer)
-                        # clean training data
-                        rewards_buffer = []
-                        log_probs_buffer = []
-                        dones_buffer = [dones]
+            t2 = time.time()
+            print('Batch {} training takes: {:.2f}'.format(batch_i, t2 - t1),
+                  'Mean Performance: {:.2f}'.format(self.env_training.current_objs.cpu().mean().item()))
+            log.append(self.env_training.current_objs.mean().cpu().item())
 
-                # learn(rewards_buffer, log_probs_buffer, dones_buffer[:-1])  # old-school training scheme
+            # start validation and saving model & logs...
+            if batch_i % args.step_validation == 0:
+                # validating...
+                validation_result1, validation_result2 = self.validation(policy, dev)
+                validation_log.append([validation_result1, validation_result2])
 
-                t2 = time.time()
-                print('Batch {} training takes: {:.2f}'.format(batch_i, t2 - t1),
-                      'Mean Performance: {:.2f}'.format(self.env_training.current_objs.cpu().mean().item()))
-                log.append(self.env_training.current_objs.mean().cpu().item())
-
-                # start validation and saving model & logs...
-                if batch_i % args.step_validation == 0:
-
-                    # validating...
-                    validation_result1, validation_result2 = self.validation(policy, dev)
-                    validation_log.append([validation_result1, validation_result2])
-
-                    # saving log
-                    np.save('./log/training_log_'
-                            '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
-                            '{}_{}_{}_{}_{}_'  # model parameters
-                            '{}_{}_{}_{}_{}_{}.npy'  # training parameters
-                            .format(args.j, args.m, args.l, args.h, args.init_type, args.reward_type, args.gamma,
-                                    args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type, self.dghan_param_for_saved_model,
-                                    args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
-                                    args.step_validation),
-                            np.array(log))
-                    np.save('./log/validation_log_'
-                            '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
-                            '{}_{}_{}_{}_{}_'  # model parameters
-                            '{}_{}_{}_{}_{}_{}.npy'  # training parameters
-                            .format(args.j, args.m, args.l, args.h, args.init_type, args.reward_type, args.gamma,
-                                    args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type, self.dghan_param_for_saved_model,
-                                    args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
-                                    args.step_validation),
-                            np.array(validation_log))
-
+                # saving log
+                np.save('./log/training_log_'
+                        '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
+                        '{}_{}_{}_{}_{}_'  # model parameters
+                        '{}_{}_{}_{}_{}_{}.npy'  # training parameters
+                        .format(args.j, args.m, args.l, args.h, args.init_type, args.reward_type, args.gamma,
+                                args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
+                                self.dghan_param_for_saved_model,
+                                args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
+                                args.step_validation),
+                        np.array(log))
+                np.save('./log/validation_log_'
+                        '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
+                        '{}_{}_{}_{}_{}_'  # model parameters
+                        '{}_{}_{}_{}_{}_{}.npy'  # training parameters
+                        .format(args.j, args.m, args.l, args.h, args.init_type, args.reward_type, args.gamma,
+                                args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
+                                self.dghan_param_for_saved_model,
+                                args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
+                                args.step_validation),
+                        np.array(validation_log))
 
 
 if __name__ == '__main__':

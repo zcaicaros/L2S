@@ -120,6 +120,8 @@ class RL2S4JSSP:
             dev = 'cuda' if torch.cuda.is_available() else 'cpu'
             init = args.init_type
 
+            torch.manual_seed(1)
+
             policy = Actor(in_dim=3,
                            hidden_dim=args.hidden_dim,
                            embedding_l=args.embedding_layer,
@@ -141,7 +143,7 @@ class RL2S4JSSP:
 
                 random.seed(batch_i)
                 np.random.seed(batch_i)
-                torch.manual_seed(batch_i)
+
 
                 instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(args.batch_size)])
                 states, feasible_actions, dones = self.env_training.reset(instances=instances, init_type=init, device=dev)

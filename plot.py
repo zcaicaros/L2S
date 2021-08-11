@@ -15,6 +15,14 @@ hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
 embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
+heads = 1
+drop_out = 0
+if embedding_type == 'gin':
+    dghan_param_for_saved_model = 'NAN'
+elif embedding_type == 'dghan' or embedding_type == 'gin+dghan':
+    dghan_param_for_saved_model = '{}_{}'.format(heads, drop_out)
+else:
+    raise Exception('embedding_type should be one of "gin", "dghan", or "gin+dghan".')
 # training parameters
 lr = 5e-5
 steps_learn = 10
@@ -30,10 +38,10 @@ plot_step_size_training = 10
 plot_step_size_validation = 1
 
 file = '{}x{}[{},{}]_{}_{}_{}_' \
-       '{}_{}_{}_{}_' \
+       '{}_{}_{}_{}_{}_' \
        '{}_{}_{}_{}_{}_{}' \
     .format(j, m, l, h, init_type, reward_type, gamma,
-            hidden_dim, embedding_layer, policy_layer, embedding_type,
+            hidden_dim, embedding_layer, policy_layer, embedding_type, dghan_param_for_saved_model,
             lr, steps_learn, transit, batch_size, episodes, step_validation)
 
 log = np.load('./log/{}_log_'

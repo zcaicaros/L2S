@@ -27,7 +27,7 @@ class RL2S4JSSP:
         self.current_validation_result = np.inf
 
         if args.embedding_type == 'gin':
-            self.dghan_param_for_saved_model = '{NAN}'
+            self.dghan_param_for_saved_model = 'NAN'
         elif args.embedding_type == 'dghan' or args.embedding_type == 'gin+dghan':
             self.dghan_param_for_saved_model = '{}_{}'.format(args.heads, args.drop_out)
         else:

@@ -49,6 +49,12 @@ def main():
     batch_size = 64
     episodes = 128000
     step_validation = 10
+    if embedding_type == 'gin':
+        dghan_param_for_saved_model = '{NAN}'
+    elif embedding_type == 'dghan' or embedding_type == 'gin+dghan':
+        dghan_param_for_saved_model = '{}_{}'.format(heads, drop_out)
+    else:
+        raise Exception('embedding_type should be one of "gin", "dghan", or "gin+dghan".')
 
     # MDP config
     cap_horizon = 2000
@@ -100,11 +106,11 @@ def main():
                            dropout=drop_out).to(dev)
             saved_model_path = './saved_model/' \
                                '{}_{}x{}[{},{}]_{}_{}_{}_' \
-                               '{}_{}_{}_{}_' \
+                               '{}_{}_{}_{}_{}_' \
                                '{}_{}_{}_{}_{}_{}' \
                                '.pth' \
                 .format(model_type, model_j, model_m, l, h, model_init_type, reward_type, gamma,
-                        hidden_dim, embedding_layer, policy_layer, embedding_type,
+                        hidden_dim, embedding_layer, policy_layer, embedding_type, dghan_param_for_saved_model,
                         lr, steps_learn, training_episode_length, batch_size, episodes, step_validation)
             print('loading model from:', saved_model_path)
             policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))

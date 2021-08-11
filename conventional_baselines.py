@@ -166,7 +166,7 @@ def main():
                 random_result = np.array(random_result)
                 random_time = np.array(random_time)
                 print(random_result.mean(axis=1))
-                print(random_time.mean(axis=1))
+                print(random_time / inst.shape[0])
 
                 print('Starting rollout Best-Improvement policy...')
                 best_improvement_result = []

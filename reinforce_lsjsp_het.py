@@ -26,6 +26,8 @@ if args.embedding_type == 'gin':
     dghan_param_for_saved_model = '{NAN}'
 elif args.embedding_type == 'dghan' or args.embedding_type == 'gin+dghan':
     dghan_param_for_saved_model = '{}_{}'.format(args.heads, args.drop_out)
+else:
+    raise Exception('embedding_type should be one of "gin", "dghan", or "gin+dghan".')
 
 
 

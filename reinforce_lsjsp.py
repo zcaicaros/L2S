@@ -144,8 +144,8 @@ class RL2S4JSSP:
                 torch.manual_seed(batch_i)
 
                 instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(args.batch_size)])
-                print(instances)
                 states, feasible_actions, dones = self.env_training.reset(instances=instances, init_type=init, device=dev)
+                # print(instances)
 
                 reward_log = []
                 rewards_buffer = []

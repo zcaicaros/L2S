@@ -4,7 +4,7 @@ import time
 import random
 from env.env_batch import JsspN5, BatchGraph
 from model.actor import Actor
-from ortools_baseline import MinimalJobshopSat
+from ortools_solver import MinimalJobshopSat
 
 
 def main():

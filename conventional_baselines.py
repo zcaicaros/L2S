@@ -4,7 +4,7 @@ import time
 from env.env_batch import JsspN5
 import copy
 import random
-from ortools_baseline import MinimalJobshopSat
+from ortools_solver import MinimalJobshopSat
 
 
 def best_improvement_move(support_env,

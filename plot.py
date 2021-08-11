@@ -49,7 +49,8 @@ file = '{}x{}[{},{}]_{}_{}_{}_' \
             hidden_dim, embedding_layer, policy_layer, embedding_type, dghan_param_for_saved_model,
             lr, steps_learn, transit, batch_size, episodes, step_validation)
 
-log = np.load('./log/OLD_{}_log_'
+log = np.load('./log/OLD_'
+              '{}_log_'
               .format(log_type)  # log type
               + file + '.npy')
 

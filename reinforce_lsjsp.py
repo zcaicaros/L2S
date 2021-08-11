@@ -185,6 +185,7 @@ class RL2S4JSSP:
                 # start validation and saving model & logs...
                 if batch_i % args.step_validation == 0:
 
+                    # validating...
                     validation_result1, validation_result2 = self.validation(policy, dev)
                     validation_log.append([validation_result1, validation_result2])
 

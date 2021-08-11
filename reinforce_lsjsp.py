@@ -85,7 +85,7 @@ class RL2S4JSSP:
         if validation_result1 < self.incumbent_validation_result:
             print('Find better model w.r.t incumbent objs, saving model...')
             torch.save(policy.state_dict(),
-                       './saved_model/NEW_incumbent_'  # saved model type
+                       './saved_model/incumbent_'  # saved model type
                        '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
                        '{}_{}_{}_{}_{}_'  # model parameters
                        '{}_{}_{}_{}_{}_{}'  # training parameters
@@ -99,7 +99,7 @@ class RL2S4JSSP:
         if validation_result2 < self.current_validation_result:
             print('Find better model w.r.t final step objs, saving model...')
             torch.save(policy.state_dict(),
-                       './saved_model/NEW_last-step_'  # saved model type
+                       './saved_model/last-step_'  # saved model type
                        '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
                        '{}_{}_{}_{}_{}_'  # model parameters
                        '{}_{}_{}_{}_{}_{}'  # training parameters
@@ -190,7 +190,7 @@ class RL2S4JSSP:
                 validation_log.append([validation_result1, validation_result2])
 
                 # saving log
-                np.save('./log/NEW_training_log_'
+                np.save('./log/training_log_'
                         '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
                         '{}_{}_{}_{}_{}_'  # model parameters
                         '{}_{}_{}_{}_{}_{}.npy'  # training parameters
@@ -200,7 +200,7 @@ class RL2S4JSSP:
                                 args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
                                 args.step_validation),
                         np.array(log))
-                np.save('./log/NEW_validation_log_'
+                np.save('./log/validation_log_'
                         '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
                         '{}_{}_{}_{}_{}_'  # model parameters
                         '{}_{}_{}_{}_{}_{}.npy'  # training parameters

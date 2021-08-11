@@ -26,12 +26,14 @@ transit = 500
 batch_size = 64
 episodes = 128000
 step_validation = 10
+
 # plot parameters
 show = True
 save = False
 log_type = 'validation'  # 'training', 'validation'
 plot_step_size_training = 1
 plot_step_size_validation = 1
+
 
 if embedding_type == 'gin':
     dghan_param_for_saved_model = 'NAN'

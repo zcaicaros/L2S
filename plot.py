@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 
 # env parameters
-j = 10
-m = 10
+j = 30
+m = 20
 l = 1
 h = 99
 init_type = 'fdd-divide-mwkr'
@@ -15,7 +15,7 @@ gamma = 1
 hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
-embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
+embedding_type = 'gin'  # 'gin', 'dghan', 'gin+dghan'
 heads = 1
 drop_out = 0
 
@@ -23,15 +23,15 @@ drop_out = 0
 lr = 5e-5
 steps_learn = 10
 transit = 500
-batch_size = 64
+batch_size = 60
 episodes = 128000
 step_validation = 10
 
 # plot parameters
 show = True
 save = False
-log_type = 'validation'  # 'training', 'validation'
-plot_step_size_training = 1
+log_type = 'training'  # 'training', 'validation'
+plot_step_size_training = 10
 plot_step_size_validation = 1
 
 
@@ -49,7 +49,7 @@ file = '{}x{}[{},{}]_{}_{}_{}_' \
             hidden_dim, embedding_layer, policy_layer, embedding_type, dghan_param_for_saved_model,
             lr, steps_learn, transit, batch_size, episodes, step_validation)
 
-log = np.load('./log/OLD_'
+log = np.load('./log/'
               '{}_log_'
               .format(log_type)  # log type
               + file + '.npy')

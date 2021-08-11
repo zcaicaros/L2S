@@ -31,10 +31,10 @@ def main():
     tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 
     # model config
-    embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
+    embedding_type = 'gin'  # 'gin', 'dghan', 'gin+dghan'
     model_init_type = 'fdd-divide-mwkr'
-    model_j = 10
-    model_m = 10
+    model_j = 30
+    model_m = 20
     heads = 1
     drop_out = 0
     training_episode_length = 500  # [64, 128, 256]
@@ -46,7 +46,7 @@ def main():
     policy_layer = 4
     lr = 5e-5
     steps_learn = 10
-    batch_size = 64
+    batch_size = 60
     episodes = 128000
     step_validation = 10
     if embedding_type == 'gin':
@@ -104,7 +104,7 @@ def main():
                            embedding_type=embedding_type,
                            heads=heads,
                            dropout=drop_out).to(dev)
-            saved_model_path = './saved_model/OLD_' \
+            saved_model_path = './saved_model/' \
                                '{}_{}x{}[{},{}]_{}_{}_{}_' \
                                '{}_{}_{}_{}_{}_' \
                                '{}_{}_{}_{}_{}_{}' \

@@ -97,10 +97,10 @@ def main():
     syn_problem_m = [15]
     # syn_problem_j = [10, 15, 20, 30, 50, 100]
     # syn_problem_m = [10, 15, 20, 20, 20, 20]
-    # tai_problem_j = [15]
-    # tai_problem_m = [15]
-    tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
-    tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
+    tai_problem_j = [15]
+    tai_problem_m = [15]
+    # tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
+    # tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 
     # MDP config
     cap_horizon = 2000
@@ -117,7 +117,7 @@ def main():
         for p_j, p_m in zip(problem_j, problem_m):  # select problem size
 
             inst = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))
-            print('\nStart testing {}{}x{}...'.format(test_t, p_j, p_m))
+            print('\nStart testing {}{}x{}...\n'.format(test_t, p_j, p_m))
 
             # read saved gap_against or use ortools to solve it.
             if test_t == 'tai':
@@ -147,30 +147,37 @@ def main():
 
             for init in init_type:
 
+                gap_against_tiled = np.tile(gap_against, (len(transit), 1))
+
                 print('Starting rollout Random policy...')
-                random_result = []
-                random_time = []
+                result_random = []
+                time_random = []
                 states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev, plot=show)
-                random_start = time.time()
+                start_random = time.time()
                 while env.itr < cap_horizon:
                     actions = [random.choice(feasible_action) for feasible_action in feasible_actions]
                     states, _, feasible_actions, _ = env.step(actions, dev, plot=show)
                     for log_horizon in transit:
                         if env.itr == log_horizon:
                             if result_type == 'incumbent':
-                                RD_result = env.incumbent_objs.cpu().squeeze().numpy()
+                                result_RD = env.incumbent_objs.cpu().squeeze().numpy()
                             else:
-                                RD_result = env.current_objs.cpu().squeeze().numpy()
-                            random_result.append(RD_result)
-                            random_time.append(time.time() - random_start)
-                random_result = np.array(random_result)
-                random_time = np.array(random_time)
-                print(random_result.mean(axis=1))
-                print(random_time / inst.shape[0])
+                                result_RD = env.current_objs.cpu().squeeze().numpy()
+                            result_random.append(result_RD)
+                            time_random.append(time.time() - start_random)
+                result_random = np.array(result_random)
+                time_random = np.array(time_random)
+                gap_random = (result_random - gap_against_tiled) / gap_against_tiled
+                mean_gap_random = gap_random.mean(axis=1)
+                mean_time_random = time_random / inst.shape[0]
+                print('Averaged gap for random policy: ', mean_gap_random)
+                print('Averaged time for random policy: ', mean_time_random)
+
+                print()
 
                 print('Starting rollout Best-Improvement policy...')
-                best_improvement_result = []
-                best_improvement_time = []
+                result_best_improvement = []
+                time_best_improvement = []
                 for ins in inst:
                     best_improvement_result_per_instance = []
                     best_improvement_time_per_instance = []
@@ -196,16 +203,21 @@ def main():
                                     BI_result = env.current_objs.cpu().squeeze().numpy()
                                 best_improvement_result_per_instance.append(BI_result)
                                 best_improvement_time_per_instance.append(time.time() - BI_start_per_instance)
-                    best_improvement_result.append(best_improvement_result_per_instance)
-                    best_improvement_time.append(best_improvement_time_per_instance)
-                best_improvement_result = np.array(best_improvement_result)
-                best_improvement_time = np.array(best_improvement_time)
-                print(best_improvement_result.mean(axis=0))
-                print(best_improvement_time.mean(axis=0))
+                    result_best_improvement.append(best_improvement_result_per_instance)
+                    time_best_improvement.append(best_improvement_time_per_instance)
+                result_best_improvement = np.array(result_best_improvement).transpose()
+                time_best_improvement = np.array(time_best_improvement).transpose()
+                gap_best_improvement = (result_best_improvement - gap_against_tiled) / gap_against_tiled
+                mean_gap_best_improvement = gap_best_improvement.mean(axis=1)
+                mean_time_best_improvement = time_best_improvement.mean(axis=1)
+                print('Averaged gap for best improvement policy: ', mean_gap_best_improvement)
+                print('Averaged time for best improvement policy: ', mean_time_best_improvement)
+
+                print()
 
                 print('Starting rollout TABU policy...')
-                tabu_result = []
-                tabu_time = []
+                result_tabu = []
+                time_tabu = []
                 for ins in inst:
                     tabu_result_per_instance = []
                     tabu_time_per_instance = []
@@ -231,12 +243,15 @@ def main():
                                     tb_result = env.current_objs.cpu().squeeze().numpy()
                                 tabu_result_per_instance.append(tb_result)
                                 tabu_time_per_instance.append(time.time() - TABU_start_per_instance)
-                    tabu_result.append(tabu_result_per_instance)
-                    tabu_time.append(tabu_time_per_instance)
-                tabu_result = np.array(tabu_result)
-                tabu_time = np.array(tabu_time)
-                print(tabu_result.mean(axis=0))
-                print(tabu_time.mean(axis=0))
+                    result_tabu.append(tabu_result_per_instance)
+                    time_tabu.append(tabu_time_per_instance)
+                result_tabu = np.array(result_tabu).transpose()
+                time_tabu = np.array(time_tabu).transpose()
+                gap_tabu = (result_tabu - gap_against_tiled) / gap_against_tiled
+                mean_gap_tabu = gap_tabu.mean(axis=1)
+                mean_time_tabu = time_tabu.mean(axis=1)
+                print('Averaged gap for best improvement policy: ', mean_gap_tabu)
+                print('Averaged time for best improvement policy: ', mean_time_tabu)
 
 
 if __name__ == '__main__':

@@ -33,7 +33,7 @@ step_validation = 10
 # plot parameters
 show = True
 save = False
-log_type = 'training'  # 'training', 'validation'
+log_type = 'validation'  # 'training', 'validation'
 plot_step_size_training = 10
 plot_step_size_validation = 1
 
@@ -54,7 +54,7 @@ if log_type == 'training':
     # print(obj.min())
     # print(obj[900:1000])
     # print(obj)
-    plt.xlabel('iteration({})'.format(plot_step_size_training))
+    plt.xlabel('iteration(stride-{})'.format(plot_step_size_training))
     plt.ylabel('make span')
     plt.plot([_ for _ in range(obj.shape[0])], obj, color='tab:blue')
     plt.grid()
@@ -73,7 +73,7 @@ else:
     # print(obj_incumbent)
     # print(obj_incumbent.min())
     # print(obj_incumbent.max())
-    plt.xlabel('incumbent-iteration({})'.format(plot_step_size_validation))
+    plt.xlabel('incumbent-iteration(stride-{})'.format(plot_step_size_validation))
     plt.ylabel('make span')
     plt.plot([_ for _ in range(obj_incumbent.shape[0])], obj_incumbent, color='tab:blue')
     plt.grid()
@@ -91,7 +91,7 @@ else:
     # print(obj_last_step)
     # print(obj_last_step.min())
     # print(obj_last_step.max())
-    plt.xlabel('last-step-iteration({})'.format(plot_step_size_validation))
+    plt.xlabel('last-step-iteration(stride-{})'.format(plot_step_size_validation))
     plt.ylabel('make span')
     plt.plot([_ for _ in range(obj_last_step.shape[0])], obj_last_step, color='tab:blue')
     plt.grid()

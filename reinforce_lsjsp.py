@@ -143,6 +143,9 @@ class RL2S4JSSP:
         print()
         for batch_i in range(1, args.episodes // args.batch_size + 1):
 
+            # random.seed(batch_i)
+            # np.random.seed(batch_i)
+
             t1 = time.time()
 
             instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(args.batch_size)])

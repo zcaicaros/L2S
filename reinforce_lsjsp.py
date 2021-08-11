@@ -121,7 +121,6 @@ class RL2S4JSSP:
 
     def train(self):
         dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-        init = args.init_type
 
         torch.manual_seed(1)
 
@@ -148,7 +147,7 @@ class RL2S4JSSP:
             np.random.seed(batch_i)
 
             instances = np.array([uni_instance_gen(args.j, args.m, args.l, args.h) for _ in range(args.batch_size)])
-            states, feasible_actions, dones = self.env_training.reset(instances=instances, init_type=init, device=dev)
+            states, feasible_actions, dones = self.env_training.reset(instances=instances, init_type=args.init_type, device=dev)
             # print(instances)
 
             reward_log = []

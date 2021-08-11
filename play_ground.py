@@ -114,9 +114,6 @@ embedding2 = GIN(in_dim=3, hidden_dim=64, layer_gin=4)
 # print(torch.tensor([1, float('nan'), 2]).sum().item())
 # print(torch.isnan(torch.tensor([1, float('nan'), 2])).sum())
 
-from model.actor import GIN
-from env.env_batch import BatchGraph
-import torch.optim as optim
 
 dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 

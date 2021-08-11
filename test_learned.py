@@ -1,15 +1,18 @@
 import numpy as np
 import torch
 import time
-from env.env_batch import JsspN5, BatchGraph
-from model.actor import Actor
+import random
+from env.env_batch_het import JsspN5, BatchGraph
+from model.actor_hetGAT_lab import Actor
 from ortools_baseline import MinimalJobshopSat
 
 
 def main():
     seed = 1
+    random.seed(seed)
+    np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    # torch.cuda.manual_seed_all(seed)
     # torch.use_deterministic_algorithms(True)  # bug, refer to https://github.com/pytorch/pytorch/issues/61032
 
     show = False
@@ -19,23 +22,25 @@ def main():
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['syn']  # ['syn', 'tai']
+    testing_type = ['tai']  # ['syn', 'tai']
     syn_problem_j = [15]
     syn_problem_m = [15]
     # syn_problem_j = [10, 15, 20, 30, 50, 100]
     # syn_problem_m = [10, 15, 20, 20, 20, 20]
-    tai_problem_j = [15]
-    tai_problem_m = [15]
-    # tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
-    # tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
+    # tai_problem_j = [15]
+    # tai_problem_m = [15]
+    tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
+    tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 
     # model config
-    model_j = [15]
-    model_m = [15]
+    model_j = [10]
+    model_m = [10]
+    heads = 1
+    drop_out = 0
     training_episode_length = [500]  # [64, 128, 256]
     reward_type = ['yaoxin']  # ['yaoxin', 'consecutive']
     model_type = ['incumbent']  # ['incumbent', 'last-step']
-    embedding_type = ['gin']  # ['gin', 'dghan', 'gin+dghan']
+    embedding_type = ['gin+dghan']  # ['gin', 'dghan', 'gin+dghan']
     gamma = 1
     hidden_dim = 128
     embedding_layer = 4
@@ -96,7 +101,12 @@ def main():
                     env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin', fea_norm_const=fea_norm_const)
                     print('Starting rollout DRL policy...')
                     for embd_type in embedding_type:
-                        policy = Actor(3, 128, embedding_l=embedding_layer, policy_l=policy_layer, embedding_type=embd_type).to(dev)
+                        policy = Actor(3, 128,
+                                       embedding_l=embedding_layer,
+                                       policy_l=policy_layer,
+                                       embedding_type=embd_type,
+                                       heads=heads,
+                                       dropout=drop_out).to(dev)
                         for r_type in reward_type:  # select reward type
                             for training_length in training_episode_length:  # select training episode length
                                 for m_j, m_m in zip(model_j, model_m):  # select training model size

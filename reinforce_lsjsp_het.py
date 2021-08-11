@@ -15,12 +15,19 @@ dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 init = args.init_type
 env = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, reward_type=args.reward_type)
 env_validation = JsspN5(n_job=args.j, n_mch=args.m, low=args.l, high=args.h, reward_type=args.reward_type)
-policy = Actor(3, args.hidden_dim,
+policy = Actor(in_dim=3,
+               hidden_dim=args.hidden_dim,
                embedding_l=args.embedding_layer,
                policy_l=args.policy_layer,
                embedding_type=args.embedding_type,
                heads=args.heads,
                dropout=args.drop_out).to(dev)
+if args.embedding_type == 'gin':
+    dghan_param_for_saved_model = '{NAN}'
+elif args.embedding_type == 'dghan' or args.embedding_type == 'gin+dghan':
+    dghan_param_for_saved_model = '{}_{}'.format(args.heads, args.drop_out)
+
+
 
 optimizer = optim.Adam(policy.parameters(), lr=args.lr)
 eps = np.finfo(np.float32).eps.item()
@@ -138,11 +145,11 @@ def main():
                 torch.save(policy.state_dict(),
                            './saved_model/incumbent_'  # saved model type
                            '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
-                           '{}_{}_{}_{}_'  # model parameters
+                           '{}_{}_{}_{}_{}_'  # model parameters
                            '{}_{}_{}_{}_{}_{}'  # training parameters
                            '.pth'
                            .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
-                                   args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
+                                   args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type, dghan_param_for_saved_model,
                                    args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
                                    args.step_validation))
                 incumbent_validation_result = validation_result1
@@ -151,11 +158,11 @@ def main():
                 torch.save(policy.state_dict(),
                            './saved_model/last-step_'  # saved model type
                            '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
-                           '{}_{}_{}_{}_'  # model parameters
+                           '{}_{}_{}_{}_{}_'  # model parameters
                            '{}_{}_{}_{}_{}_{}'  # training parameters
                            '.pth'
                            .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
-                                   args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
+                                   args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type, dghan_param_for_saved_model,
                                    args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
                                    args.step_validation))
                 current_validation_result = validation_result2
@@ -163,20 +170,20 @@ def main():
             # saving log
             np.save('./log/training_log_'
                     '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
-                    '{}_{}_{}_{}_'  # model parameters
+                    '{}_{}_{}_{}_{}_'  # model parameters
                     '{}_{}_{}_{}_{}_{}.npy'  # training parameters
                     .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
-                            args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
+                            args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type, dghan_param_for_saved_model,
                             args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
                             args.step_validation),
                     np.array(log))
             validation_log.append([validation_result1, validation_result2])
             np.save('./log/validation_log_'
                     '{}x{}[{},{}]_{}_{}_{}_'  # env parameters
-                    '{}_{}_{}_{}_'  # model parameters
+                    '{}_{}_{}_{}_{}_'  # model parameters
                     '{}_{}_{}_{}_{}_{}.npy'  # training parameters
                     .format(args.j, args.m, args.l, args.h, init, args.reward_type, args.gamma,
-                            args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
+                            args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type, dghan_param_for_saved_model,
                             args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
                             args.step_validation),
                     np.array(validation_log))

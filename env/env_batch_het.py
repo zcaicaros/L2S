@@ -415,20 +415,22 @@ class JsspN5:
 
 def main():
 
+    # random.seed(1)
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    j = 100
-    m = 20
+    j = 15
+    m = 15
     h = 99
     l = 1
-    transit = 100
-    batch_size = 10
+    transit = 0
+    batch_size = 1
     n_batch = 1
     init = 'fdd-divide-mwkr'
     reward_type = 'yaoxin'
 
-    # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[:batch_size]
-    insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
+    insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[1:2]
+    # insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
     # np.save('test_inst.npy', insts)
     # print(insts)
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, reward_type=reward_type)
@@ -439,6 +441,7 @@ def main():
 
         t3 = time.time()
         states, feasible_actions, done = env.reset(instances=insts, init_type=init, device=device)
+        # print(feasible_actions)
         batch_wrapper = BatchGraph()
         # print(env.incumbent_objs)
 
@@ -480,10 +483,10 @@ def main():
 
 
 if __name__ == '__main__':
-    random.seed(1)
-    torch.manual_seed(1)
-    torch.cuda.manual_seed(1)
-    np.random.seed(3)  # 123456324
+    random.seed(2)
+    # torch.manual_seed(1)
+    # torch.cuda.manual_seed(1)
+    np.random.seed(4)  # 123456324
 
     # main()
     import cProfile

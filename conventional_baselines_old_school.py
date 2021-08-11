@@ -1,21 +1,14 @@
 import numpy as np
 import torch
 import time
-from env.env_batch_het import JsspN5
+from env.env_batch import JsspN5
 import copy
 import random
 from ortools_baseline import MinimalJobshopSat
 
 
-def best_improvement_move(support_env,
-                          feasible_actions,
-                          current_graph,
-                          current_sub_graphs_mc,
-                          current_tabu_list,
-                          current_obj,
-                          incumbent_obj,
-                          instance,
-                          device):
+def best_improvement_move(support_env, feasible_actions, current_graph, current_tabu_list, current_obj, incumbent_obj,
+                          instance, device):
     # only support single instance, so env.inst.shape = [b=1, 2, j, m]
 
     n_feasible_actions = len(feasible_actions)
@@ -23,13 +16,11 @@ def best_improvement_move(support_env,
     duplicated_instances = np.tile(instance, reps=[n_feasible_actions, 1, 1, 1])
     duplicated_current_obj = current_obj.repeat(n_feasible_actions, 1)
     duplicated_incumbent_obj = incumbent_obj.repeat(n_feasible_actions, 1)
-    duplicated_current_sub_graphs_mc = [copy.deepcopy(current_sub_graphs_mc) for _ in range(n_feasible_actions)]
     duplicated_current_graphs = [copy.deepcopy(current_graph) for _ in range(n_feasible_actions)]
     duplicated_tabu_lists = [copy.copy(current_tabu_list) for _ in range(n_feasible_actions)]
 
     support_env.instances = duplicated_instances
     support_env.current_graphs = duplicated_current_graphs
-    support_env.sub_graphs_mc = duplicated_current_sub_graphs_mc
     support_env.current_objs = duplicated_current_obj
     support_env.tabu_lists = duplicated_tabu_lists
     support_env.incumbent_objs = duplicated_incumbent_obj
@@ -45,14 +36,7 @@ def best_improvement_move(support_env,
     return best_move
 
 
-def tabu_move(support_env,
-              feasible_actions,
-              current_graph,
-              current_sub_graphs_mc,
-              current_tabu_list,
-              current_obj,
-              incumbent_obj,
-              instance,
+def tabu_move(support_env, feasible_actions, current_graph, current_tabu_list, current_obj, incumbent_obj, instance,
               device):
     # only support single instance, so env.inst.shape = [b=1, 2, j, m]
 
@@ -61,13 +45,11 @@ def tabu_move(support_env,
     duplicated_instances = np.tile(instance, reps=[n_feasible_actions, 1, 1, 1])
     duplicated_current_obj = current_obj.repeat(n_feasible_actions, 1)
     duplicated_incumbent_obj = incumbent_obj.repeat(n_feasible_actions, 1)
-    duplicated_current_sub_graphs_mc = [copy.deepcopy(current_sub_graphs_mc) for _ in range(n_feasible_actions)]
     duplicated_current_graphs = [copy.deepcopy(current_graph) for _ in range(n_feasible_actions)]
     duplicated_tabu_lists = [copy.copy(current_tabu_list) for _ in range(n_feasible_actions)]
 
     support_env.instances = duplicated_instances
     support_env.current_graphs = duplicated_current_graphs
-    support_env.sub_graphs_mc = duplicated_current_sub_graphs_mc
     support_env.current_objs = duplicated_current_obj
     support_env.tabu_lists = duplicated_tabu_lists
     support_env.incumbent_objs = duplicated_incumbent_obj
@@ -80,40 +62,31 @@ def tabu_move(support_env,
 
 
 
+show = False
+dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+# benchmark config
+l = 1
+h = 99
+init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
+testing_type = ['tai']  # ['syn', 'tai']
+syn_problem_j = [10]
+syn_problem_m = [10]
+# tai_problem_j = [15]
+# tai_problem_m = [15]
+# syn_problem_j = [10, 15, 20, 30, 50, 100]
+# syn_problem_m = [10, 15, 20, 20, 20, 20]
+tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
+tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
 
+# MDP config
+transit = [500, 1000, 2000]  # [500, 1000, 2000, 5000, 10000]
+result_type = 'incumbent'  # 'current', 'incumbent'
+fea_norm_const = 1000
 
 
 
 def main():
 
-
-
-    show = False
-    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-    # benchmark config
-    l = 1
-    h = 99
-    init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['tai']  # ['syn', 'tai']
-    syn_problem_j = [10]
-    syn_problem_m = [10]
-    # syn_problem_j = [10, 15, 20, 30, 50, 100]
-    # syn_problem_m = [10, 15, 20, 20, 20, 20]
-    tai_problem_j = [15]
-    tai_problem_m = [15]
-    # tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
-    # tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
-
-    # MDP config
-    transit = [500]  # [500, 1000, 2000, 5000, 10000]
-    result_type = 'incumbent'  # 'current', 'incumbent'
-    fea_norm_const = 1000
-
-
-
-    # seed
-    random.seed(1)
-    np.random.seed(1)
     for test_t in testing_type:  # select benchmark
         if test_t == 'syn':
             problem_j, problem_m = syn_problem_j, syn_problem_m
@@ -158,24 +131,28 @@ def main():
                     inference_time_each_test_step = []
                     env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin', fea_norm_const=fea_norm_const)
 
+                    # saved_actions = []
+
                     # rollout random policy
+                    import random
                     # random.seed(1)
                     print('Starting rollout random policy...')
                     t1_random = time.time()
                     states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev)
-                    saved_actions = np.load('saved_actions.npy')
-                    for i in range(test_step):
+                    while env.itr < test_step:
                         actions = [random.choice(feasible_action) for feasible_action in feasible_actions]
-                        # actions = saved_actions[i].tolist()
                         # print(feasible_actions)
                         # print(actions)
                         # print()
+                        # saved_actions.append(actions)
                         states, _, feasible_actions, _ = env.step(actions, dev)
-                        # print(states[1].shape, states[2].shape)
                     if result_type == 'incumbent':
                         Random_result = env.incumbent_objs.cpu().squeeze().numpy()
                     else:
                         Random_result = env.current_objs.cpu().squeeze().numpy()
+
+                    # print(np.array(saved_actions).shape)
+                    # np.save('saved_actions.npy', saved_actions)
 
                     t2_random = time.time()
                     print('Random settings: {}{}x{}, {}, test_step={}'.format(test_t, p_j, p_m, init, test_step))
@@ -187,7 +164,7 @@ def main():
                     print()
 
 
-                    '''# rollout best_improvement_move
+                    # rollout best_improvement_move
                     # random.seed(1)
                     print('Starting rollout best_improvement_move policy...')
                     support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin')
@@ -200,7 +177,6 @@ def main():
                             best_move = best_improvement_move(support_env=support_env,
                                                               feasible_actions=feasible_actions[0],
                                                               current_graph=env.current_graphs[0],
-                                                              current_sub_graphs_mc=env.sub_graphs_mc[0],
                                                               current_tabu_list=env.tabu_lists[0],
                                                               current_obj=env.current_objs[0],
                                                               incumbent_obj=env.incumbent_objs[0],
@@ -237,7 +213,6 @@ def main():
                             best_move = tabu_move(support_env=support_env,
                                                   feasible_actions=feasible_actions[0],
                                                   current_graph=env.current_graphs[0],
-                                                  current_sub_graphs_mc=env.sub_graphs_mc[0],
                                                   current_tabu_list=env.tabu_lists[0],
                                                   current_obj=env.current_objs[0],
                                                   incumbent_obj=env.incumbent_objs[0],
@@ -262,9 +237,10 @@ def main():
                     inference_time.append(inference_time_each_test_step)
 
             # np.save('test_results/results_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(results))
-            # np.save('test_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))'''
+            # np.save('test_results/inference_time_{}{}x{}.npy'.format(test_t, p_j, p_m), np.array(inference_time))
 
 
 if __name__ == '__main__':
-
+    # seed
+    random.seed(1)
     main()

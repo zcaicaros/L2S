@@ -14,7 +14,7 @@ gamma = 1
 hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
-embedding_type = 'gin+dghan'
+embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
 # training parameters
 lr = 5e-5
 steps_learn = 10
@@ -44,7 +44,8 @@ if log_type == 'training':
     obj = log[:log.shape[0] // plot_step_size_training * plot_step_size_training].reshape(log.shape[0] // plot_step_size_training, -1).mean(axis=1)
     # plot objective...
     # print(obj.min())
-    # print(obj[:100])
+    # print(obj[900:1000])
+    # print(obj)
     plt.xlabel('iteration({})'.format(plot_step_size_training))
     plt.ylabel('make span')
     plt.plot([_ for _ in range(obj.shape[0])], obj, color='tab:blue')

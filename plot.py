@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 
 # env parameters
-j = 20
-m = 20
+j = 15
+m = 15
 l = 1
 h = 99
 init_type = 'fdd-divide-mwkr'

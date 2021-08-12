@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 
 # env parameters
-j = 10
-m = 10
+j = 15
+m = 15
 l = 1
 h = 99
 init_type = 'fdd-divide-mwkr'
@@ -15,13 +15,13 @@ gamma = 1
 hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
-embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
+embedding_type = 'gin'  # 'gin', 'dghan', 'gin+dghan'
 heads = 1
 drop_out = 0
 
 # training parameters
 lr = 5e-5
-steps_learn = 5
+steps_learn = 10
 transit = 500
 batch_size = 64
 episodes = 128000
@@ -31,7 +31,7 @@ step_validation = 10
 show = True
 save = False
 log_type = 'training'  # 'training', 'validation'
-plot_step_size_training = 10
+plot_step_size_training = 1
 plot_step_size_validation = 1
 
 
@@ -76,7 +76,7 @@ if log_type == 'training':
 else:
     obj_incumbent = log[:log.shape[0]//plot_step_size_validation*plot_step_size_validation, 0].reshape(log.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plot objective...
-    print(obj_incumbent)
+    # print(obj_incumbent)
     # print(obj_incumbent.min())
     # print(obj_incumbent.max())
     plt.xlabel('incumbent-iteration(stride-{})'.format(plot_step_size_validation))

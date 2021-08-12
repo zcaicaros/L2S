@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 
 # env parameters
-j = 15
-m = 15
+j = 30
+m = 20
 l = 1
 h = 99
 init_type = 'fdd-divide-mwkr'
@@ -23,14 +23,14 @@ drop_out = 0
 lr = 5e-5
 steps_learn = 10
 transit = 500
-batch_size = 64
+batch_size = 60
 episodes = 128000
 step_validation = 10
 
 # plot parameters
 show = True
 save = False
-log_type = 'validation'  # 'training', 'validation'
+log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = 10
 plot_step_size_validation = 1
 

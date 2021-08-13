@@ -379,8 +379,8 @@ class JsspN5:
     def reset(self, instances, init_type, device, plot=False):
         self.instances = instances
         if init_type == 'plist':
-            random_plist = np.repeat(np.arange(self.n_job).repeat(self.n_mch).reshape(1, -1), repeats=self.instances.shape[0], axis=0)  # fixed priority list: [0, 0, 0, ..., n-1, n-1, n-1]
-            (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, sub_graphs_mc, make_span = self._p_list_solver(args=[self.instances, random_plist, device], plot=plot)
+            plist = np.repeat(np.random.permutation(np.arange(self.n_job).repeat(self.n_mch)).reshape(1, -1), repeats=self.instances.shape[0], axis=0)  # fixed random plist for all instances
+            (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, sub_graphs_mc, make_span = self._p_list_solver(args=[self.instances, plist, device], plot=plot)
         elif init_type == 'spt':
             (x, edge_indices_pc, edge_indices_mc, batch), current_graphs, sub_graphs_mc, make_span = self._rules_solver(args=[self.instances, device, 'spt'], plot=plot)
         elif init_type == 'fdd-divide-mwkr':

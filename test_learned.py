@@ -97,7 +97,7 @@ def main():
             print('\nStart testing {}{}x{}...'.format(test_t, p_j, p_m))
 
             # read saved gap_against or use ortools to solve it.
-            if test_t == 'tai':
+            if test_t != 'syn':
                 gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
             else:
                 # ortools solver

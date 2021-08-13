@@ -129,7 +129,7 @@ def main():
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['tai']  # ['syn', 'tai']
+    testing_type = ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
     # syn_problem_j = [15]
     # syn_problem_m = [15]
     syn_problem_j = [10, 15, 20, 30]  # [10, 15, 20, 30, 50, 100]
@@ -138,18 +138,40 @@ def main():
     # tai_problem_m = [15]
     tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
     tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
+    abz_problem_j = [10, 20]
+    abz_problem_m = [10, 15]
+    orb_problem_j = [10]
+    orb_problem_m = [10]
+    yn_problem_j = [20]
+    yn_problem_m = [20]
+    swv_problem_j = [20, 20, 50]
+    swv_problem_m = [10, 15, 10]
+    la_problem_j = [10, 15, 20, 10, 15, 20, 30]
+    la_problem_m = [5, 5, 5, 10, 10, 10, 10]
 
     # MDP config
-    cap_horizon = 2000
-    transit = [500, 1000, 2000]  # [500, 1000, 2000]
+    cap_horizon = 5000
+    transit = [500, 1000, 2000, 5000]  # [500, 1000, 2000]
     result_type = 'incumbent'  # 'current', 'incumbent'
     fea_norm_const = 1000
 
     for test_t in testing_type:  # select benchmark
         if test_t == 'syn':
             problem_j, problem_m = syn_problem_j, syn_problem_m
-        else:
+        elif test_t == 'tai':
             problem_j, problem_m = tai_problem_j, tai_problem_m
+        elif test_t == 'abz':
+            problem_j, problem_m = abz_problem_j, abz_problem_m
+        elif test_t == 'orb':
+            problem_j, problem_m = orb_problem_j, orb_problem_m
+        elif test_t == 'yn':
+            problem_j, problem_m = yn_problem_j, yn_problem_m
+        elif test_t == 'swv':
+            problem_j, problem_m = swv_problem_j, swv_problem_m
+        elif test_t == 'la':
+            problem_j, problem_m = la_problem_j, la_problem_m
+        else:
+            raise Exception('Problem type must be in testing_type = ["syn", "tai", "abz", "orb", "yn", "swv", "la"].')
 
         for p_j, p_m in zip(problem_j, problem_m):  # select problem size
 
@@ -238,10 +260,6 @@ def main():
                     _, feasible_actions, _ = env.reset(instances=ins, init_type=init, device=dev, plot=show)
                     steps_count = 0
                     while steps_count < cap_horizon:
-                        print(steps_count)
-                        print(env.itr)
-                        print(results_with_restart_per_instance)
-                        print()
                         best_actions = best_improvement_move(support_env=support_env,
                                                              feasible_actions=feasible_actions[0],
                                                              current_graph=env.current_graphs[0],
@@ -264,7 +282,6 @@ def main():
                             if steps_count == log_horizon:
                                 best_improvement_result_per_instance.append(min(results_with_restart_per_instance))
                                 best_improvement_time_per_instance.append(time.time() - BI_start_per_instance)
-                                print(best_improvement_result_per_instance)
                     result_best_improvement.append(best_improvement_result_per_instance)
                     time_best_improvement.append(best_improvement_time_per_instance)
                 result_best_improvement = np.array(result_best_improvement).transpose()
@@ -311,7 +328,6 @@ def main():
                             if steps_count == log_horizon:
                                 first_improvement_result_per_instance.append(min(results_with_restart_per_instance))
                                 first_improvement_time_per_instance.append(time.time() - FRSTI_start_per_instance)
-                                print(first_improvement_result_per_instance)
                     result_first_improvement.append(first_improvement_result_per_instance)
                     time_first_improvement.append(first_improvement_time_per_instance)
                 result_first_improvement = np.array(result_first_improvement).transpose()

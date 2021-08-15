@@ -24,7 +24,7 @@ class RL2S4JSSP:
         else:
             print('No validation data for {}x{}[{},{}], generating new one.'.format(args.j, args.m, args.l, args.h))
             self.validation_data = np.array(
-                [uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(args.batch_size)])
+                [uni_instance_gen(n_j=args.j, n_m=args.m, low=args.l, high=args.h) for _ in range(100)])
             np.save('./validation_data/validation_instance_{}x{}[{},{}].npy'.format(args.j, args.m, args.l, args.h),
                     self.validation_data)
         self.incumbent_validation_result = np.inf

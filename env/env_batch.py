@@ -419,18 +419,18 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    j = 15
-    m = 15
+    j = 20
+    m = 10
     h = 99
     l = 1
-    transit = 0
-    batch_size = 1
+    transit = 500
+    batch_size = 64
     n_batch = 1
     init = 'fdd-divide-mwkr'
     reward_type = 'yaoxin'
 
-    insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[1:2]
-    # insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
+    # insts = np.load('../test_data/tai{}x{}.npy'.format(j, m))[1:2]
+    insts = np.array([uni_instance_gen(n_j=j, n_m=m, low=l, high=h) for _ in range(batch_size)])
     # np.save('test_inst.npy', insts)
     # print(insts)
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, reward_type=reward_type)
@@ -465,6 +465,7 @@ def main():
                 actions = [random.choice(feasible_actions[i]) for i in range(len(feasible_actions))]
 
                 states, reward, feasible_actions, done = env.step(actions, device)
+                # print(reward)
 
                 returns.append(reward)
 
@@ -478,6 +479,7 @@ def main():
 
         print(t4 - t3)
         print(env.incumbent_objs)
+        print(torch.count_nonzero(torch.cat(returns, dim=-1), dim=-1))
 
         # print(torch.count_nonzero(torch.cat(returns, dim=-1), dim=-1))
 

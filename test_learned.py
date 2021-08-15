@@ -49,7 +49,7 @@ def main():
     drop_out = 0
     training_episode_length = 500  # [64, 128, 256]
     reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
-    model_type = 'incumbent'  # 'incumbent', 'last-step'
+    model_type = 'last-step'  # 'incumbent', 'last-step'
     gamma = 1
     hidden_dim = 128
     embedding_layer = 4

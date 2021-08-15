@@ -23,7 +23,7 @@ drop_out = 0.
 lr = 5e-5
 steps_learn = 10
 transit = 500
-batch_size = 32
+batch_size = 64
 episodes = 128000
 step_validation = 10
 
@@ -33,6 +33,7 @@ save = False
 log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = 10
 plot_step_size_validation = 1
+save_file_type = '.png'
 
 
 if embedding_type == 'gin':
@@ -49,7 +50,7 @@ file = '{}x{}[{},{}]_{}_{}_{}_' \
             hidden_dim, embedding_layer, policy_layer, embedding_type, dghan_param_for_saved_model,
             lr, steps_learn, transit, batch_size, episodes, step_validation)
 
-log = np.load('./log/'
+log = np.load('./log/OLD_'
               '{}_log_'
               .format(log_type)  # log type
               + file + '.npy')
@@ -68,7 +69,7 @@ if log_type == 'training':
     if save:
         plt.savefig('./curves/{}_plt_'
                     .format(log_type)  # log type
-                    + file + '.png')
+                    + file + save_file_type)
     if show:
         plt.show()
     plt.close()
@@ -87,7 +88,7 @@ else:
     if save:
         plt.savefig('./curves/{}_plt_incumbent_'
                     .format(log_type)  # log type
-                    + file + '.png')
+                    + file + save_file_type)
     if show:
         plt.show()
     plt.close()
@@ -105,7 +106,7 @@ else:
     if save:
         plt.savefig('./curves/{}_plt_last-step_'
                     .format(log_type)  # log type
-                    + file + '.png')
+                    + file + save_file_type)
     if show:
         plt.show()
     plt.close()

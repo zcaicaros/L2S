@@ -20,7 +20,7 @@ def main():
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
+    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
     # syn_problem_j = [15]
     # syn_problem_m = [15]
     syn_problem_j = [10, 15, 20, 30]  # [10, 15, 20, 30, 50, 100]
@@ -46,7 +46,7 @@ def main():
     model_j = 10
     model_m = 10
     heads = 1
-    drop_out = 0
+    drop_out = 0.
     training_episode_length = 500  # [64, 128, 256]
     reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
     model_type = 'incumbent'  # 'incumbent', 'last-step'
@@ -67,7 +67,7 @@ def main():
         raise Exception('embedding_type should be one of "gin", "dghan", or "gin+dghan".')
 
     # MDP config
-    cap_horizon = 2000
+    cap_horizon = 5000
     performance_milestones = [500, 1000, 2000, 5000]  # [500, 1000, 2000, 5000]
     result_type = 'incumbent'  # 'current', 'incumbent'
     fea_norm_const = 1000

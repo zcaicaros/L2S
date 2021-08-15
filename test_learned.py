@@ -46,15 +46,15 @@ def main():
     model_j = 10
     model_m = 10
     heads = 1
-    drop_out = 0
+    drop_out = 0.
     training_episode_length = 500  # [64, 128, 256]
     reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
-    model_type = 'last-step'  # 'incumbent', 'last-step'
+    model_type = 'incumbent'  # 'incumbent', 'last-step'
     gamma = 1
     hidden_dim = 128
     embedding_layer = 4
     policy_layer = 4
-    lr = 1e-4
+    lr = 5e-5
     steps_learn = 5
     batch_size = 64
     episodes = 128000
@@ -68,7 +68,7 @@ def main():
 
     # MDP config
     cap_horizon = 2000
-    performance_milestones = [500, 1000, 2000]  # [500, 1000, 2000]
+    performance_milestones = [500, 1000, 2000]  # [500, 1000, 2000, 5000]
     result_type = 'incumbent'  # 'current', 'incumbent'
     fea_norm_const = 1000
 

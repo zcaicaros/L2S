@@ -2,8 +2,8 @@ import argparse
 parser = argparse.ArgumentParser(description='DRL-LSJSP')
 
 # env parameters
-parser.add_argument('--j', type=int, default=10)
-parser.add_argument('--m', type=int, default=10)
+parser.add_argument('--j', type=int, default=30)
+parser.add_argument('--m', type=int, default=20)
 parser.add_argument('--l', type=int, default=1)
 parser.add_argument('--h', type=int, default=99)
 parser.add_argument('--init_type', type=str, default='fdd-divide-mwkr')

@@ -17,10 +17,10 @@ embedding_layer = 4
 policy_layer = 4
 embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
 heads = 1
-drop_out = 0
+drop_out = 0.
 
 # training parameters
-lr = 1e-4
+lr = 5e-5
 steps_learn = 5
 transit = 500
 batch_size = 64
@@ -31,7 +31,7 @@ step_validation = 10
 show = True
 save = False
 log_type = 'validation'  # 'training', 'validation'
-plot_step_size_training = 1
+plot_step_size_training = 10
 plot_step_size_validation = 1
 
 

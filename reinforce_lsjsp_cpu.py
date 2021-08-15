@@ -9,6 +9,7 @@ from env.env_batch import JsspN5, BatchGraph
 from model.actor import Actor
 from env.generateJSP import uni_instance_gen
 from pathlib import Path
+import gc
 
 
 class RL2S4JSSP:
@@ -77,7 +78,9 @@ class RL2S4JSSP:
             validation_batch_data.wrapper(*states_val)
             actions_val, _ = policy(validation_batch_data, feasible_actions_val)
             states_val, _, feasible_actions_val, _ = self.env_validation.step(actions_val, dev)
-        states_val, feasible_actions_val, actions_val, _ = None, None, None, None
+        del states_val, feasible_actions_val, actions_val, _
+        gc.collect()
+        # states_val, feasible_actions_val, actions_val, _ = None, None, None, None
         validation_batch_data.clean()
         validation_result1 = self.env_validation.incumbent_objs.mean().cpu().item()
         validation_result2 = self.env_validation.current_objs.mean().cpu().item()
@@ -120,7 +123,7 @@ class RL2S4JSSP:
         return validation_result1, validation_result2
 
     def train(self):
-        dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+        dev = 'cpu' if torch.cuda.is_available() else 'cpu'
 
         torch.manual_seed(1)
         random.seed(1)

@@ -21,9 +21,9 @@ drop_out = 0.
 
 # training parameters
 lr = 5e-5
-steps_learn = 5
+steps_learn = 10
 transit = 500
-batch_size = 64
+batch_size = 32
 episodes = 128000
 step_validation = 10
 
@@ -31,7 +31,7 @@ step_validation = 10
 show = True
 save = False
 log_type = 'training'  # 'training', 'validation'
-plot_step_size_training = 1
+plot_step_size_training = 10
 plot_step_size_validation = 1
 
 

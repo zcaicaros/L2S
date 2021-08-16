@@ -68,7 +68,7 @@ def main():
 
     # MDP config
     cap_horizon = 200000
-    performance_milestones = [500, 1000, 2000, 5000, 200000]  # [500, 1000, 2000, 5000]
+    performance_milestones = [500, 1000, 2000, 5000, 50000, 150000, 200000]  # [500, 1000, 2000, 5000]
     result_type = 'incumbent'  # 'current', 'incumbent'
     fea_norm_const = 1000
 

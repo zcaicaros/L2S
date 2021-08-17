@@ -72,8 +72,6 @@ def main():
     result_type = 'incumbent'  # 'current', 'incumbent'
     fea_norm_const = 1000
 
-    # print('tabu size = 3')
-
     for test_t in testing_type:  # select benchmark
         if test_t == 'syn':
             problem_j, problem_m = syn_problem_j, syn_problem_m

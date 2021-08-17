@@ -15,13 +15,13 @@ gamma = 1
 hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
-embedding_type = 'dghan'  # 'gin', 'dghan', 'gin+dghan'
+embedding_type = 'gin'  # 'gin', 'dghan', 'gin+dghan'
 heads = 1
 drop_out = 0.
 
 # training parameters
 lr = 5e-5
-steps_learn = 5
+steps_learn = 10
 transit = 500
 batch_size = 64
 episodes = 128000

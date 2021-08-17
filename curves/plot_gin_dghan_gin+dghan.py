@@ -24,8 +24,7 @@ drop_out = 0.
 
 # training parameters
 lr = 5e-5
-steps_learn1 = 5
-steps_learn2 = 10
+steps_learn = 10
 transit = 500
 batch_size = 64
 episodes = 128000
@@ -66,7 +65,7 @@ file1 = '{}x{}[{},{}]_{}_{}_{}_' \
         '{}_{}_{}_{}_{}_{}' \
     .format(j, m, l, h, init_type, reward_type, gamma,
             hidden_dim, embedding_layer, policy_layer, embedding_type1, dghan_param_for_saved_model1,
-            lr, steps_learn2, transit, batch_size, episodes, step_validation)
+            lr, steps_learn, transit, batch_size, episodes, step_validation)
 
 log1 = np.load('../log/'
                '{}_log_'
@@ -78,7 +77,7 @@ file2 = '{}x{}[{},{}]_{}_{}_{}_' \
         '{}_{}_{}_{}_{}_{}' \
     .format(j, m, l, h, init_type, reward_type, gamma,
             hidden_dim, embedding_layer, policy_layer, embedding_type2, dghan_param_for_saved_model2,
-            lr, steps_learn1, transit, batch_size, episodes, step_validation)
+            lr, steps_learn, transit, batch_size, episodes, step_validation)
 
 log2 = np.load('../log/'
                '{}_log_'
@@ -90,7 +89,7 @@ file3 = '{}x{}[{},{}]_{}_{}_{}_' \
         '{}_{}_{}_{}_{}_{}' \
     .format(j, m, l, h, init_type, reward_type, gamma,
             hidden_dim, embedding_layer, policy_layer, embedding_type3, dghan_param_for_saved_model3,
-            lr, steps_learn2, transit, batch_size, episodes, step_validation)
+            lr, steps_learn, transit, batch_size, episodes, step_validation)
 
 log3 = np.load('../log/OLD_'
                '{}_log_'
@@ -110,8 +109,8 @@ if log_type == 'training':
     plt.plot(x, obj2, color='tab:red', label='DGHAN')
     plt.plot(x, obj3, color='tab:green', label='GIN + DGHAN')
     plt.tight_layout()
-    plt.savefig('./{}{}'.format('merged_training_log', save_file_type))
     plt.legend()
+    plt.savefig('./{}{}'.format('merged_training_log', save_file_type))
     plt.show()
 
 else:
@@ -127,8 +126,8 @@ else:
     plt.plot(x, obj_incumbent2, color='tab:red', label='DGHAN')
     plt.plot(x, obj_incumbent3, color='tab:green', label='GIN + DGHAN')
     plt.tight_layout()
-    plt.savefig('./{}{}'.format('merged_incumbent_validation_log', save_file_type))
     plt.legend()
+    plt.savefig('./{}{}'.format('merged_incumbent_validation_log', save_file_type))
     plt.show()
 
     obj_last_step1 = log1[:log1.shape[0] // plot_step_size_validation * plot_step_size_validation, 1].reshape(log1.shape[0] // plot_step_size_validation, -1).mean(axis=1)
@@ -143,8 +142,8 @@ else:
     plt.plot(x, obj_last_step2, color='tab:red', label='DGHAN')
     plt.plot(x, obj_last_step3, color='tab:green', label='GIN + DGHAN')
     plt.tight_layout()
-    plt.savefig('./{}{}'.format('merged_last-step_validation_log', save_file_type))
     plt.legend()
+    plt.savefig('./{}{}'.format('merged_last-step_validation_log', save_file_type))
     plt.show()
 
 

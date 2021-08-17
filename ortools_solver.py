@@ -75,7 +75,7 @@ def MinimalJobshopSat(data):
 
 if __name__ == '__main__':
 
-    import numpy as np
+    '''import numpy as np
     datas = np.array([uni_instance_gen(n_j=10, n_m=10, low=1, high=99) for _ in range(10)])
     results = []
     for i, data in enumerate(datas):
@@ -84,4 +84,72 @@ if __name__ == '__main__':
         data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
         result = MinimalJobshopSat(data.tolist())
         print('Instance' + str(i + 1) + ' makespan:', result)
-        results.append(result)
+        results.append(result)'''
+
+    import numpy as np
+    # benchmark config
+    l = 1
+    h = 99
+    init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
+    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
+    syn_problem_j = [10, 15, 15, 20, 20]  # [10, 15, 20, 30, 50, 100]
+    syn_problem_m = [10, 10, 15, 10, 15]  # [10, 15, 20, 20, 20, 20]
+    tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
+    tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
+    abz_problem_j = [10, 20]
+    abz_problem_m = [10, 15]
+    orb_problem_j = [10]
+    orb_problem_m = [10]
+    yn_problem_j = [20]
+    yn_problem_m = [20]
+    swv_problem_j = [20, 20, 50]
+    swv_problem_m = [10, 15, 10]
+    la_problem_j = [10, 15, 20, 10, 15, 20, 30]
+    la_problem_m = [5, 5, 5, 10, 10, 10, 10]
+
+    for test_t in testing_type:  # select benchmark
+        if test_t == 'syn':
+            problem_j, problem_m = syn_problem_j, syn_problem_m
+        elif test_t == 'tai':
+            problem_j, problem_m = tai_problem_j, tai_problem_m
+        elif test_t == 'abz':
+            problem_j, problem_m = abz_problem_j, abz_problem_m
+        elif test_t == 'orb':
+            problem_j, problem_m = orb_problem_j, orb_problem_m
+        elif test_t == 'yn':
+            problem_j, problem_m = yn_problem_j, yn_problem_m
+        elif test_t == 'swv':
+            problem_j, problem_m = swv_problem_j, swv_problem_m
+        elif test_t == 'la':
+            problem_j, problem_m = la_problem_j, la_problem_m
+        else:
+            raise Exception(
+                'Problem type must be in testing_type = ["syn", "tai", "abz", "orb", "yn", "swv", "la"].')
+
+        for p_j, p_m in zip(problem_j, problem_m):  # select problem size
+
+            inst = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))
+            print('\nStart testing {}{}x{}...\n'.format(test_t, p_j, p_m))
+
+            # read saved gap_against or use ortools to solve it.
+            if test_t != 'syn':
+                gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
+            else:
+                # ortools solver
+                from pathlib import Path
+
+                ortools_path = Path('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
+                if ortools_path.is_file():
+                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))[:, 1]
+                else:
+                    gap_against = []
+                    print('Starting Ortools...')
+                    for i, data in enumerate(inst):
+                        times_rearrange = np.expand_dims(data[0], axis=-1)
+                        machines_rearrange = np.expand_dims(data[1], axis=-1)
+                        data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
+                        result = MinimalJobshopSat(data.tolist())
+                        print('Instance-' + str(i + 1) + ' Ortools makespan:', result)
+                        gap_against.append(result[1])
+                    gap_against = np.array(gap_against)
+                    np.save('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m), gap_against)

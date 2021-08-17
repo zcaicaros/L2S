@@ -192,8 +192,8 @@ def main():
     yn_problem_m = [20]
     swv_problem_j = [20, 20, 50]
     swv_problem_m = [10, 15, 10]
-    la_problem_j = [10, 15, 20, 10, 15, 20, 30]
-    la_problem_m = [5, 5, 5, 10, 10, 10, 10]
+    la_problem_j = [10, 15, 20, 10, 15, 20, 30, 15]
+    la_problem_m = [5, 5, 5, 10, 10, 10, 10, 15]
 
     # MDP config
     cap_horizon = 5000

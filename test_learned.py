@@ -67,10 +67,12 @@ def main():
         raise Exception('embedding_type should be one of "gin", "dghan", or "gin+dghan".')
 
     # MDP config
-    cap_horizon = 200000
-    performance_milestones = [500, 1000, 2000, 5000, 50000, 150000, 200000]  # [500, 1000, 2000, 5000]
+    cap_horizon = 100000
+    performance_milestones = [500, 1000, 2000, 5000, 10000, 20000, 40000, 60000, 100000]  # [500, 1000, 2000, 5000]
     result_type = 'incumbent'  # 'current', 'incumbent'
     fea_norm_const = 1000
+
+    # print('tabu size = 3')
 
     for test_t in testing_type:  # select benchmark
         if test_t == 'syn':

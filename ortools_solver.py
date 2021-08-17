@@ -1,4 +1,3 @@
-from __future__ import print_function
 import collections
 # Import Python wrapper for or-tools CP-SAT solver.
 from ortools.sat.python import cp_model

@@ -15,13 +15,13 @@ gamma = 1
 hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
-embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
+embedding_type = 'dghan'  # 'gin', 'dghan', 'gin+dghan'
 heads = 1
 drop_out = 0.
 
 # training parameters
 lr = 5e-5
-steps_learn = 10
+steps_learn = 5
 transit = 500
 batch_size = 64
 episodes = 128000
@@ -50,7 +50,7 @@ file = '{}x{}[{},{}]_{}_{}_{}_' \
             hidden_dim, embedding_layer, policy_layer, embedding_type, dghan_param_for_saved_model,
             lr, steps_learn, transit, batch_size, episodes, step_validation)
 
-log = np.load('./log/OLD_'
+log = np.load('./log/'
               '{}_log_'
               .format(log_type)  # log type
               + file + '.npy')

@@ -75,23 +75,12 @@ def MinimalJobshopSat(data):
 
 if __name__ == '__main__':
 
-    '''import numpy as np
-    datas = np.array([uni_instance_gen(n_j=10, n_m=10, low=1, high=99) for _ in range(10)])
-    results = []
-    for i, data in enumerate(datas):
-        times_rearrange = np.expand_dims(data[0], axis=-1)
-        machines_rearrange = np.expand_dims(data[1], axis=-1)
-        data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
-        result = MinimalJobshopSat(data.tolist())
-        print('Instance' + str(i + 1) + ' makespan:', result)
-        results.append(result)'''
-
     import numpy as np
-    # benchmark config
+
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
+    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'syn']
     syn_problem_j = [10, 15, 15, 20, 20]  # [10, 15, 20, 30, 50, 100]
     syn_problem_m = [10, 10, 15, 10, 15]  # [10, 15, 20, 20, 20, 20]
     tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
@@ -129,11 +118,25 @@ if __name__ == '__main__':
         for p_j, p_m in zip(problem_j, problem_m):  # select problem size
 
             inst = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))
-            print('\nStart testing {}{}x{}...\n'.format(test_t, p_j, p_m))
+            print('\nStart solving {}{}x{} using OR-Tools...\n'.format(test_t, p_j, p_m))
 
             # read saved gap_against or use ortools to solve it.
             if test_t != 'syn':
                 gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
+                results = []
+                for i, data in enumerate(inst):
+                    times_rearrange = np.expand_dims(data[0], axis=-1)
+                    machines_rearrange = np.expand_dims(data[1], axis=-1)
+                    data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
+                    result = MinimalJobshopSat(data.tolist())
+                    print('Instance' + str(i + 1) + ' makespan:', result)
+                    results.append(result)
+                results = np.array(results)
+                ortools_obj = results[:, 1]
+                ortools_gap = (ortools_obj - gap_against)/gap_against
+                ortools_gap_mean = ortools_gap.mean()
+                np.save('./ortools_result/ortools_{}{}x{}_result.npy'.format(test_t, p_j, p_m), results)
+                print('Or-Tools mean gap:', ortools_gap_mean)
             else:
                 # ortools solver
                 from pathlib import Path
@@ -152,4 +155,4 @@ if __name__ == '__main__':
                         print('Instance-' + str(i + 1) + ' Ortools makespan:', result)
                         gap_against.append(result[1])
                     gap_against = np.array(gap_against)
-                    np.save('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m), gap_against)
+                    np.save('./test_data/syn{}x{}_result.npy'.format(p_j, p_m), gap_against)

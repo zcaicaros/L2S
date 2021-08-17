@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 # env parameters
-j = 10
+j = 20
 m = 10
 l = 1
 h = 99
@@ -15,7 +15,7 @@ gamma = 1
 hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
-embedding_type = 'gin'  # 'gin', 'dghan', 'gin+dghan'
+embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
 heads = 1
 drop_out = 0.
 
@@ -30,7 +30,7 @@ step_validation = 10
 # plot parameters
 show = True
 save = False
-log_type = 'training'  # 'training', 'validation'
+log_type = 'validation'  # 'training', 'validation'
 plot_step_size_training = 10
 plot_step_size_validation = 1
 save_file_type = '.png'

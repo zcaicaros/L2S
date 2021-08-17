@@ -50,7 +50,7 @@ file = '{}x{}[{},{}]_{}_{}_{}_' \
             hidden_dim, embedding_layer, policy_layer, embedding_type, dghan_param_for_saved_model,
             lr, steps_learn, transit, batch_size, episodes, step_validation)
 
-log = np.load('./log/'
+log = np.load('../log/'
               '{}_log_'
               .format(log_type)  # log type
               + file + '.npy')
@@ -67,7 +67,7 @@ if log_type == 'training':
     plt.grid()
     plt.tight_layout()
     if save:
-        plt.savefig('./curves/{}_plt_'
+        plt.savefig('./{}_plt_'
                     .format(log_type)  # log type
                     + file + save_file_type)
     if show:
@@ -86,7 +86,7 @@ else:
     plt.grid()
     plt.tight_layout()
     if save:
-        plt.savefig('./curves/{}_plt_incumbent_'
+        plt.savefig('./{}_plt_incumbent_'
                     .format(log_type)  # log type
                     + file + save_file_type)
     if show:
@@ -104,7 +104,7 @@ else:
     plt.grid()
     plt.tight_layout()
     if save:
-        plt.savefig('./curves/{}_plt_last-step_'
+        plt.savefig('./{}_plt_last-step_'
                     .format(log_type)  # log type
                     + file + save_file_type)
     if show:

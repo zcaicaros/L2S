@@ -24,7 +24,8 @@ drop_out = 0.
 
 # training parameters
 lr = 5e-5
-steps_learn = 10
+steps_learn1 = 5
+steps_learn2 = 10
 transit = 500
 batch_size = 64
 episodes = 128000
@@ -32,7 +33,7 @@ step_validation = 10
 
 # plot parameters
 show = True
-save = False
+save = True
 log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = 10
 plot_step_size_validation = 1
@@ -65,9 +66,9 @@ file1 = '{}x{}[{},{}]_{}_{}_{}_' \
         '{}_{}_{}_{}_{}_{}' \
     .format(j, m, l, h, init_type, reward_type, gamma,
             hidden_dim, embedding_layer, policy_layer, embedding_type1, dghan_param_for_saved_model1,
-            lr, steps_learn, transit, batch_size, episodes, step_validation)
+            lr, steps_learn2, transit, batch_size, episodes, step_validation)
 
-log1 = np.load('./log/'
+log1 = np.load('../log/'
                '{}_log_'
                .format(log_type)  # log type
                + file1 + '.npy')
@@ -77,9 +78,9 @@ file2 = '{}x{}[{},{}]_{}_{}_{}_' \
         '{}_{}_{}_{}_{}_{}' \
     .format(j, m, l, h, init_type, reward_type, gamma,
             hidden_dim, embedding_layer, policy_layer, embedding_type2, dghan_param_for_saved_model2,
-            lr, steps_learn, transit, batch_size, episodes, step_validation)
+            lr, steps_learn1, transit, batch_size, episodes, step_validation)
 
-log2 = np.load('./log/'
+log2 = np.load('../log/'
                '{}_log_'
                .format(log_type)  # log type
                + file2 + '.npy')
@@ -89,9 +90,9 @@ file3 = '{}x{}[{},{}]_{}_{}_{}_' \
         '{}_{}_{}_{}_{}_{}' \
     .format(j, m, l, h, init_type, reward_type, gamma,
             hidden_dim, embedding_layer, policy_layer, embedding_type3, dghan_param_for_saved_model3,
-            lr, steps_learn, transit, batch_size, episodes, step_validation)
+            lr, steps_learn2, transit, batch_size, episodes, step_validation)
 
-log3 = np.load('./log/OLD_'
+log3 = np.load('../log/OLD_'
                '{}_log_'
                .format(log_type)  # log type
                + file3 + '.npy')
@@ -109,7 +110,7 @@ if log_type == 'training':
     plt.plot(x, obj2, color='tab:red', label='DGHAN')
     plt.plot(x, obj3, color='tab:green', label='GIN + DGHAN')
     plt.tight_layout()
-    plt.savefig('./curves/{}{}'.format('merged_training_log', save_file_type))
+    plt.savefig('./{}{}'.format('merged_training_log', save_file_type))
     plt.legend()
     plt.show()
 
@@ -126,7 +127,7 @@ else:
     plt.plot(x, obj_incumbent2, color='tab:red', label='DGHAN')
     plt.plot(x, obj_incumbent3, color='tab:green', label='GIN + DGHAN')
     plt.tight_layout()
-    plt.savefig('./curves/{}{}'.format('merged_incumbent_validation_log', save_file_type))
+    plt.savefig('./{}{}'.format('merged_incumbent_validation_log', save_file_type))
     plt.legend()
     plt.show()
 
@@ -142,7 +143,7 @@ else:
     plt.plot(x, obj_last_step2, color='tab:red', label='DGHAN')
     plt.plot(x, obj_last_step3, color='tab:green', label='GIN + DGHAN')
     plt.tight_layout()
-    plt.savefig('./curves/{}{}'.format('merged_last-step_validation_log', save_file_type))
+    plt.savefig('./{}{}'.format('merged_last-step_validation_log', save_file_type))
     plt.legend()
     plt.show()
 

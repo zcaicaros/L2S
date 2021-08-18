@@ -32,7 +32,7 @@ step_validation = 10
 
 # plot parameters
 show = True
-save = True
+save = False
 log_type = 'validation'  # 'training', 'validation'
 plot_step_size_training = 10
 plot_step_size_validation = 1

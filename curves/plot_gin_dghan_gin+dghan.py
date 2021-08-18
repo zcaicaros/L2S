@@ -33,7 +33,7 @@ step_validation = 10
 # plot parameters
 show = True
 save = True
-log_type = 'training'  # 'training', 'validation'
+log_type = 'validation'  # 'training', 'validation'
 plot_step_size_training = 10
 plot_step_size_validation = 1
 save_file_type = '.png'
@@ -91,7 +91,7 @@ file3 = '{}x{}[{},{}]_{}_{}_{}_' \
             hidden_dim, embedding_layer, policy_layer, embedding_type3, dghan_param_for_saved_model3,
             lr, steps_learn, transit, batch_size, episodes, step_validation)
 
-log3 = np.load('../log/OLD_'
+log3 = np.load('../log/'
                '{}_log_'
                .format(log_type)  # log type
                + file3 + '.npy')

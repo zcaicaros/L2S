@@ -1,6 +1,9 @@
 import numpy as np
 import torch
 import time
+
+import torch_geometric.utils
+
 from env.env_batch import JsspN5
 import copy
 import random
@@ -60,9 +63,10 @@ def best_improvement_move(support_env,
         memory.add_ele([[copy.deepcopy(support_env.current_graphs[i])],
                         [copy.deepcopy(support_env.sub_graphs_mc[i])],
                         [copy.deepcopy(support_env.tabu_lists[i])],
-                        torch.clone(support_env.current_objs[i]).unsqueeze(0),
-                        torch.clone(support_env.incumbent_objs[i].unsqueeze(0)),
-                        np.copy(np.expand_dims(instance, axis=0))])
+                        torch.clone(support_env.current_objs[i]).unsqueeze(0)
+                        # torch.clone(support_env.incumbent_objs[i].unsqueeze(0)),
+                        # np.copy(np.expand_dims(instance, axis=0))
+                        ])
 
     if support_env.current_objs.min().cpu().item() < current_obj.cpu().item():
         best_move = [feasible_actions[torch.argmin(support_env.current_objs, dim=0, keepdim=True).cpu().item()]]
@@ -106,9 +110,10 @@ def first_improvement_move(support_env,
         memory.add_ele([[copy.deepcopy(support_env.current_graphs[i])],
                         [copy.deepcopy(support_env.sub_graphs_mc[i])],
                         [copy.deepcopy(support_env.tabu_lists[i])],
-                        torch.clone(support_env.current_objs[i]).unsqueeze(0),
-                        torch.clone(support_env.incumbent_objs[i].unsqueeze(0)),
-                        np.copy(np.expand_dims(instance, axis=0))])
+                        torch.clone(support_env.current_objs[i]).unsqueeze(0)
+                        # torch.clone(support_env.incumbent_objs[i].unsqueeze(0)),
+                        # np.copy(np.expand_dims(instance, axis=0))
+                        ])
 
     if support_env.current_objs.min().cpu().item() < current_obj.cpu().item():
         first_improved_idx = torch.nonzero(support_env.current_objs < current_obj)[0][0].cpu().item()
@@ -153,9 +158,10 @@ def greedy_move(support_env,
         memory.add_ele([[copy.deepcopy(support_env.current_graphs[i])],
                         [copy.deepcopy(support_env.sub_graphs_mc[i])],
                         [copy.deepcopy(support_env.tabu_lists[i])],
-                        torch.clone(support_env.current_objs[i]).unsqueeze(0),
-                        torch.clone(support_env.incumbent_objs[i].unsqueeze(0)),
-                        np.copy(np.expand_dims(instance, axis=0))])
+                        torch.clone(support_env.current_objs[i]).unsqueeze(0)
+                        # torch.clone(support_env.incumbent_objs[i].unsqueeze(0)),
+                        # np.copy(np.expand_dims(instance, axis=0))
+                        ])
 
     greedy_mv = [feasible_actions[torch.argmin(support_env.current_objs, dim=0, keepdim=True).cpu().item()]]
 
@@ -252,13 +258,15 @@ def main():
 
             for init in init_type:
 
-                gap_against_tiled = np.tile(gap_against, (len(transit), 1))
+                n_instances = 1
+                gap_against_tiled = np.tile(gap_against[:n_instances], (len(transit), 1))
+                # print(gap_against_tiled)
                 memory = LongTermMem(mem_size=500)
 
                 print('Starting rollout Greedy policy...')
                 result_greedy = []
                 time_greedy = []
-                for ins in inst:
+                for ins in inst[:n_instances]:
                     results_with_restart_per_instance = []
                     greedy_result_per_instance = []
                     greedy_time_per_instance = []
@@ -288,13 +296,35 @@ def main():
                             env.sub_graphs_mc = restart_point[1]
                             env.tabu_lists = restart_point[2]
                             env.current_objs = restart_point[3]
-                            env.incumbent_objs = restart_point[4]
-                            env.instances = restart_point[5]
-                            env.itr = 0
+                            # env.incumbent_objs = restart_point[4]
+                            # env.instances = restart_point[3]
+                            # env.itr = 0
                             feasible_actions = env.feasible_actions(dev)[0]
                         else:
                             _, _, feasible_actions, _ = env.step(greedy_actions, dev, plot=show)
                         steps_count += 1
+
+                        '''import matplotlib.pyplot as plt
+                        import networkx as nx
+                        restart_point = memory.sample_ele()
+                        x_axis = np.pad(np.tile(np.arange(1, p_m + 1, 1), p_j), (1, 1), 'constant',
+                                        constant_values=[0, p_m + 1])
+                        y_axis = np.pad(np.arange(p_j, 0, -1).repeat(p_m), (1, 1), 'constant',
+                                        constant_values=np.median(np.arange(p_j, 0, -1)))
+                        pos = dict((n, (x, y)) for n, x, y in zip(restart_point[0][0].nodes(), x_axis, y_axis))
+                        plt.figure(figsize=(15, 10))
+                        plt.tight_layout()
+                        nx.draw_networkx_edge_labels(restart_point[0][0], pos=pos)  # show edge weight
+                        nx.draw(
+                            restart_point[0][0], pos=pos, with_labels=True, arrows=True, connectionstyle='arc3, rad = 0.1'
+                            # <-- tune curvature and style ref:https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.patches.ConnectionStyle.html
+                        )
+                        plt.show()
+
+                        pyg = torch_geometric.utils.from_networkx(restart_point[1][0])
+                        print(pyg.edge_index.shape)
+                        print(restart_point[1][0].number_of_edges())'''
+
                         for log_horizon in transit:
                             if steps_count == log_horizon:
                                 if result_type == 'incumbent':
@@ -306,6 +336,7 @@ def main():
                     result_greedy.append(greedy_result_per_instance)
                     time_greedy.append(greedy_time_per_instance)
                 result_greedy = np.array(result_greedy).transpose()
+                print(result_greedy)
                 time_greedy = np.array(time_greedy).transpose()
                 gap_greedy = (result_greedy - gap_against_tiled) / gap_against_tiled
                 mean_gap_greedy = gap_greedy.mean(axis=1)
@@ -319,7 +350,7 @@ def main():
                 memory.clean_mem()
                 result_best_improvement = []
                 time_best_improvement = []
-                for ins in inst:
+                for ins in inst[:n_instances]:
                     results_with_restart_per_instance = []
                     best_improvement_result_per_instance = []
                     best_improvement_time_per_instance = []
@@ -339,24 +370,28 @@ def main():
                                                              memory=memory,
                                                              device=dev)
                         if best_actions == [[0, 0]]:
-                            if result_type == 'incumbent':
-                                results_with_restart_per_instance.append(env.incumbent_objs.cpu().item())
-                            else:
-                                results_with_restart_per_instance.append(env.current_objs.cpu().item())
+                            # if result_type == 'incumbent':
+                            #     results_with_restart_per_instance.append(env.incumbent_objs.cpu().item())
+                            # else:
+                            #     results_with_restart_per_instance.append(env.current_objs.cpu().item())
                             restart_point = memory.sample_ele()
                             env.current_graphs = restart_point[0]
                             env.sub_graphs_mc = restart_point[1]
                             env.tabu_lists = restart_point[2]
                             env.current_objs = restart_point[3]
-                            env.incumbent_objs = restart_point[4]
-                            env.instances = restart_point[5]
-                            env.itr = 0
+                            # env.incumbent_objs = restart_point[4]
+                            # env.instances = restart_point[3]
+                            # env.itr = 0
                             feasible_actions = env.feasible_actions(dev)[0]
                         else:
                             _, _, feasible_actions, _ = env.step(best_actions, dev, plot=show)
                         steps_count += 1
                         for log_horizon in transit:
                             if steps_count == log_horizon:
+                                if result_type == 'incumbent':
+                                    results_with_restart_per_instance.append(env.incumbent_objs.cpu().item())
+                                else:
+                                    results_with_restart_per_instance.append(env.current_objs.cpu().item())
                                 best_improvement_result_per_instance.append(min(results_with_restart_per_instance))
                                 best_improvement_time_per_instance.append(time.time() - BI_start_per_instance)
                     result_best_improvement.append(best_improvement_result_per_instance)
@@ -395,24 +430,28 @@ def main():
                                                                         memory=memory,
                                                                         device=dev)
                         if first_improved_actions == [[0, 0]]:
-                            if result_type == 'incumbent':
-                                results_with_restart_per_instance.append(env.incumbent_objs.cpu().item())
-                            else:
-                                results_with_restart_per_instance.append(env.current_objs.cpu().item())
+                            # if result_type == 'incumbent':
+                            #     results_with_restart_per_instance.append(env.incumbent_objs.cpu().item())
+                            # else:
+                            #     results_with_restart_per_instance.append(env.current_objs.cpu().item())
                             restart_point = memory.sample_ele()
                             env.current_graphs = restart_point[0]
                             env.sub_graphs_mc = restart_point[1]
                             env.tabu_lists = restart_point[2]
                             env.current_objs = restart_point[3]
-                            env.incumbent_objs = restart_point[4]
-                            env.instances = restart_point[5]
-                            env.itr = 0
+                            # env.incumbent_objs = restart_point[4]
+                            # env.instances = restart_point[3]
+                            # env.itr = 0
                             feasible_actions = env.feasible_actions(dev)[0]
                         else:
                             _, _, feasible_actions, _ = env.step(first_improved_actions, dev, plot=show)
                         steps_count += 1
                         for log_horizon in transit:
                             if steps_count == log_horizon:
+                                if result_type == 'incumbent':
+                                    results_with_restart_per_instance.append(env.incumbent_objs.cpu().item())
+                                else:
+                                    results_with_restart_per_instance.append(env.current_objs.cpu().item())
                                 first_improvement_result_per_instance.append(min(results_with_restart_per_instance))
                                 first_improvement_time_per_instance.append(time.time() - FRSTI_start_per_instance)
                     result_first_improvement.append(first_improvement_result_per_instance)

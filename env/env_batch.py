@@ -419,12 +419,12 @@ def main():
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    j = 20
-    m = 10
+    j = 6
+    m = 3
     h = 99
     l = 1
     transit = 500
-    batch_size = 64
+    batch_size = 1
     n_batch = 1
     init = 'fdd-divide-mwkr'
     reward_type = 'yaoxin'
@@ -434,6 +434,7 @@ def main():
     # np.save('test_inst.npy', insts)
     # print(insts)
     env = JsspN5(n_job=j, n_mch=m, low=l, high=h, reward_type=reward_type)
+    print(env.adj_mat_pc)
     actor = Actor(in_dim=3, hidden_dim=64, embedding_type='gin').to(device)
     # print([param for param in actor.parameters()])
 

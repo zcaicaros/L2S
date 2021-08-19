@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 # env parameters
-j = 20
+j = 15
 m = 10
 l = 1
 h = 99
@@ -30,7 +30,7 @@ step_validation = 10
 # plot parameters
 show = True
 save = False
-log_type = 'validation'  # 'training', 'validation'
+log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = 10
 plot_step_size_validation = 1
 save_file_type = '.png'

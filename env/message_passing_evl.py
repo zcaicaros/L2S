@@ -98,7 +98,7 @@ if __name__ == "__main__":
     m = 20
     l = 1
     h = 99
-    batch_size = 64
+    batch_size = 10
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     np.random.seed(1)
 
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     t2 = time.time()
 
     # testing forward pass for first instance
-    inst = insts[-1]
+    inst = insts[0]
     state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
     dur_earliest_st = torch.from_numpy(np.pad(inst[0].reshape(-1), (1, 1), 'constant', constant_values=0)).reshape(-1, 1).to(dev)
     forward_pass = ForwardPass(aggr='max', flow="source_to_target")
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     print()
 
     # testing backward pass for first instance
-    inst = insts[-1]
+    inst = insts[0]
     state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
     dur_latest_st = torch.from_numpy(np.pad(inst[0].reshape(-1), (1, 1), 'constant', constant_values=0)).reshape(-1, 1).to(dev)
     backward_pass = BackwardPass(aggr='max', flow="target_to_source")
@@ -173,8 +173,11 @@ if __name__ == "__main__":
     dur = torch.from_numpy(dur).reshape(-1, 1).to(dev)
     eva = Evaluator()
     t5 = time.time()
-    est, lst, _ = eva.forward(edge_index=edge_idx, duration=dur, n_j=j, n_m=m)
+    est, lst, makespan = eva.forward(edge_index=edge_idx, duration=dur, n_j=j, n_m=m)
     t6 = time.time()
+    # print(makespan)
+    # print(est.cpu().reshape(batch_size, -1, 1).max(dim=1))
+    # print(lst.cpu().reshape(batch_size, -1, 1).max(dim=1))
     if torch.equal(est.cpu().squeeze() / 1000, batch_data.x[:, 1]) and torch.equal(lst.squeeze().cpu() / 1000, batch_data.x[:, 2]):
         print('forward pass and backward pass are all OK! It takes:', t6 - t5, 'networkx version forward pass and backward pass take:', t2 - t1)
 

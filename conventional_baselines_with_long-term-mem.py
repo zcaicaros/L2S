@@ -250,7 +250,7 @@ def main():
                         print('Instance-' + str(i + 1) + ' Ortools makespan:', result)
                         gap_against.append(result[1])
                     gap_against = np.array(gap_against)
-                    np.save('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m), gap_against)
+                    np.save('./test_data/syn{}x{}_result.npy'.format(p_j, p_m), gap_against)
 
             env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin', fea_norm_const=fea_norm_const)
             support_env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin',

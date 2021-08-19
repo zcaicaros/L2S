@@ -258,10 +258,10 @@ def main():
 
             for init in init_type:
 
-                n_instances = 20
+                n_instances = 10
                 gap_against_tiled = np.tile(gap_against[:n_instances], (len(transit), 1))
                 # print(gap_against_tiled)
-                memory = LongTermMem(mem_size=500)
+                memory = LongTermMem(mem_size=1000)
 
                 print('Starting rollout Greedy policy...')
                 result_greedy = []

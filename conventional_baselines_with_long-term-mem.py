@@ -285,8 +285,7 @@ def main():
                                                      instance=env.instances[0],
                                                      memory=memory,
                                                      device=dev)
-                        # print(greedy_actions)
-                        if greedy_actions == [[0, 0]]:
+                        '''if greedy_actions == [[0, 0]]:
                             if result_type == 'incumbent':
                                 results_with_restart_per_instance.append(env.incumbent_objs.cpu().item())
                             else:
@@ -301,7 +300,8 @@ def main():
                             # env.itr = 0
                             feasible_actions = env.feasible_actions(dev)[0]
                         else:
-                            _, _, feasible_actions, _ = env.step(greedy_actions, dev, plot=show)
+                            _, _, feasible_actions, _ = env.step(greedy_actions, dev, plot=show)'''
+                        _, _, feasible_actions, _ = env.step(greedy_actions, dev, plot=show)
                         steps_count += 1
 
                         '''import matplotlib.pyplot as plt

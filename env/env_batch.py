@@ -37,7 +37,7 @@ class BatchGraph:
 
 
 class JsspN5:
-    def __init__(self, n_job, n_mch, low, high, reward_type, fea_norm_const=1000):
+    def __init__(self, n_job, n_mch, low, high, reward_type='yaoxin', fea_norm_const=1000):
 
         self.n_job = n_job
         self.n_mch = n_mch

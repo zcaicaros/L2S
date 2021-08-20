@@ -1,10 +1,13 @@
 from env.env_batch import JsspN5
+import torch
 import copy
+import random
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from env.message_passing_evl import Evaluator
 from torch_geometric.utils import from_networkx
+from torch_geometric.data.batch import Batch
 
 
 def show_state(G, j, m):
@@ -63,7 +66,7 @@ def change_nxgraph_topology(action, G, instance, plot=False):
     return G_copy
 
 
-def get_initial_sols(instances, low, high, init_type):
+def get_initial_sols(instances, low, high, init_type, dev):
     """
     instances: np.array [batch_size, 2, j, m]
     low: lower bound for processing time of instances
@@ -72,7 +75,7 @@ def get_initial_sols(instances, low, high, init_type):
     """
     j, m = instances[0][0].shape
     env = JsspN5(j, m, low, high)
-    env.reset(instances=instances, init_type=init_type, device='cpu')
+    env.reset(instances=instances, init_type=init_type, device=dev)
     init_Gs = copy.deepcopy(env.current_graphs)
     return init_Gs  # list of networkx.Digraph
 
@@ -127,31 +130,78 @@ def feasible_action(G, tabu_list, instance):
         return [0, 0]
 
 
-def random_policy_baselines(instances):
+def random_policy_baselines(instances, search_horizon, dev, init_type='fdd-divide-mwkr', low=1, high=99):
     """
     instances: np.array [batch_size, 2, j, m]
     """
-    return 
+    j, m = instances[0][0].shape
+    n_op = j * m
+    horizon = 0
+    eva = Evaluator()
+    tabu_size = 1
+    tabu_lst = [[] for _ in range(instances.shape[0])]
+
+    x = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
+
+    Gs = get_initial_sols(instances=instances, low=low, high=high, init_type=init_type, dev=dev)
+    pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
+    _, _, make_span = eva.forward(pyg.edge_index.to(dev), duration=x.to(dev), n_j=j, n_m=m)
+
+    incumbent_makespan = make_span
+    while horizon < search_horizon:
+        feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(Gs, tabu_lst, instances)]
+        actions = [random.choice(feasible_a) for feasible_a in feasible_actions]  # [[1, 2], [5, 8], ...]
+        # print(actions[0][::-1])
+        print([a for a in actions])
+        action_reversed = [a[::-1] for a in actions]
+        for i, action in enumerate(action_reversed):
+            if action == [0, 0]:  # if dummy action, don't update tabu list
+                pass
+            else:
+                if len(tabu_lst[i]) == tabu_size:
+                    tabu_lst[i].pop(0)
+                    tabu_lst[i].append(action)
+                else:
+                    tabu_lst[i].append(action)
+        Gs = [change_nxgraph_topology(a, G, ins) for a, G, ins in zip(actions, Gs, instances)]
+        pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
+        _, _, make_span = eva.forward(pyg.edge_index.to(dev), duration=x.to(dev), n_j=j, n_m=m)
+        incumbent_makespan = torch.where(make_span - incumbent_makespan < 0, make_span, incumbent_makespan)
+        horizon += 1
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
     from env.generateJSP import uni_instance_gen
 
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     problem = 'tai'
     j = 4
     m = 4
     l = 1
     h = 99
+    b = 10
     init = 'fdd-divide-mwkr'
+    steps = 10
+
+    random.seed(3)
+    np.random.seed(2)
 
     # insts = np.load('./test_data/{}{}x{}.npy'.format(problem, j, m))
-    insts = np.array([uni_instance_gen(j, m, l, h) for _ in range(3)])
+    insts = np.array([uni_instance_gen(j, m, l, h) for _ in range(b)])
 
-    init_sols = get_initial_sols(instances=insts, low=l, high=h, init_type=init)
+    init_sols = get_initial_sols(instances=insts, low=l, high=h, init_type=init, dev=device)
 
     sol = init_sols[1]
-    show_state(sol, j, m)
+    # show_state(sol, j, m)
     tabu_l = []
     candidate_action = feasible_action(sol, tabu_l, insts[1])
-    print(candidate_action)
+
+    random_policy_baselines(instances=insts, search_horizon=steps, dev=device)
 

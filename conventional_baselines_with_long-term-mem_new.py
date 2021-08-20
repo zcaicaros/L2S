@@ -10,6 +10,25 @@ from torch_geometric.utils import from_networkx
 from torch_geometric.data.batch import Batch
 
 
+class LongTermMem:
+    def __init__(self, mem_size):
+        self.mem_size = mem_size
+        self.mem = []
+
+    def add_ele(self, element):
+        if len(self.mem) < self.mem_size:
+            self.mem.append(element)
+        else:
+            self.mem.pop(0)
+            self.mem.append(element)
+
+    def sample_ele(self):
+        return random.choice(self.mem)
+
+    def clean_mem(self):
+        self.mem = []
+
+
 def show_state(G, j, m):
     x_axis = np.pad(np.tile(np.arange(1, m + 1, 1), j), (1, 1), 'constant', constant_values=[0, m + 1])
     y_axis = np.pad(np.arange(j, 0, -1).repeat(m), (1, 1), 'constant', constant_values=np.median(np.arange(j, 0, -1)))
@@ -243,37 +262,46 @@ def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divi
     eva = Evaluator()
     tabu_size = 1
     tabu_lst = [[] for _ in range(instances.shape[0])]
+    batch_memory = [LongTermMem(mem_size=500) for _ in range(instances.shape[0])]
 
-    x = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
+    dur_for_move = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
 
-    Gs = get_initial_sols(instances=instances, low=low, high=high, init_type=init_type, dev=dev)
-    pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
-    _, _, make_span = eva.forward(pyg.edge_index.to(dev), duration=x.to(dev), n_j=j, n_m=m)
+    current_Gs = get_initial_sols(instances=instances, low=low, high=high, init_type=init_type, dev=dev)
+    current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
+    _, _, make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
 
     incumbent_makespan = make_span
     while horizon < search_horizon:
-        feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(Gs, tabu_lst, instances)]
+        feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(current_Gs, tabu_lst, instances)]
 
-        # start to find move for all instances...
-        next_state_count = [len(fea_a) for fea_a in feasible_actions]
-        dur_for_find_move = np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0)
-        dur_for_find_move = np.repeat(dur_for_find_move, next_state_count, axis=0).reshape(-1, 1)
-        dur_for_find_move = torch.from_numpy(dur_for_find_move)
-        Gs_all_instances = []
-        for fea_a, G, ins in zip(feasible_actions, Gs, instances):  # fea_a: e.g. [[1, 2], [6, 8], ...]
+        ## start to find move for all instances...
+        # calculate next G of all actions for all instances
+        Gs_for_find_move = []
+        next_G_count = [0 for _ in range(instances.shape[0])]
+        for i, (fea_a, G, ins) in enumerate(zip(feasible_actions, current_Gs, instances)):  # fea_a: e.g. [[1, 2], [6, 8], ...]
             for a in fea_a:  # a: e.g. [1, 2]
-                Gs_all_instances.append(change_nxgraph_topology(a, G, ins))
-        pyg_one_step_fwd = Batch.from_data_list([from_networkx(G) for G in Gs_all_instances])
+                next_G_count[i] = next_G_count[i] + 1
+                if a != [0, 0]:
+                    Gs_for_find_move.append(change_nxgraph_topology(a, G, ins))
+                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), copy.deepcopy(a[::-1])])
+                else:
+                    # batch_memory[i].add_ele([copy.deepcopy(G), copy.deepcopy(tabu_lst[i])])
+                    pass
+        # batching all next G
+        pyg_one_step_fwd = Batch.from_data_list([from_networkx(G) for G in Gs_for_find_move])
+        # calculate dur for evaluator
+        dur_for_find_move = np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0)
+        dur_for_find_move = np.repeat(dur_for_find_move, next_G_count, axis=0).reshape(-1, 1)
+        dur_for_find_move = torch.from_numpy(dur_for_find_move)
+        # calculate make_span for all next G of all instances
         _, _, make_span = eva.forward(pyg_one_step_fwd.edge_index.to(dev), duration=dur_for_find_move.to(dev), n_j=j, n_m=m)
         make_span = make_span.cpu().numpy()
-        min_make_span = [np.min(make_span[start:end]) for start, end in zip(np.cumsum([0]+next_state_count[:-1]), np.cumsum(next_state_count))]
-        print(incumbent_makespan)
-        print(torch.tensor(min_make_span).reshape(-1, 1))
-        idx_need_restart = torch.where(incumbent_makespan < torch.tensor(min_make_span).reshape(-1, 1))
-        print(idx_need_restart)
-        # print(incumbent_makespan)
-        print()
-
+        min_make_span = [np.min(make_span[start:end]) for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))]
+        flag_need_restart = incumbent_makespan < torch.tensor(min_make_span).reshape(-1, 1)
+        print(incumbent_makespan.squeeze())
+        print(torch.tensor(min_make_span).reshape(-1, 1).squeeze())
+        print(flag_need_restart.squeeze())
+        print(torch.where(flag_need_restart == True)[0])
         horizon += 1
 
         '''# move...
@@ -287,9 +315,9 @@ def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divi
                     tabu_lst[i].append(action)
                 else:
                     tabu_lst[i].append(action)
-        Gs = [change_nxgraph_topology(a, G, ins) for a, G, ins in zip(selected_actions, Gs, instances)]
-        pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
-        _, _, make_span = eva.forward(pyg.edge_index.to(dev), duration=x.to(dev), n_j=j, n_m=m)
+        current_Gs = [change_nxgraph_topology(a, G, ins) for a, G, ins in zip(selected_actions, current_Gs, instances)]
+        current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
+        _, _, make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
         incumbent_makespan = torch.where(make_span - incumbent_makespan < 0, make_span, incumbent_makespan)
         horizon += 1'''
 

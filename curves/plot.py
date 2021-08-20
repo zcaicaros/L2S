@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 # env parameters
-j = 15
+j = 10
 m = 10
 l = 1
 h = 99
@@ -16,15 +16,15 @@ hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
 embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
-heads = 1
+heads = 2
 drop_out = 0.
 
 # training parameters
-lr = 5e-5
+lr = 4e-5
 steps_learn = 10
 transit = 500
 batch_size = 64
-episodes = 128000
+episodes = 256000
 step_validation = 10
 
 # plot parameters

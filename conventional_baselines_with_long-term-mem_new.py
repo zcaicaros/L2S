@@ -127,12 +127,13 @@ def feasible_action(G, tabu_list, instance):
     if len(action) != 0:
         return action
     else:  # if no feasible actions available return [0, 0]
-        return [0, 0]
+        return [[0, 0]]
 
 
 def random_policy_baselines(instances, search_horizon, dev, init_type='fdd-divide-mwkr', low=1, high=99):
     """
     instances: np.array [batch_size, 2, j, m]
+    search_horizon: int
     """
     j, m = instances[0][0].shape
     n_op = j * m
@@ -150,9 +151,11 @@ def random_policy_baselines(instances, search_horizon, dev, init_type='fdd-divid
     incumbent_makespan = make_span
     while horizon < search_horizon:
         feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(Gs, tabu_lst, instances)]
+
+        # select random actions
         actions = [random.choice(feasible_a) for feasible_a in feasible_actions]  # [[1, 2], [5, 8], ...]
-        # print(actions[0][::-1])
-        print([a for a in actions])
+
+        # move...
         action_reversed = [a[::-1] for a in actions]
         for i, action in enumerate(action_reversed):
             if action == [0, 0]:  # if dummy action, don't update tabu list
@@ -169,6 +172,129 @@ def random_policy_baselines(instances, search_horizon, dev, init_type='fdd-divid
         incumbent_makespan = torch.where(make_span - incumbent_makespan < 0, make_span, incumbent_makespan)
         horizon += 1
 
+    return incumbent_makespan.cpu().numpy()
+
+
+def Greedy_baselines(instances, search_horizon, dev, init_type='fdd-divide-mwkr', low=1, high=99):
+    """
+    instances: np.array [batch_size, 2, j, m]
+    search_horizon: int
+    """
+    j, m = instances[0][0].shape
+    n_op = j * m
+    horizon = 0
+    eva = Evaluator()
+    tabu_size = 1
+    tabu_lst = [[] for _ in range(instances.shape[0])]
+
+    x = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
+
+    Gs = get_initial_sols(instances=instances, low=low, high=high, init_type=init_type, dev=dev)
+    pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
+    _, _, make_span = eva.forward(pyg.edge_index.to(dev), duration=x.to(dev), n_j=j, n_m=m)
+
+    incumbent_makespan = make_span
+    while horizon < search_horizon:
+        feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(Gs, tabu_lst, instances)]
+
+        # start to find move for all instances...
+        next_state_count = [len(fea_a) for fea_a in feasible_actions]
+        dur_for_find_move = np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0)
+        dur_for_find_move = np.repeat(dur_for_find_move, next_state_count, axis=0).reshape(-1, 1)
+        dur_for_find_move = torch.from_numpy(dur_for_find_move)
+        Gs_all_instances = []
+        for fea_a, G, ins in zip(feasible_actions, Gs, instances):  # fea_a: e.g. [[1, 2], [6, 8], ...]
+            for a in fea_a:  # a: e.g. [1, 2]
+                Gs_all_instances.append(change_nxgraph_topology(a, G, ins))
+        pyg_one_step_fwd = Batch.from_data_list([from_networkx(G) for G in Gs_all_instances])
+        _, _, make_span = eva.forward(pyg_one_step_fwd.edge_index.to(dev), duration=dur_for_find_move.to(dev), n_j=j, n_m=m)
+        make_span = make_span.cpu().numpy()
+        actions_idx = [np.argmin(make_span[start:end]) for start, end in zip(np.cumsum([0]+next_state_count[:-1]), np.cumsum(next_state_count))]
+        selected_actions = [fea_a[idx] for fea_a, idx in zip(feasible_actions, actions_idx)]
+
+        # move...
+        action_reversed = [a[::-1] for a in selected_actions]
+        for i, action in enumerate(action_reversed):
+            if action == [0, 0]:  # if dummy action, don't update tabu list
+                pass
+            else:
+                if len(tabu_lst[i]) == tabu_size:
+                    tabu_lst[i].pop(0)
+                    tabu_lst[i].append(action)
+                else:
+                    tabu_lst[i].append(action)
+        Gs = [change_nxgraph_topology(a, G, ins) for a, G, ins in zip(selected_actions, Gs, instances)]
+        pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
+        _, _, make_span = eva.forward(pyg.edge_index.to(dev), duration=x.to(dev), n_j=j, n_m=m)
+        incumbent_makespan = torch.where(make_span - incumbent_makespan < 0, make_span, incumbent_makespan)
+        horizon += 1
+
+    return incumbent_makespan.cpu().numpy()
+
+
+def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divide-mwkr', low=1, high=99):
+    """
+    instances: np.array [batch_size, 2, j, m]
+    search_horizon: int
+    """
+    j, m = instances[0][0].shape
+    n_op = j * m
+    horizon = 0
+    eva = Evaluator()
+    tabu_size = 1
+    tabu_lst = [[] for _ in range(instances.shape[0])]
+
+    x = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
+
+    Gs = get_initial_sols(instances=instances, low=low, high=high, init_type=init_type, dev=dev)
+    pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
+    _, _, make_span = eva.forward(pyg.edge_index.to(dev), duration=x.to(dev), n_j=j, n_m=m)
+
+    incumbent_makespan = make_span
+    while horizon < search_horizon:
+        feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(Gs, tabu_lst, instances)]
+
+        # start to find move for all instances...
+        next_state_count = [len(fea_a) for fea_a in feasible_actions]
+        dur_for_find_move = np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0)
+        dur_for_find_move = np.repeat(dur_for_find_move, next_state_count, axis=0).reshape(-1, 1)
+        dur_for_find_move = torch.from_numpy(dur_for_find_move)
+        Gs_all_instances = []
+        for fea_a, G, ins in zip(feasible_actions, Gs, instances):  # fea_a: e.g. [[1, 2], [6, 8], ...]
+            for a in fea_a:  # a: e.g. [1, 2]
+                Gs_all_instances.append(change_nxgraph_topology(a, G, ins))
+        pyg_one_step_fwd = Batch.from_data_list([from_networkx(G) for G in Gs_all_instances])
+        _, _, make_span = eva.forward(pyg_one_step_fwd.edge_index.to(dev), duration=dur_for_find_move.to(dev), n_j=j, n_m=m)
+        make_span = make_span.cpu().numpy()
+        min_make_span = [np.min(make_span[start:end]) for start, end in zip(np.cumsum([0]+next_state_count[:-1]), np.cumsum(next_state_count))]
+        print(incumbent_makespan)
+        print(torch.tensor(min_make_span).reshape(-1, 1))
+        idx_need_restart = torch.where(incumbent_makespan < torch.tensor(min_make_span).reshape(-1, 1))
+        print(idx_need_restart)
+        # print(incumbent_makespan)
+        print()
+
+        horizon += 1
+
+        '''# move...
+        action_reversed = [a[::-1] for a in selected_actions]
+        for i, action in enumerate(action_reversed):
+            if action == [0, 0]:  # if dummy action, don't update tabu list
+                pass
+            else:
+                if len(tabu_lst[i]) == tabu_size:
+                    tabu_lst[i].pop(0)
+                    tabu_lst[i].append(action)
+                else:
+                    tabu_lst[i].append(action)
+        Gs = [change_nxgraph_topology(a, G, ins) for a, G, ins in zip(selected_actions, Gs, instances)]
+        pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
+        _, _, make_span = eva.forward(pyg.edge_index.to(dev), duration=x.to(dev), n_j=j, n_m=m)
+        incumbent_makespan = torch.where(make_span - incumbent_makespan < 0, make_span, incumbent_makespan)
+        horizon += 1'''
+
+    return incumbent_makespan.cpu().numpy()
+
 
 
 
@@ -182,14 +308,13 @@ if __name__ == "__main__":
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     problem = 'tai'
-    j = 4
-    m = 4
+    j = 10
+    m = 10
     l = 1
     h = 99
     b = 10
     init = 'fdd-divide-mwkr'
-    steps = 10
-
+    steps = 1
     random.seed(3)
     np.random.seed(2)
 
@@ -203,5 +328,7 @@ if __name__ == "__main__":
     tabu_l = []
     candidate_action = feasible_action(sol, tabu_l, insts[1])
 
-    random_policy_baselines(instances=insts, search_horizon=steps, dev=device)
+    # random_makespan = random_policy_baselines(instances=insts, search_horizon=steps, dev=device)
+    # greedy_makespan = Greedy_baselines(instances=insts, search_horizon=steps, dev=device)
+    bi_makespan = BestImprovement_baseline(instances=insts, search_horizon=steps, dev=device)
 

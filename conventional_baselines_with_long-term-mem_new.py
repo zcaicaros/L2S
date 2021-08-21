@@ -300,19 +300,11 @@ def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divi
         make_span = make_span.cpu().numpy()
         min_make_span_idx = [np.argmin(make_span[start:end]) for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))]
         min_make_span = [ms[idx][0] for ms, idx in zip([make_span[start:end] for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))], min_make_span_idx)]
-        # print(min_make_span)
-        # print(next_G_count)
-        # print(min_make_span_idx)
-        # print(min_make_span)
         flag_need_restart = (incumbent_makespan < torch.tensor(min_make_span).reshape(-1, 1)).squeeze().cpu().numpy()
-        # print(incumbent_makespan.squeeze())
-        # print(torch.tensor(min_make_span).reshape(-1, 1).squeeze())
-        # print(flag_need_restart.squeeze())
-        # print(torch.where(flag_need_restart == True)[0])
         for i, (flag, min_idx) in enumerate(zip(flag_need_restart, min_make_span_idx)):
-            if flag:
+            if flag:  # random restart from long-term memory
                 current_Gs[i], tabu_lst[i] = copy.deepcopy(random.choice(batch_memory[i].mem))
-            else:
+            else:  # move
                 current_Gs[i], tabu_lst[i] = copy.deepcopy(Gs_for_find_move[i][min_idx]), [copy.deepcopy(actions_for_find_move[i][min_idx][::-1])]
 
         current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
@@ -323,7 +315,7 @@ def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divi
         # print(incumbent_makespan.squeeze())
 
 
-    return incumbent_makespan.cpu().numpy()
+    return incumbent_makespan.cpu().numpy().reshape(-1)
 
 
 
@@ -338,27 +330,23 @@ if __name__ == "__main__":
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     problem = 'tai'
-    j = 10
-    m = 10
+    j = 15
+    m = 15
     l = 1
     h = 99
     b = 10
     init = 'fdd-divide-mwkr'
-    steps = 2000
+    steps_limit = 100
+    log_horizons = [500, 1000, 2000, 5000]
     random.seed(3)
     np.random.seed(2)
 
-    # insts = np.load('./test_data/{}{}x{}.npy'.format(problem, j, m))
-    insts = np.array([uni_instance_gen(j, m, l, h) for _ in range(b)])
-
-    init_sols = get_initial_sols(instances=insts, low=l, high=h, init_type=init, dev=device)
-
-    sol = init_sols[1]
-    # show_state(sol, j, m)
-    tabu_l = []
-    candidate_action = feasible_action(sol, tabu_l, insts[1])
+    insts = np.load('./test_data/{}{}x{}.npy'.format(problem, j, m))
+    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(problem, j, m))
 
     # random_makespan = random_policy_baselines(instances=insts, search_horizon=steps, dev=device)
     # greedy_makespan = Greedy_baselines(instances=insts, search_horizon=steps, dev=device)
-    bi_makespan = BestImprovement_baseline(instances=insts, search_horizon=steps, dev=device)
+    bi_makespan = BestImprovement_baseline(instances=insts, search_horizon=steps_limit, dev=device)
+    gap = (bi_makespan - gap_against) / gap_against
+    print(gap.mean())
 

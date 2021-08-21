@@ -271,7 +271,7 @@ def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divi
     _, _, make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
 
     incumbent_makespan = make_span
-    print(incumbent_makespan.squeeze())
+    # print(incumbent_makespan.squeeze())
     while horizon < search_horizon:
         feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(current_Gs, tabu_lst, instances)]
 
@@ -319,6 +319,8 @@ def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divi
         _, _, make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
         incumbent_makespan = torch.where(make_span - incumbent_makespan < 0, make_span, incumbent_makespan)
         horizon += 1
+
+        # print(incumbent_makespan.squeeze())
 
 
     return incumbent_makespan.cpu().numpy()

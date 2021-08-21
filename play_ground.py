@@ -11,3 +11,5 @@ l1 = [1]
 l2 = l1 + [0]
 print(l1)
 print(l2)
+
+print(np.load('test_data/syn20x10.npy').shape)

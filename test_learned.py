@@ -104,7 +104,7 @@ def main():
                 from pathlib import Path
                 ortools_path = Path('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
                 if ortools_path.is_file():
-                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))[:, 1]
+                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
                 else:
                     gap_against = []
                     print('Starting Ortools...')

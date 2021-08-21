@@ -271,24 +271,26 @@ def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divi
     _, _, make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
 
     incumbent_makespan = make_span
+    print(incumbent_makespan.squeeze())
     while horizon < search_horizon:
         feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(current_Gs, tabu_lst, instances)]
 
         ## start to find move for all instances...
         # calculate next G of all actions for all instances
-        Gs_for_find_move = []
-        next_G_count = [0 for _ in range(instances.shape[0])]
+        Gs_for_find_move = [[] for _ in range(len(feasible_actions))]
+        actions_for_find_move = [[] for _ in range(len(feasible_actions))]
+        next_G_count = [len(fea_a) for fea_a in feasible_actions]
         for i, (fea_a, G, ins) in enumerate(zip(feasible_actions, current_Gs, instances)):  # fea_a: e.g. [[1, 2], [6, 8], ...]
             for a in fea_a:  # a: e.g. [1, 2]
-                next_G_count[i] = next_G_count[i] + 1
                 if a != [0, 0]:
-                    Gs_for_find_move.append(change_nxgraph_topology(a, G, ins))
-                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), copy.deepcopy(a[::-1])])
+                    Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
+                    actions_for_find_move[i].append(a)
+                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), [copy.deepcopy(a[::-1])]])
                 else:
                     # batch_memory[i].add_ele([copy.deepcopy(G), copy.deepcopy(tabu_lst[i])])
                     pass
         # batching all next G
-        pyg_one_step_fwd = Batch.from_data_list([from_networkx(G) for G in Gs_for_find_move])
+        pyg_one_step_fwd = Batch.from_data_list([from_networkx(G) for i in range(len(feasible_actions)) for G in Gs_for_find_move[i]])
         # calculate dur for evaluator
         dur_for_find_move = np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0)
         dur_for_find_move = np.repeat(dur_for_find_move, next_G_count, axis=0).reshape(-1, 1)
@@ -296,30 +298,28 @@ def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divi
         # calculate make_span for all next G of all instances
         _, _, make_span = eva.forward(pyg_one_step_fwd.edge_index.to(dev), duration=dur_for_find_move.to(dev), n_j=j, n_m=m)
         make_span = make_span.cpu().numpy()
-        min_make_span = [np.min(make_span[start:end]) for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))]
-        flag_need_restart = incumbent_makespan < torch.tensor(min_make_span).reshape(-1, 1)
-        print(incumbent_makespan.squeeze())
-        print(torch.tensor(min_make_span).reshape(-1, 1).squeeze())
-        print(flag_need_restart.squeeze())
-        print(torch.where(flag_need_restart == True)[0])
-        horizon += 1
-
-        '''# move...
-        action_reversed = [a[::-1] for a in selected_actions]
-        for i, action in enumerate(action_reversed):
-            if action == [0, 0]:  # if dummy action, don't update tabu list
-                pass
+        min_make_span_idx = [np.argmin(make_span[start:end]) for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))]
+        min_make_span = [ms[idx][0] for ms, idx in zip([make_span[start:end] for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))], min_make_span_idx)]
+        # print(min_make_span)
+        # print(next_G_count)
+        # print(min_make_span_idx)
+        # print(min_make_span)
+        flag_need_restart = (incumbent_makespan < torch.tensor(min_make_span).reshape(-1, 1)).squeeze().cpu().numpy()
+        # print(incumbent_makespan.squeeze())
+        # print(torch.tensor(min_make_span).reshape(-1, 1).squeeze())
+        # print(flag_need_restart.squeeze())
+        # print(torch.where(flag_need_restart == True)[0])
+        for i, (flag, min_idx) in enumerate(zip(flag_need_restart, min_make_span_idx)):
+            if flag:
+                current_Gs[i], tabu_lst[i] = copy.deepcopy(random.choice(batch_memory[i].mem))
             else:
-                if len(tabu_lst[i]) == tabu_size:
-                    tabu_lst[i].pop(0)
-                    tabu_lst[i].append(action)
-                else:
-                    tabu_lst[i].append(action)
-        current_Gs = [change_nxgraph_topology(a, G, ins) for a, G, ins in zip(selected_actions, current_Gs, instances)]
+                current_Gs[i], tabu_lst[i] = copy.deepcopy(Gs_for_find_move[i][min_idx]), [copy.deepcopy(actions_for_find_move[i][min_idx][::-1])]
+
         current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
         _, _, make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
         incumbent_makespan = torch.where(make_span - incumbent_makespan < 0, make_span, incumbent_makespan)
-        horizon += 1'''
+        horizon += 1
+
 
     return incumbent_makespan.cpu().numpy()
 
@@ -342,7 +342,7 @@ if __name__ == "__main__":
     h = 99
     b = 10
     init = 'fdd-divide-mwkr'
-    steps = 1
+    steps = 100
     random.seed(3)
     np.random.seed(2)
 

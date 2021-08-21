@@ -369,8 +369,10 @@ if __name__ == "__main__":
     insts = np.load('./test_data/{}{}x{}.npy'.format(problem, j, m))
     gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(problem, j, m))
 
-    # random_makespan = random_policy_baselines(instances=insts, search_horizon=steps, dev=device)
-    # greedy_makespan = Greedy_baselines(instances=insts, search_horizon=steps, dev=device)
+    # random_makespan = random_policy_baselines(instances=insts, search_horizon=steps_limit, log_step=log_horizons, dev=device)
+    # gap = (random_makespan - gap_against) / gap_against
+    # greedy_makespan = Greedy_baselines(instances=insts, search_horizon=steps_limit, log_step=log_horizons, dev=device)
+    # gap = (greedy_makespan - gap_against) / gap_against
     bi_makespan = BestImprovement_baseline(instances=insts, search_horizon=steps_limit, log_step=log_horizons, dev=device)
     gap = (bi_makespan - gap_against) / gap_against
     print(gap.mean(axis=-1))

@@ -361,8 +361,8 @@ if __name__ == "__main__":
     h = 99
     b = 10
     init = 'fdd-divide-mwkr'
-    steps_limit = 500
-    log_horizons = [500, 1000, 2000, 5000]
+    steps_limit = 10
+    log_horizons = [2, 4, 6, 10]
     random.seed(3)
     np.random.seed(2)
 
@@ -371,7 +371,10 @@ if __name__ == "__main__":
 
     # random_makespan = random_policy_baselines(instances=insts, search_horizon=steps, dev=device)
     # greedy_makespan = Greedy_baselines(instances=insts, search_horizon=steps, dev=device)
-    bi_makespan = BestImprovement_baseline(instances=insts, search_horizon=steps_limit, dev=device)
-    gap = (bi_makespan - gap_against) / gap_against
-    print(gap.mean())
+    bi_makespan = BestImprovement_baseline(instances=insts, search_horizon=steps_limit, log_step=log_horizons, dev=device)
+    print(bi_makespan)
+    # gap = (bi_makespan - gap_against) / gap_against
+    gap = bi_makespan - gap_against
+    print(gap)
+    print(gap_against)
 

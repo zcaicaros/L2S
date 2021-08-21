@@ -344,7 +344,7 @@ if __name__ == "__main__":
     h = 99
     b = 10
     init = 'fdd-divide-mwkr'
-    steps = 100
+    steps = 2000
     random.seed(3)
     np.random.seed(2)
 

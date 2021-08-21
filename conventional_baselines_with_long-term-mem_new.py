@@ -291,17 +291,18 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
         Gs_for_find_move = [[] for _ in range(len(feasible_actions))]
         actions_for_find_move = [[] for _ in range(len(feasible_actions))]
         next_G_count = [len(fea_a) for fea_a in feasible_actions]
-        for i, (fea_a, G, ins) in enumerate(zip(feasible_actions, current_Gs, instances)):  # fea_a: e.g. [[1, 2], [6, 8], ...]
+        for i, (fea_a, G, t_l, ins) in enumerate(zip(feasible_actions, current_Gs, tabu_lst, instances)):  # fea_a: e.g. [[1, 2], [6, 8], ...]
             for a in fea_a:  # a: e.g. [1, 2]
                 if a != [0, 0]:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
                     actions_for_find_move[i].append(a)
-                    if len(tabu_lst[i]) == tabu_size:
-                        tabu_lst[i].pop(0)
-                        tabu_lst[i].append(a)
+                    t_l_cp = copy.deepcopy(t_l)
+                    if len(t_l_cp) == tabu_size:
+                        t_l_cp.pop(0)
+                        t_l_cp.append(a)
                     else:
-                        tabu_lst[i].append(a)
-                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), copy.deepcopy(tabu_lst[i])])
+                        t_l_cp.append(a)
+                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), t_l_cp])
                 else:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
                     actions_for_find_move[i].append(a)
@@ -361,8 +362,8 @@ if __name__ == "__main__":
     h = 99
     b = 10
     init = 'fdd-divide-mwkr'
-    steps_limit = 10
-    log_horizons = [4, 6, 8, 10]
+    steps_limit = 1000
+    log_horizons = [500, 1000]
     random.seed(3)
     np.random.seed(2)
 

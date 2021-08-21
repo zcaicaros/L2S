@@ -43,8 +43,8 @@ def main():
     # model config
     embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
     model_init_type = 'fdd-divide-mwkr'
-    model_j = 10
-    model_m = 10
+    model_j = 20
+    model_m = 15
     heads = 1
     drop_out = 0.
     training_episode_length = 500  # [64, 128, 256]

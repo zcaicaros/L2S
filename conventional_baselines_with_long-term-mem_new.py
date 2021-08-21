@@ -322,7 +322,12 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
                 current_Gs[i], tabu_lst[i] = copy.deepcopy(random.choice(batch_memory[i].mem))
             else:  # move
                 if actions_for_find_move[i][min_idx] != [0, 0]:
-                    current_Gs[i], tabu_lst[i] = copy.deepcopy(Gs_for_find_move[i][min_idx]), [copy.deepcopy(actions_for_find_move[i][min_idx][::-1])]
+                    current_Gs[i] = copy.deepcopy(Gs_for_find_move[i][min_idx])
+                    if len(tabu_lst[i]) == tabu_size:
+                        tabu_lst[i].pop(0)
+                        tabu_lst[i].append(copy.deepcopy(actions_for_find_move[i][min_idx][::-1]))
+                    else:
+                        tabu_lst[i].append(copy.deepcopy(actions_for_find_move[i][min_idx][::-1]))
                 else:
                     current_Gs[i], tabu_lst[i] = copy.deepcopy(Gs_for_find_move[i][min_idx]), [copy.deepcopy(tabu_lst[i])]
 

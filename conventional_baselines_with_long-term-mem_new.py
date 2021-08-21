@@ -293,9 +293,9 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
         next_G_count = [len(fea_a) for fea_a in feasible_actions]
         for i, (fea_a, G, t_l, ins) in enumerate(zip(feasible_actions, current_Gs, tabu_lst, instances)):  # fea_a: e.g. [[1, 2], [6, 8], ...]
             for a in fea_a:  # a: e.g. [1, 2]
+                actions_for_find_move[i].append(a)
                 if a != [0, 0]:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
-                    actions_for_find_move[i].append(a)
                     t_l_cp = copy.deepcopy(t_l)
                     if len(t_l_cp) == tabu_size:
                         t_l_cp.pop(0)
@@ -305,7 +305,6 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
                     batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), t_l_cp])
                 else:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
-                    actions_for_find_move[i].append(a)
         # batching all next G
         pyg_one_step_fwd = Batch.from_data_list([from_networkx(G) for i in range(len(feasible_actions)) for G in Gs_for_find_move[i]])
         # calculate dur for evaluator

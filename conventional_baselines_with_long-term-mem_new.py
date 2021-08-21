@@ -149,7 +149,7 @@ def feasible_action(G, tabu_list, instance):
         return [[0, 0]]
 
 
-def random_policy_baselines(instances, search_horizon, dev, init_type='fdd-divide-mwkr', low=1, high=99):
+def random_policy_baselines(instances, search_horizon, log_step, dev, init_type='fdd-divide-mwkr', low=1, high=99):
     """
     instances: np.array [batch_size, 2, j, m]
     search_horizon: int
@@ -167,6 +167,7 @@ def random_policy_baselines(instances, search_horizon, dev, init_type='fdd-divid
     pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
     _, _, make_span = eva.forward(pyg.edge_index.to(dev), duration=x.to(dev), n_j=j, n_m=m)
 
+    results = []
     incumbent_makespan = make_span
     while horizon < search_horizon:
         feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(Gs, tabu_lst, instances)]
@@ -191,10 +192,14 @@ def random_policy_baselines(instances, search_horizon, dev, init_type='fdd-divid
         incumbent_makespan = torch.where(make_span - incumbent_makespan < 0, make_span, incumbent_makespan)
         horizon += 1
 
-    return incumbent_makespan.cpu().numpy()
+        for log_t in log_step:
+            if horizon == log_t:
+                results.append(incumbent_makespan.cpu().numpy().reshape(-1))
+
+    return np.stack(results)
 
 
-def Greedy_baselines(instances, search_horizon, dev, init_type='fdd-divide-mwkr', low=1, high=99):
+def Greedy_baselines(instances, search_horizon, log_step, dev, init_type='fdd-divide-mwkr', low=1, high=99):
     """
     instances: np.array [batch_size, 2, j, m]
     search_horizon: int
@@ -212,6 +217,7 @@ def Greedy_baselines(instances, search_horizon, dev, init_type='fdd-divide-mwkr'
     pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
     _, _, make_span = eva.forward(pyg.edge_index.to(dev), duration=x.to(dev), n_j=j, n_m=m)
 
+    results = []
     incumbent_makespan = make_span
     while horizon < search_horizon:
         feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(Gs, tabu_lst, instances)]
@@ -248,10 +254,14 @@ def Greedy_baselines(instances, search_horizon, dev, init_type='fdd-divide-mwkr'
         incumbent_makespan = torch.where(make_span - incumbent_makespan < 0, make_span, incumbent_makespan)
         horizon += 1
 
-    return incumbent_makespan.cpu().numpy()
+        for log_t in log_step:
+            if horizon == log_t:
+                results.append(incumbent_makespan.cpu().numpy().reshape(-1))
+
+    return np.stack(results)
 
 
-def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divide-mwkr', low=1, high=99):
+def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type='fdd-divide-mwkr', low=1, high=99):
     """
     instances: np.array [batch_size, 2, j, m]
     search_horizon: int
@@ -270,6 +280,7 @@ def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divi
     current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
     _, _, make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
 
+    results = []
     incumbent_makespan = make_span
     # print(incumbent_makespan.squeeze())
     while horizon < search_horizon:
@@ -285,10 +296,15 @@ def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divi
                 if a != [0, 0]:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
                     actions_for_find_move[i].append(a)
-                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), [copy.deepcopy(a[::-1])]])
+                    if len(tabu_lst[i]) == tabu_size:
+                        tabu_lst[i].pop(0)
+                        tabu_lst[i].append(a)
+                    else:
+                        tabu_lst[i].append(a)
+                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), copy.deepcopy(tabu_lst[i])])
                 else:
-                    # batch_memory[i].add_ele([copy.deepcopy(G), copy.deepcopy(tabu_lst[i])])
-                    pass
+                    Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
+                    actions_for_find_move[i].append(a)
         # batching all next G
         pyg_one_step_fwd = Batch.from_data_list([from_networkx(G) for i in range(len(feasible_actions)) for G in Gs_for_find_move[i]])
         # calculate dur for evaluator
@@ -305,17 +321,21 @@ def BestImprovement_baseline(instances, search_horizon, dev, init_type='fdd-divi
             if flag:  # random restart from long-term memory
                 current_Gs[i], tabu_lst[i] = copy.deepcopy(random.choice(batch_memory[i].mem))
             else:  # move
-                current_Gs[i], tabu_lst[i] = copy.deepcopy(Gs_for_find_move[i][min_idx]), [copy.deepcopy(actions_for_find_move[i][min_idx][::-1])]
+                if actions_for_find_move[i][min_idx] != [0, 0]:
+                    current_Gs[i], tabu_lst[i] = copy.deepcopy(Gs_for_find_move[i][min_idx]), [copy.deepcopy(actions_for_find_move[i][min_idx][::-1])]
+                else:
+                    current_Gs[i], tabu_lst[i] = copy.deepcopy(Gs_for_find_move[i][min_idx]), [copy.deepcopy(tabu_lst[i])]
 
         current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
         _, _, make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
         incumbent_makespan = torch.where(make_span - incumbent_makespan < 0, make_span, incumbent_makespan)
         horizon += 1
 
-        # print(incumbent_makespan.squeeze())
+        for log_t in log_step:
+            if horizon == log_t:
+                results.append(incumbent_makespan.cpu().numpy().reshape(-1))
 
-
-    return incumbent_makespan.cpu().numpy().reshape(-1)
+    return np.stack(results)
 
 
 

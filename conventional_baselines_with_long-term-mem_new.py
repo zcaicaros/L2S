@@ -336,7 +336,7 @@ if __name__ == "__main__":
     h = 99
     b = 10
     init = 'fdd-divide-mwkr'
-    steps_limit = 100
+    steps_limit = 500
     log_horizons = [500, 1000, 2000, 5000]
     random.seed(3)
     np.random.seed(2)

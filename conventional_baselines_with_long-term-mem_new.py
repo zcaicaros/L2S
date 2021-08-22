@@ -528,7 +528,7 @@ def main():
                                                    init_type=init,
                                                    low=l,
                                                    high=h)
-                gap_greedy_policy = ((random_makespan - gap_against) / gap_against).mean(axis=-1)
+                gap_greedy_policy = ((greedy_makespan - gap_against) / gap_against).mean(axis=-1)
                 best_improvement_makespan = BestImprovement_baseline(instances=testing_instances,
                                                                      search_horizon=cap_horizon,
                                                                      log_step=transit,
@@ -536,7 +536,7 @@ def main():
                                                                      init_type=init,
                                                                      low=l,
                                                                      high=h)
-                gap_best_improvement_policy = ((random_makespan - gap_against) / gap_against).mean(axis=-1)
+                gap_best_improvement_policy = ((best_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
                 first_improvement_makespan = BestImprovement_baseline(instances=testing_instances,
                                                                       search_horizon=cap_horizon,
                                                                       log_step=transit,
@@ -544,7 +544,7 @@ def main():
                                                                       init_type=init,
                                                                       low=l,
                                                                       high=h)
-                gap_first_improvement_policy = ((random_makespan - gap_against) / gap_against).mean(axis=-1)
+                gap_first_improvement_policy = ((first_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
 
 
 

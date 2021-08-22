@@ -461,7 +461,7 @@ def main():
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
+    testing_type = ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
     # syn_problem_j = [15]
     # syn_problem_m = [15]
     syn_problem_j = [10, 15, 15, 20, 20]  # [10, 15, 20, 30, 50, 100]
@@ -482,10 +482,8 @@ def main():
     la_problem_m = [5, 5, 5, 10, 10, 10, 10, 15]
 
     # MDP config
-    cap_horizon = 10
-    transit = [4, 6, 8, 10]  # [500, 1000, 2000]
-    result_type = 'incumbent'  # 'current', 'incumbent'
-    fea_norm_const = 1000
+    cap_horizon = 5000
+    transit = [500, 1000, 2000, 5000]  # [500, 1000, 2000, 5000]
 
     for test_t in testing_type:  # select benchmark
         if test_t == 'syn':

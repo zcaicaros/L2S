@@ -288,7 +288,7 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
     eva = Evaluator()
     tabu_size = 1
     tabu_lst = [[] for _ in range(instances.shape[0])]
-    batch_memory = [LongTermMem(mem_size=500) for _ in range(instances.shape[0])]
+    batch_memory = [LongTermMem(mem_size=200) for _ in range(instances.shape[0])]
 
     dur_for_move = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
 
@@ -332,7 +332,7 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
         make_span_for_find_moves = make_span_for_find_moves.cpu().numpy()
         min_make_span_idx_for_find_moves = [np.argmin(make_span_for_find_moves[start:end]) for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))]
         min_make_span_for_find_moves = [ms[idx][0] for ms, idx in zip([make_span_for_find_moves[start:end] for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))], min_make_span_idx_for_find_moves)]
-        flag_need_restart = (incumbent_makespan < torch.tensor(min_make_span_for_find_moves).reshape(-1, 1)).squeeze().cpu().numpy()
+        flag_need_restart = (incumbent_makespan < torch.tensor(min_make_span_for_find_moves, device=incumbent_makespan.device).reshape(-1, 1)).squeeze().cpu().numpy()
         for i, (flag, min_idx) in enumerate(zip(flag_need_restart, min_make_span_idx_for_find_moves)):
             if flag:  # random restart from long-term memory
                 current_Gs[i], tabu_lst[i] = copy.deepcopy(random.choice(batch_memory[i].mem))
@@ -375,7 +375,7 @@ def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_typ
     eva = Evaluator()
     tabu_size = 1
     tabu_lst = [[] for _ in range(instances.shape[0])]
-    batch_memory = [LongTermMem(mem_size=500) for _ in range(instances.shape[0])]
+    batch_memory = [LongTermMem(mem_size=200) for _ in range(instances.shape[0])]
 
     dur_for_move = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
 
@@ -461,7 +461,7 @@ def main():
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
+    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
     # syn_problem_j = [15]
     # syn_problem_m = [15]
     syn_problem_j = [10, 15, 15, 20, 20]  # [10, 15, 20, 30, 50, 100]
@@ -536,10 +536,10 @@ def main():
                 print('Random policy gap for {} testing steps are: {}'.format(transit, gap_random_policy))
                 print('Random policy time for {} testing steps are: {}'.format(transit, random_time))'''
 
-                greedy_makespan, greedy_time = Greedy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
+                '''greedy_makespan, greedy_time = Greedy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_greedy_policy = ((greedy_makespan - gap_against) / gap_against).mean(axis=-1)
                 print('Greedy policy gap for {} testing steps are: {}'.format(transit, gap_greedy_policy))
-                print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time))
+                print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time))'''
 
                 best_improvement_makespan, best_improvement_time = BestImprovement_baseline(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_best_improvement_policy = ((best_improvement_makespan - gap_against) / gap_against).mean(axis=-1)

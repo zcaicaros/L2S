@@ -156,6 +156,10 @@ def random_policy_baselines(instances, search_horizon, log_step, dev, init_type=
     instances: np.array [batch_size, 2, j, m]
     search_horizon: int
     """
+
+    time_start = time.time()
+    time_log = []
+
     j, m = instances[0][0].shape
     n_op = j * m
     horizon = 0
@@ -196,9 +200,10 @@ def random_policy_baselines(instances, search_horizon, log_step, dev, init_type=
 
         for log_t in log_step:
             if horizon == log_t:
+                time_log.append((time.time() - time_start)/instances.shape[0])
                 results.append(incumbent_makespan.cpu().numpy().reshape(-1))
 
-    return np.stack(results)
+    return np.stack(results), np.array(time_log)
 
 
 def Greedy_baselines(instances, search_horizon, log_step, dev, init_type='fdd-divide-mwkr', low=1, high=99):
@@ -206,6 +211,10 @@ def Greedy_baselines(instances, search_horizon, log_step, dev, init_type='fdd-di
     instances: np.array [batch_size, 2, j, m]
     search_horizon: int
     """
+
+    time_start = time.time()
+    time_log = []
+
     j, m = instances[0][0].shape
     n_op = j * m
     horizon = 0
@@ -259,8 +268,9 @@ def Greedy_baselines(instances, search_horizon, log_step, dev, init_type='fdd-di
         for log_t in log_step:
             if horizon == log_t:
                 results.append(incumbent_makespan.cpu().numpy().reshape(-1))
+                time_log.append((time.time() - time_start) / instances.shape[0])
 
-    return np.stack(results)
+    return np.stack(results), np.array(time_log)
 
 
 def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type='fdd-divide-mwkr', low=1, high=99):
@@ -268,6 +278,10 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
     instances: np.array [batch_size, 2, j, m]
     search_horizon: int
     """
+
+    time_start = time.time()
+    time_log = []
+
     j, m = instances[0][0].shape
     n_op = j * m
     horizon = 0
@@ -341,8 +355,9 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
         for log_t in log_step:
             if horizon == log_t:
                 results.append(incumbent_makespan.cpu().numpy().reshape(-1))
+                time_log.append((time.time() - time_start) / instances.shape[0])
 
-    return np.stack(results)
+    return np.stack(results), np.array(time_log)
 
 
 def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_type='fdd-divide-mwkr', low=1, high=99):
@@ -350,6 +365,10 @@ def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_typ
     instances: np.array [batch_size, 2, j, m]
     search_horizon: int
     """
+
+    time_start = time.time()
+    time_log = []
+
     j, m = instances[0][0].shape
     n_op = j * m
     horizon = 0
@@ -426,8 +445,9 @@ def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_typ
         for log_t in log_step:
             if horizon == log_t:
                 results.append(incumbent_makespan)
+                time_log.append((time.time() - time_start) / instances.shape[0])
 
-    return np.stack(results)
+    return np.stack(results), np.array(time_log)
 
 
 def main():
@@ -441,7 +461,7 @@ def main():
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
+    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
     # syn_problem_j = [15]
     # syn_problem_m = [15]
     syn_problem_j = [10, 15, 15, 20, 20]  # [10, 15, 20, 30, 50, 100]
@@ -462,8 +482,8 @@ def main():
     la_problem_m = [5, 5, 5, 10, 10, 10, 10, 15]
 
     # MDP config
-    cap_horizon = 5000
-    transit = [500, 1000, 2000, 5000]  # [500, 1000, 2000]
+    cap_horizon = 10
+    transit = [4, 6, 8, 10]  # [500, 1000, 2000]
     result_type = 'incumbent'  # 'current', 'incumbent'
     fea_norm_const = 1000
 
@@ -513,38 +533,25 @@ def main():
                     np.save('./test_data/syn{}x{}_result.npy'.format(p_j, p_m), gap_against)
 
             for init in init_type:
-                random_makespan = random_policy_baselines(instances=testing_instances,
-                                                          search_horizon=cap_horizon,
-                                                          log_step=transit,
-                                                          dev=dev,
-                                                          init_type=init,
-                                                          low=l,
-                                                          high=h)
+                random_makespan, random_time = random_policy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_random_policy = ((random_makespan - gap_against) / gap_against).mean(axis=-1)
-                greedy_makespan = Greedy_baselines(instances=testing_instances,
-                                                   search_horizon=cap_horizon,
-                                                   log_step=transit,
-                                                   dev=dev,
-                                                   init_type=init,
-                                                   low=l,
-                                                   high=h)
+                print('Random policy gap for {} testing steps are: {}'.format(transit, gap_random_policy))
+                print('Random policy time for {} testing steps are: {}'.format(transit, random_time))
+
+                greedy_makespan, greedy_time = Greedy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_greedy_policy = ((greedy_makespan - gap_against) / gap_against).mean(axis=-1)
-                best_improvement_makespan = BestImprovement_baseline(instances=testing_instances,
-                                                                     search_horizon=cap_horizon,
-                                                                     log_step=transit,
-                                                                     dev=dev,
-                                                                     init_type=init,
-                                                                     low=l,
-                                                                     high=h)
+                print('Greedy policy gap for {} testing steps are: {}'.format(transit, gap_greedy_policy))
+                print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time))
+
+                best_improvement_makespan, best_improvement_time = BestImprovement_baseline(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_best_improvement_policy = ((best_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
-                first_improvement_makespan = BestImprovement_baseline(instances=testing_instances,
-                                                                      search_horizon=cap_horizon,
-                                                                      log_step=transit,
-                                                                      dev=dev,
-                                                                      init_type=init,
-                                                                      low=l,
-                                                                      high=h)
+                print('Best-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_best_improvement_policy))
+                print('Best-Improvement policy time for {} testing steps are: {}'.format(transit, best_improvement_time))
+
+                first_improvement_makespan, first_improvement_time = BestImprovement_baseline(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_first_improvement_policy = ((first_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
+                print('First-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_first_improvement_policy))
+                print('First-Improvement policy time for {} testing steps are: {}'.format(transit, first_improvement_time))
 
 
 

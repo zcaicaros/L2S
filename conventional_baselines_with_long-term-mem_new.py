@@ -1,4 +1,5 @@
 from env.env_batch import JsspN5
+import time
 import torch
 import copy
 import random
@@ -8,6 +9,7 @@ import matplotlib.pyplot as plt
 from env.message_passing_evl import Evaluator
 from torch_geometric.utils import from_networkx
 from torch_geometric.data.batch import Batch
+from ortools_solver import MinimalJobshopSat
 
 
 class LongTermMem:
@@ -278,10 +280,10 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
 
     current_Gs = get_initial_sols(instances=instances, low=low, high=high, init_type=init_type, dev=dev)
     current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
-    _, _, make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
+    _, _, init_make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
 
     results = []
-    incumbent_makespan = make_span
+    incumbent_makespan = init_make_span
     # print(incumbent_makespan.squeeze())
     while horizon < search_horizon:
         feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(current_Gs, tabu_lst, instances)]
@@ -312,12 +314,12 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
         dur_for_find_move = np.repeat(dur_for_find_move, next_G_count, axis=0).reshape(-1, 1)
         dur_for_find_move = torch.from_numpy(dur_for_find_move)
         # calculate make_span for all next G of all instances
-        _, _, make_span = eva.forward(pyg_one_step_fwd.edge_index.to(dev), duration=dur_for_find_move.to(dev), n_j=j, n_m=m)
-        make_span = make_span.cpu().numpy()
-        min_make_span_idx = [np.argmin(make_span[start:end]) for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))]
-        min_make_span = [ms[idx][0] for ms, idx in zip([make_span[start:end] for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))], min_make_span_idx)]
-        flag_need_restart = (incumbent_makespan < torch.tensor(min_make_span).reshape(-1, 1)).squeeze().cpu().numpy()
-        for i, (flag, min_idx) in enumerate(zip(flag_need_restart, min_make_span_idx)):
+        _, _, make_span_for_find_moves = eva.forward(pyg_one_step_fwd.edge_index.to(dev), duration=dur_for_find_move.to(dev), n_j=j, n_m=m)
+        make_span_for_find_moves = make_span_for_find_moves.cpu().numpy()
+        min_make_span_idx_for_find_moves = [np.argmin(make_span_for_find_moves[start:end]) for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))]
+        min_make_span_for_find_moves = [ms[idx][0] for ms, idx in zip([make_span_for_find_moves[start:end] for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))], min_make_span_idx_for_find_moves)]
+        flag_need_restart = (incumbent_makespan < torch.tensor(min_make_span_for_find_moves).reshape(-1, 1)).squeeze().cpu().numpy()
+        for i, (flag, min_idx) in enumerate(zip(flag_need_restart, min_make_span_idx_for_find_moves)):
             if flag:  # random restart from long-term memory
                 current_Gs[i], tabu_lst[i] = copy.deepcopy(random.choice(batch_memory[i].mem))
             else:  # move
@@ -343,37 +345,211 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
     return np.stack(results)
 
 
+def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_type='fdd-divide-mwkr', low=1, high=99):
+    """
+    instances: np.array [batch_size, 2, j, m]
+    search_horizon: int
+    """
+    j, m = instances[0][0].shape
+    n_op = j * m
+    horizon = 0
+    eva = Evaluator()
+    tabu_size = 1
+    tabu_lst = [[] for _ in range(instances.shape[0])]
+    batch_memory = [LongTermMem(mem_size=500) for _ in range(instances.shape[0])]
+
+    dur_for_move = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
+
+    current_Gs = get_initial_sols(instances=instances, low=low, high=high, init_type=init_type, dev=dev)
+    current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
+    _, _, init_make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
+
+    results = []
+    incumbent_makespan = init_make_span.cpu().numpy().reshape(-1)
+    # print(incumbent_makespan.squeeze())
+    while horizon < search_horizon:
+        feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(current_Gs, tabu_lst, instances)]
+
+        ## start to find move for all instances...
+        # calculate next G of all actions for all instances
+        Gs_for_find_move = [[] for _ in range(len(feasible_actions))]
+        actions_for_find_move = [[] for _ in range(len(feasible_actions))]
+        next_G_count = [len(fea_a) for fea_a in feasible_actions]
+        for i, (fea_a, G, t_l, ins) in enumerate(zip(feasible_actions, current_Gs, tabu_lst, instances)):  # fea_a: e.g. [[1, 2], [6, 8], ...]
+            for a in fea_a:  # a: e.g. [1, 2]
+                actions_for_find_move[i].append(a)
+                if a != [0, 0]:
+                    Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
+                    t_l_cp = copy.deepcopy(t_l)
+                    if len(t_l_cp) == tabu_size:
+                        t_l_cp.pop(0)
+                        t_l_cp.append(a)
+                    else:
+                        t_l_cp.append(a)
+                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), t_l_cp])
+                else:
+                    Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
+        # batching all next G
+        pyg_one_step_fwd = Batch.from_data_list([from_networkx(G) for i in range(len(feasible_actions)) for G in Gs_for_find_move[i]])
+        # calculate dur for evaluator
+        dur_for_find_move = np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0)
+        dur_for_find_move = np.repeat(dur_for_find_move, next_G_count, axis=0).reshape(-1, 1)
+        dur_for_find_move = torch.from_numpy(dur_for_find_move)
+        # calculate make_span for all next G of all instances
+        _, _, make_span_for_find_moves = eva.forward(pyg_one_step_fwd.edge_index.to(dev), duration=dur_for_find_move.to(dev), n_j=j, n_m=m)
+        make_span_for_find_moves = make_span_for_find_moves.cpu().numpy().reshape(-1)
+        splited_make_span_for_find_moves = [make_span_for_find_moves[start:end] for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))]
+        first_smaller_idx = [np.argmax(ms < target) for ms, target in zip(splited_make_span_for_find_moves, incumbent_makespan)]
+        first_smaller_make_span = [ms[idx] for ms, idx in zip(splited_make_span_for_find_moves, first_smaller_idx)]
+        flag_need_restart = incumbent_makespan < first_smaller_make_span
+
+        for i, (flag, fst_smaller_idx) in enumerate(zip(flag_need_restart, first_smaller_idx)):
+            if flag:  # random restart from long-term memory
+                current_Gs[i], tabu_lst[i] = copy.deepcopy(random.choice(batch_memory[i].mem))
+            else:  # move
+                if actions_for_find_move[i][fst_smaller_idx] != [0, 0]:
+                    current_Gs[i] = copy.deepcopy(Gs_for_find_move[i][fst_smaller_idx])
+                    if len(tabu_lst[i]) == tabu_size:
+                        tabu_lst[i].pop(0)
+                        tabu_lst[i].append(copy.deepcopy(actions_for_find_move[i][fst_smaller_idx][::-1]))
+                    else:
+                        tabu_lst[i].append(copy.deepcopy(actions_for_find_move[i][fst_smaller_idx][::-1]))
+                else:
+                    current_Gs[i], tabu_lst[i] = copy.deepcopy(Gs_for_find_move[i][fst_smaller_idx]), [copy.deepcopy(tabu_lst[i])]
+
+        current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
+        _, _, make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
+        make_span = make_span.cpu().numpy().reshape(-1)
+        incumbent_makespan = np.where(make_span - incumbent_makespan < 0, make_span, incumbent_makespan)
+        horizon += 1
+
+        for log_t in log_step:
+            if horizon == log_t:
+                results.append(incumbent_makespan)
+
+    return np.stack(results)
 
 
+def main():
+    seed = 1
+    random.seed(seed)
+    np.random.seed(seed)
+
+    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    # benchmark config
+    l = 1
+    h = 99
+    init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
+    testing_type = ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
+    # syn_problem_j = [15]
+    # syn_problem_m = [15]
+    syn_problem_j = [10, 15, 15, 20, 20]  # [10, 15, 20, 30, 50, 100]
+    syn_problem_m = [10, 10, 15, 10, 15]  # [10, 15, 20, 20, 20, 20]
+    # tai_problem_j = [15]
+    # tai_problem_m = [15]
+    tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
+    tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
+    abz_problem_j = [10, 20]
+    abz_problem_m = [10, 15]
+    orb_problem_j = [10]
+    orb_problem_m = [10]
+    yn_problem_j = [20]
+    yn_problem_m = [20]
+    swv_problem_j = [20, 20, 50]
+    swv_problem_m = [10, 15, 10]
+    la_problem_j = [10, 15, 20, 10, 15, 20, 30, 15]
+    la_problem_m = [5, 5, 5, 10, 10, 10, 10, 15]
+
+    # MDP config
+    cap_horizon = 5000
+    transit = [500, 1000, 2000, 5000]  # [500, 1000, 2000]
+    result_type = 'incumbent'  # 'current', 'incumbent'
+    fea_norm_const = 1000
+
+    for test_t in testing_type:  # select benchmark
+        if test_t == 'syn':
+            problem_j, problem_m = syn_problem_j, syn_problem_m
+        elif test_t == 'tai':
+            problem_j, problem_m = tai_problem_j, tai_problem_m
+        elif test_t == 'abz':
+            problem_j, problem_m = abz_problem_j, abz_problem_m
+        elif test_t == 'orb':
+            problem_j, problem_m = orb_problem_j, orb_problem_m
+        elif test_t == 'yn':
+            problem_j, problem_m = yn_problem_j, yn_problem_m
+        elif test_t == 'swv':
+            problem_j, problem_m = swv_problem_j, swv_problem_m
+        elif test_t == 'la':
+            problem_j, problem_m = la_problem_j, la_problem_m
+        else:
+            raise Exception('Problem type must be in testing_type = ["syn", "tai", "abz", "orb", "yn", "swv", "la"].')
+
+        for p_j, p_m in zip(problem_j, problem_m):  # select problem size
+
+            testing_instances = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))
+            print('\nStart testing {}{}x{}...\n'.format(test_t, p_j, p_m))
+
+            # read saved gap_against or use ortools to solve it.
+            if test_t != 'syn':
+                gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
+            else:
+                # ortools solver
+                from pathlib import Path
+                ortools_path = Path('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
+                if ortools_path.is_file():
+                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))[:, 1]
+                else:
+                    gap_against = []
+                    print('Starting Ortools...')
+                    for i, data in enumerate(testing_instances):
+                        times_rearrange = np.expand_dims(data[0], axis=-1)
+                        machines_rearrange = np.expand_dims(data[1], axis=-1)
+                        data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
+                        result = MinimalJobshopSat(data.tolist())
+                        print('Instance-' + str(i + 1) + ' Ortools makespan:', result)
+                        gap_against.append(result[1])
+                    gap_against = np.array(gap_against)
+                    np.save('./test_data/syn{}x{}_result.npy'.format(p_j, p_m), gap_against)
+
+            for init in init_type:
+                random_makespan = random_policy_baselines(instances=testing_instances,
+                                                          search_horizon=cap_horizon,
+                                                          log_step=transit,
+                                                          dev=dev,
+                                                          init_type=init,
+                                                          low=l,
+                                                          high=h)
+                gap_random_policy = ((random_makespan - gap_against) / gap_against).mean(axis=-1)
+                greedy_makespan = Greedy_baselines(instances=testing_instances,
+                                                   search_horizon=cap_horizon,
+                                                   log_step=transit,
+                                                   dev=dev,
+                                                   init_type=init,
+                                                   low=l,
+                                                   high=h)
+                gap_greedy_policy = ((random_makespan - gap_against) / gap_against).mean(axis=-1)
+                best_improvement_makespan = BestImprovement_baseline(instances=testing_instances,
+                                                                     search_horizon=cap_horizon,
+                                                                     log_step=transit,
+                                                                     dev=dev,
+                                                                     init_type=init,
+                                                                     low=l,
+                                                                     high=h)
+                gap_best_improvement_policy = ((random_makespan - gap_against) / gap_against).mean(axis=-1)
+                first_improvement_makespan = BestImprovement_baseline(instances=testing_instances,
+                                                                      search_horizon=cap_horizon,
+                                                                      log_step=transit,
+                                                                      dev=dev,
+                                                                      init_type=init,
+                                                                      low=l,
+                                                                      high=h)
+                gap_first_improvement_policy = ((random_makespan - gap_against) / gap_against).mean(axis=-1)
 
 
 
 
 
 if __name__ == "__main__":
-    from env.generateJSP import uni_instance_gen
 
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    problem = 'tai'
-    j = 15
-    m = 15
-    l = 1
-    h = 99
-    b = 10
-    init = 'fdd-divide-mwkr'
-    steps_limit = 5000
-    log_horizons = [500, 1000, 2000, 5000]
-    random.seed(3)
-    np.random.seed(2)
-
-    insts = np.load('./test_data/{}{}x{}.npy'.format(problem, j, m))
-    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(problem, j, m))
-
-    # random_makespan = random_policy_baselines(instances=insts, search_horizon=steps_limit, log_step=log_horizons, dev=device)
-    # gap = (random_makespan - gap_against) / gap_against
-    # greedy_makespan = Greedy_baselines(instances=insts, search_horizon=steps_limit, log_step=log_horizons, dev=device)
-    # gap = (greedy_makespan - gap_against) / gap_against
-    bi_makespan = BestImprovement_baseline(instances=insts, search_horizon=steps_limit, log_step=log_horizons, dev=device)
-    gap = (bi_makespan - gap_against) / gap_against
-    print(gap.mean(axis=-1))
-
+    main()

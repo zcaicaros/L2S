@@ -531,10 +531,10 @@ def main():
                     np.save('./test_data/syn{}x{}_result.npy'.format(p_j, p_m), gap_against)
 
             for init in init_type:
-                random_makespan, random_time = random_policy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
+                '''random_makespan, random_time = random_policy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_random_policy = ((random_makespan - gap_against) / gap_against).mean(axis=-1)
                 print('Random policy gap for {} testing steps are: {}'.format(transit, gap_random_policy))
-                print('Random policy time for {} testing steps are: {}'.format(transit, random_time))
+                print('Random policy time for {} testing steps are: {}'.format(transit, random_time))'''
 
                 greedy_makespan, greedy_time = Greedy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_greedy_policy = ((greedy_makespan - gap_against) / gap_against).mean(axis=-1)

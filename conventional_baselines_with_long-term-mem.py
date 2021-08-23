@@ -288,7 +288,7 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
     eva = Evaluator()
     tabu_size = 1
     tabu_lst = [[] for _ in range(instances.shape[0])]
-    batch_memory = [LongTermMem(mem_size=200) for _ in range(instances.shape[0])]
+    batch_memory = [LongTermMem(mem_size=500) for _ in range(instances.shape[0])]
 
     dur_for_move = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
 
@@ -375,7 +375,7 @@ def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_typ
     eva = Evaluator()
     tabu_size = 1
     tabu_lst = [[] for _ in range(instances.shape[0])]
-    batch_memory = [LongTermMem(mem_size=200) for _ in range(instances.shape[0])]
+    batch_memory = [LongTermMem(mem_size=500) for _ in range(instances.shape[0])]
 
     dur_for_move = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
 
@@ -461,7 +461,7 @@ def main():
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
+    testing_type = ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
     # syn_problem_j = [15]
     # syn_problem_m = [15]
     syn_problem_j = [10, 15, 15, 20, 20]  # [10, 15, 20, 30, 50, 100]

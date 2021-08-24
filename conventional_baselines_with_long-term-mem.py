@@ -534,10 +534,11 @@ def main():
                 print('Random policy gap for {} testing steps are: {}'.format(transit, gap_random_policy))
                 print('Random policy time for {} testing steps are: {}'.format(transit, random_time))'''
 
-                '''greedy_makespan, greedy_time = Greedy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
+                greedy_makespan, greedy_time = Greedy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_greedy_policy = ((greedy_makespan - gap_against) / gap_against).mean(axis=-1)
                 print('Greedy policy gap for {} testing steps are: {}'.format(transit, gap_greedy_policy))
-                print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time))'''
+                print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time))
+                
                 best_improvement_makespan, best_improvement_time = BestImprovement_baseline(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_best_improvement_policy = ((best_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
                 print('Best-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_best_improvement_policy))

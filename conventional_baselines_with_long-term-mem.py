@@ -461,7 +461,7 @@ def main():
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
+    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'syn']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
     syn_problem_j = [10, 15]  # [10, 15, 15, 20, 20]
     syn_problem_m = [10, 15]  # [10, 10, 15, 10, 15]
     tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]  # [15, 20, 20, 30, 30, 50, 50, 100]

@@ -1,4 +1,3 @@
-import time
 import collections
 # Import Python wrapper for or-tools CP-SAT solver.
 from ortools.sat.python import cp_model
@@ -76,6 +75,7 @@ def MinimalJobshopSat(data):
 if __name__ == '__main__':
 
     import numpy as np
+    import time
 
     l = 1
     h = 99

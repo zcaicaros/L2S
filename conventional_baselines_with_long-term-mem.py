@@ -526,6 +526,8 @@ def main():
                     gap_against = np.array(gap_against)
                     np.save('./test_data/syn{}x{}_result.npy'.format(p_j, p_m), gap_against)
 
+            gap_against = gap_against[:, 1]
+
             for init in init_type:
                 '''random_makespan, random_time = random_policy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_random_policy = ((random_makespan - gap_against) / gap_against).mean(axis=-1)
@@ -536,7 +538,7 @@ def main():
                 gap_greedy_policy = ((greedy_makespan - gap_against) / gap_against).mean(axis=-1)
                 print('Greedy policy gap for {} testing steps are: {}'.format(transit, gap_greedy_policy))
                 print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time))'''
-
+                print(gap_against.shape)
                 best_improvement_makespan, best_improvement_time = BestImprovement_baseline(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_best_improvement_policy = ((best_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
                 print('Best-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_best_improvement_policy))

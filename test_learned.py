@@ -104,7 +104,7 @@ def main():
                 from pathlib import Path
                 ortools_path = Path('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
                 if ortools_path.is_file():
-                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
+                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))[:, 1]
                 else:
                     gap_against = []
                     print('Starting Ortools...')
@@ -117,6 +117,7 @@ def main():
                         gap_against.append(result[1])
                     gap_against = np.array(gap_against)
                     np.save('./test_data/ortools_result_syn_test_data_{}x{}.npy'.format(p_j, p_m), gap_against)
+                    gap_against = gap_against[:, 1]
 
             env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin', fea_norm_const=fea_norm_const)
             torch.manual_seed(seed)

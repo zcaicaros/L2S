@@ -478,8 +478,8 @@ def main():
     la_problem_m = [5, 5, 5, 10, 10, 10, 10, 15]  # [5, 5, 5, 10, 10, 10, 10, 15]
 
     # MDP config
-    cap_horizon = 4  # 5000
-    transit = [1, 2, 3, 4]  # [500, 1000, 2000, 5000]
+    cap_horizon = 5000  # 5000
+    transit = [500, 1000, 2000, 5000]  # [500, 1000, 2000, 5000]
 
     for test_t in testing_type:  # select benchmark
         if test_t == 'syn':

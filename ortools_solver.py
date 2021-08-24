@@ -1,3 +1,4 @@
+import time
 import collections
 # Import Python wrapper for or-tools CP-SAT solver.
 from ortools.sat.python import cp_model
@@ -123,35 +124,48 @@ if __name__ == '__main__':
             if test_t != 'syn':
                 gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
                 results = []
+                time_log = []
                 for i, data in enumerate(inst):
+                    time_start = time.time()
                     times_rearrange = np.expand_dims(data[0], axis=-1)
                     machines_rearrange = np.expand_dims(data[1], axis=-1)
                     data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
                     result = MinimalJobshopSat(data.tolist())
                     print('Instance' + str(i + 1) + ' makespan:', result)
                     results.append(result)
+                    time_end = time.time()
+                    time_log.append(time_end - time_start)
                 results = np.array(results)
+                time_log = np.array(time_log)
                 ortools_obj = results[:, 1]
                 ortools_gap = (ortools_obj - gap_against)/gap_against
                 ortools_gap_mean = ortools_gap.mean()
                 np.save('./ortools_result/ortools_{}{}x{}_result.npy'.format(test_t, p_j, p_m), results)
+                np.save('./ortools_result/ortools_{}{}x{}_time.npy'.format(test_t, p_j, p_m), time_log.reshape(-1, 1))
                 print('Or-Tools mean gap:', ortools_gap_mean)
+                print('Or-Tools mean time:', time_log.mean())
+
             else:
                 # ortools solver
                 from pathlib import Path
-
                 ortools_path = Path('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
-                if ortools_path.is_file():
-                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
-                else:
-                    gap_against = []
+                if not ortools_path.is_file():
+                    results = []
+                    time_log = []
                     print('Starting Ortools...')
                     for i, data in enumerate(inst):
+                        time_start = time.time()
                         times_rearrange = np.expand_dims(data[0], axis=-1)
                         machines_rearrange = np.expand_dims(data[1], axis=-1)
                         data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
                         result = MinimalJobshopSat(data.tolist())
                         print('Instance-' + str(i + 1) + ' Ortools makespan:', result)
-                        gap_against.append(result[1])
-                    gap_against = np.array(gap_against)
-                    np.save('./test_data/syn{}x{}_result.npy'.format(p_j, p_m), gap_against)
+                        results.append(result[1])
+                        time_end = time.time()
+                        time_log.append(time_end - time_start)
+                    results = np.array(results)
+                    time_log = np.array(time_log)
+                    np.save('./ortools_result/ortools_{}{}x{}_result.npy'.format(test_t, p_j, p_m), results)
+                    np.save('./ortools_result/ortools_{}{}x{}_time.npy'.format(test_t, p_j, p_m), time_log.reshape(-1, 1))
+                    print('Or-Tools mean gap:', 0)
+                    print('Or-Tools mean time:', time_log.mean())

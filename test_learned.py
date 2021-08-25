@@ -45,7 +45,7 @@ def main():
     model_m = 15
     heads = 1
     drop_out = 0.
-    training_episode_length = 500  # [64, 128, 256]
+    training_episode_length = 500
     reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
     model_type = 'incumbent'  # 'incumbent', 'last-step'
     gamma = 1

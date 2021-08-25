@@ -30,12 +30,12 @@ episodes = 128000
 step_validation = 10
 
 # plot parameters
-total_plt_steps = 200
+total_plt_steps = 100
 show = True
-save = False
+save = True
 log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = (episodes // batch_size) // total_plt_steps
-plot_step_size_validation = (episodes // batch_size) // (total_plt_steps * 5)
+plot_step_size_validation = (episodes // batch_size) // (total_plt_steps * 10)
 save_file_type = '.pdf'
 
 
@@ -120,7 +120,7 @@ else:
     obj_incumbent2 = log2[:log2.shape[0] // plot_step_size_validation * plot_step_size_validation, 0].reshape(log2.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     obj_incumbent3 = log3[:log3.shape[0] // plot_step_size_validation * plot_step_size_validation, 0].reshape(log3.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plotting...
-    plt.xlabel('iteration(stride-{})'.format(plot_step_size_training))
+    plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation))
     plt.ylabel('make span')
     plt.grid()
     x = np.array([i + 1 for i in range(obj_incumbent1.shape[0])])
@@ -138,7 +138,7 @@ else:
     obj_last_step2 = log2[:log2.shape[0] // plot_step_size_validation * plot_step_size_validation, 1].reshape(log2.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     obj_last_step3 = log3[:log3.shape[0] // plot_step_size_validation * plot_step_size_validation, 1].reshape(log3.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plotting...
-    plt.xlabel('iteration(stride-{})'.format(plot_step_size_training))
+    plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation))
     plt.ylabel('make span')
     plt.grid()
     x = np.array([i + 1 for i in range(obj_last_step1.shape[0])])

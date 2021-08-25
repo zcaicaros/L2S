@@ -1,6 +1,116 @@
 import numpy as np
 
 
+problem, j, m = 'tai', 15, 15
+GNNRL_result = np.array([1389, 1519, 1457, 1465, 1352, 1481, 1554, 1488, 1556, 1501], dtype=float)
+ScheduleNet_result = np.array([1452, 1411, 1396, 1348, 1382, 1413, 1380, 1374, 1523, 1493], dtype=float)
+gap_against = np.load('../test_data/{}{}x{}_result.npy'.format(problem, j, m))
+gap_GNNRL = (GNNRL_result - gap_against)/gap_against
+gap_ScheduleNet = (ScheduleNet_result - gap_against)/gap_against
+print('GNNRL mean gap for {}{}x{}:'.format(problem, j, m), gap_GNNRL.mean())
+print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet.mean())
+print()
+
+problem, j, m = 'tai', 20, 15
+GNNRL_result = np.array([1626, 1668, 1715, 1642, 1672, 1700, 1678, 1684, 1900, 1752], dtype=float)
+ScheduleNet_result = np.array([1612, 1600, 1625, 1590, 1676, 1550, 1753, 1668, 1622, 1604], dtype=float)
+gap_against = np.load('../test_data/{}{}x{}_result.npy'.format(problem, j, m))
+gap_GNNRL = (GNNRL_result - gap_against)/gap_against
+gap_ScheduleNet = (ScheduleNet_result - gap_against)/gap_against
+print('GNNRL mean gap for {}{}x{}:'.format(problem, j, m), gap_GNNRL.mean())
+print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet.mean())
+print()
+
+problem, j, m = 'tai', 20, 20
+GNNRL_result = np.array([2199, 2049, 2006, 2020, 1981, 2057, 2187, 2054, 2210, 2140], dtype=float)
+ScheduleNet_result = np.array([1921, 1844, 1879, 1922, 1897, 1887, 2009, 1813, 1875, 1913], dtype=float)
+gap_against = np.load('../test_data/{}{}x{}_result.npy'.format(problem, j, m))
+gap_GNNRL = (GNNRL_result - gap_against)/gap_against
+gap_ScheduleNet = (ScheduleNet_result - gap_against)/gap_against
+print('GNNRL mean gap for {}{}x{}:'.format(problem, j, m), gap_GNNRL.mean())
+print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet.mean())
+print()
+
+problem, j, m = 'tai', 30, 15
+GNNRL_result = np.array([2251, 2378, 2316, 2319, 2333, 2210, 2201, 2151, 2138, 2007], dtype=float)
+ScheduleNet_result = np.array([2055, 2268, 2281, 2061, 2218, 2154, 2112, 1970, 2146, 2030], dtype=float)
+gap_against = np.load('../test_data/{}{}x{}_result.npy'.format(problem, j, m))
+gap_GNNRL = (GNNRL_result - gap_against)/gap_against
+gap_ScheduleNet = (ScheduleNet_result - gap_against)/gap_against
+print('GNNRL mean gap for {}{}x{}:'.format(problem, j, m), gap_GNNRL.mean())
+print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet.mean())
+print()
+
+problem, j, m = 'tai', 30, 20
+GNNRL_result = np.array([2654, 2579, 2737, 2772, 2435, 2681, 2428, 2440, 2446, 2530], dtype=float)
+ScheduleNet_result = np.array([2572, 2397, 2310, 2456, 2445, 2541, 2280, 2358, 2301, 2453], dtype=float)
+gap_against = np.load('../test_data/{}{}x{}_result.npy'.format(problem, j, m))
+gap_GNNRL = (GNNRL_result - gap_against)/gap_against
+gap_ScheduleNet = (ScheduleNet_result - gap_against)/gap_against
+print('GNNRL mean gap for {}{}x{}:'.format(problem, j, m), gap_GNNRL.mean())
+print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet.mean())
+print()
+
+problem, j, m = 'tai', 50, 15
+GNNRL_result = np.array([3145, 3157, 3103, 3278, 3142, 3258, 3230, 3469, 3108, 3256], dtype=float)
+ScheduleNet_result = np.array([3382, 3231, 3083, 3068, 3078, 3065, 3266, 3321, 3044, 3036], dtype=float)
+gap_against = np.load('../test_data/{}{}x{}_result.npy'.format(problem, j, m))
+gap_GNNRL = (GNNRL_result - gap_against)/gap_against
+gap_ScheduleNet = (ScheduleNet_result - gap_against)/gap_against
+print('GNNRL mean gap for {}{}x{}:'.format(problem, j, m), gap_GNNRL.mean())
+print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet.mean())
+print()
+
+problem, j, m = 'tai', 50, 20
+GNNRL_result = np.array([3425, 3626, 3110, 3329, 3339, 3340, 3371, 3265, 3798, 3919], dtype=float)
+ScheduleNet_result = np.array([3202, 3339, 3118, 2989, 3168, 3199, 3236, 3072, 3535, 3436], dtype=float)
+gap_against = np.load('../test_data/{}{}x{}_result.npy'.format(problem, j, m))
+gap_GNNRL = (GNNRL_result - gap_against)/gap_against
+gap_ScheduleNet = (ScheduleNet_result - gap_against)/gap_against
+print('GNNRL mean gap for {}{}x{}:'.format(problem, j, m), gap_GNNRL.mean())
+print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet.mean())
+print()
+
+problem, j, m = 'tai', 100, 20
+GNNRL_result = np.array([5962, 5522, 6335, 5827, 6042, 5707, 5737, 5979, 5799, 5718], dtype=float)
+ScheduleNet_result = np.array([5879, 5456, 6052, 5513, 5992, 5773, 5637, 5833, 5556, 5545], dtype=float)
+gap_against = np.load('../test_data/{}{}x{}_result.npy'.format(problem, j, m))
+gap_GNNRL = (GNNRL_result - gap_against)/gap_against
+gap_ScheduleNet = (ScheduleNet_result - gap_against)/gap_against
+print('GNNRL mean gap for {}{}x{}:'.format(problem, j, m), gap_GNNRL.mean())
+print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet.mean())
+print()
+
+problem, j, m = 'ft', 6, 6
+GNNRL_result = np.array([71], dtype=float)
+ScheduleNet_result = np.array([59], dtype=float)
+gap_against = np.load('../test_data/{}{}x{}_result.npy'.format(problem, j, m))
+gap_GNNRL = (GNNRL_result - gap_against)/gap_against
+gap_ScheduleNet = (ScheduleNet_result - gap_against)/gap_against
+print('GNNRL mean gap for {}{}x{}:'.format(problem, j, m), gap_GNNRL.mean())
+print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet.mean())
+print()
+
+problem, j, m = 'ft', 10, 10
+GNNRL_result = np.array([1142], dtype=float)
+ScheduleNet_result = np.array([1111], dtype=float)
+gap_against = np.load('../test_data/{}{}x{}_result.npy'.format(problem, j, m))
+gap_GNNRL = (GNNRL_result - gap_against)/gap_against
+gap_ScheduleNet = (ScheduleNet_result - gap_against)/gap_against
+print('GNNRL mean gap for {}{}x{}:'.format(problem, j, m), gap_GNNRL.mean())
+print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet.mean())
+print()
+
+problem, j, m = 'ft', 20, 5
+GNNRL_result = np.array([1338], dtype=float)
+ScheduleNet_result = np.array([1498], dtype=float)
+gap_against = np.load('../test_data/{}{}x{}_result.npy'.format(problem, j, m))
+gap_GNNRL = (GNNRL_result - gap_against)/gap_against
+gap_ScheduleNet = (ScheduleNet_result - gap_against)/gap_against
+print('GNNRL mean gap for {}{}x{}:'.format(problem, j, m), gap_GNNRL.mean())
+print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet.mean())
+print()
+
 problem, j, m = 'abz', 10, 10
 GNNRL_result = np.array([1353, 1043], dtype=float)
 ScheduleNet_result = np.array([1336, 981], dtype=float)

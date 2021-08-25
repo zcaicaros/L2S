@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 
 # env parameters
-j = 10
-m = 10
+j = 20
+m = 15
 l = 1
 h = 99
 init_type = 'fdd-divide-mwkr'
@@ -16,7 +16,7 @@ hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
 embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
-heads = 2
+heads = 1
 drop_out = 0.
 
 # training parameters
@@ -28,10 +28,11 @@ episodes = 256000
 step_validation = 10
 
 # plot parameters
+total_plt_steps = 200
 show = True
 save = False
 log_type = 'training'  # 'training', 'validation'
-plot_step_size_training = 10
+plot_step_size_training = (episodes // batch_size) // total_plt_steps
 plot_step_size_validation = 1
 save_file_type = '.png'
 

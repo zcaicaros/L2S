@@ -81,8 +81,8 @@ if __name__ == '__main__':
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
     testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'syn']
-    syn_problem_j = [10, 15, 15, 20, 20]  # [10, 15, 15, 20, 20]
-    syn_problem_m = [10, 10, 15, 10, 15]  # [10, 10, 15, 10, 15]
+    syn_problem_j = [10, 15, 15, 20, 20, 100, 200]  # [10, 15, 15, 20, 20, 100, 200]
+    syn_problem_m = [10, 10, 15, 10, 15, 20, 50]  # [10, 10, 15, 10, 15, 20, 50]
     tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]  # [15, 20, 20, 30, 30, 50, 50, 100]
     tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]  # [15, 15, 20, 15, 20, 15, 20, 20]
     abz_problem_j = [10, 20]  # [10, 20]
@@ -127,28 +127,31 @@ if __name__ == '__main__':
 
             # read saved gap_against or use ortools to solve it.
             if test_t != 'syn':
-                gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
-                results = []
-                time_log = []
-                for i, data in enumerate(inst):
-                    time_start = time.time()
-                    times_rearrange = np.expand_dims(data[0], axis=-1)
-                    machines_rearrange = np.expand_dims(data[1], axis=-1)
-                    data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
-                    result = MinimalJobshopSat(data.tolist())
-                    print('Instance' + str(i + 1) + ' makespan:', result)
-                    results.append(result)
-                    time_end = time.time()
-                    time_log.append(time_end - time_start)
-                results = np.array(results)
-                time_log = np.array(time_log)
-                ortools_obj = results[:, 1]
-                ortools_gap = (ortools_obj - gap_against)/gap_against
-                ortools_gap_mean = ortools_gap.mean()
-                np.save('./ortools_result/ortools_{}{}x{}_result.npy'.format(test_t, p_j, p_m), results)
-                np.save('./ortools_result/ortools_{}{}x{}_time.npy'.format(test_t, p_j, p_m), time_log.reshape(-1, 1))
-                print('Or-Tools mean gap:', ortools_gap_mean)
-                print('Or-Tools mean time:', time_log.mean())
+                from pathlib import Path
+                ortools_path = Path('./ortools_result/ortools_{}{}x{}_result.npy'.format(test_t, p_j, p_m))
+                if not ortools_path.is_file():
+                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
+                    results = []
+                    time_log = []
+                    for i, data in enumerate(inst):
+                        time_start = time.time()
+                        times_rearrange = np.expand_dims(data[0], axis=-1)
+                        machines_rearrange = np.expand_dims(data[1], axis=-1)
+                        data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
+                        result = MinimalJobshopSat(data.tolist())
+                        print('Instance' + str(i + 1) + ' makespan:', result)
+                        results.append(result)
+                        time_end = time.time()
+                        time_log.append(time_end - time_start)
+                    results = np.array(results)
+                    time_log = np.array(time_log)
+                    ortools_obj = results[:, 1]
+                    ortools_gap = (ortools_obj - gap_against)/gap_against
+                    ortools_gap_mean = ortools_gap.mean()
+                    np.save('./ortools_result/ortools_{}{}x{}_result.npy'.format(test_t, p_j, p_m), results)
+                    np.save('./ortools_result/ortools_{}{}x{}_time.npy'.format(test_t, p_j, p_m), time_log.reshape(-1, 1))
+                    print('Or-Tools mean gap:', ortools_gap_mean)
+                    print('Or-Tools mean time:', time_log.mean())
 
             else:
                 # ortools solver

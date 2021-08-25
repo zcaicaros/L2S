@@ -36,7 +36,7 @@ show = True
 save = False
 log_type = 'validation'  # 'training', 'validation'
 plot_step_size_training = (episodes // batch_size) // total_plt_steps
-plot_step_size_validation = 1
+plot_step_size_validation = (episodes // batch_size) // (total_plt_steps * 5)
 save_file_type = '.png'
 
 
@@ -111,7 +111,8 @@ if log_type == 'training':
     plt.plot(x, obj3, color='tab:green', label='GIN + DGHAN')
     plt.tight_layout()
     plt.legend()
-    plt.savefig('./{}{}'.format('merged_training_log', save_file_type))
+    if save:
+        plt.savefig('./{}{}'.format('merged_training_log', save_file_type))
     plt.show()
 
 else:
@@ -128,7 +129,8 @@ else:
     plt.plot(x, obj_incumbent3, color='tab:green', label='GIN + DGHAN')
     plt.tight_layout()
     plt.legend()
-    plt.savefig('./{}{}'.format('merged_incumbent_validation_log', save_file_type))
+    if save:
+        plt.savefig('./{}{}'.format('merged_incumbent_validation_log', save_file_type))
     plt.show()
 
     obj_last_step1 = log1[:log1.shape[0] // plot_step_size_validation * plot_step_size_validation, 1].reshape(log1.shape[0] // plot_step_size_validation, -1).mean(axis=1)
@@ -144,7 +146,8 @@ else:
     plt.plot(x, obj_last_step3, color='tab:green', label='GIN + DGHAN')
     plt.tight_layout()
     plt.legend()
-    plt.savefig('./{}{}'.format('merged_last-step_validation_log', save_file_type))
+    if save:
+        plt.savefig('./{}{}'.format('merged_last-step_validation_log', save_file_type))
     plt.show()
 
 

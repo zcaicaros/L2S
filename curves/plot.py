@@ -28,12 +28,12 @@ episodes = 256000
 step_validation = 10
 
 # plot parameters
-total_plt_steps = 200
+total_plt_steps = 100
 show = True
 save = False
 log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = (episodes // batch_size) // total_plt_steps
-plot_step_size_validation = 1
+plot_step_size_validation = (episodes // batch_size) // (total_plt_steps * 10)
 save_file_type = '.png'
 
 

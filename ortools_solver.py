@@ -80,7 +80,7 @@ if __name__ == '__main__':
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'syn']
+    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'syn']
     syn_problem_j = [10, 15, 15, 20, 20]  # [10, 15, 15, 20, 20]
     syn_problem_m = [10, 10, 15, 10, 15]  # [10, 10, 15, 10, 15]
     tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]  # [15, 20, 20, 30, 30, 50, 50, 100]
@@ -95,6 +95,9 @@ if __name__ == '__main__':
     swv_problem_m = [10, 15, 10]  # [10, 15, 10]
     la_problem_j = [10, 15, 20, 10, 15, 20, 30, 15]  # [10, 15, 20, 10, 15, 20, 30, 15]
     la_problem_m = [5, 5, 5, 10, 10, 10, 10, 15]  # [5, 5, 5, 10, 10, 10, 10, 15]
+    ft_problem_j = [6, 10, 20]  # [6, 10, 20]
+    ft_problem_m = [6, 10, 5]  # [6, 10, 5]
+
 
     for test_t in testing_type:  # select benchmark
         if test_t == 'syn':
@@ -111,9 +114,11 @@ if __name__ == '__main__':
             problem_j, problem_m = swv_problem_j, swv_problem_m
         elif test_t == 'la':
             problem_j, problem_m = la_problem_j, la_problem_m
+        elif test_t == 'ft':
+            problem_j, problem_m = ft_problem_j, ft_problem_m
         else:
             raise Exception(
-                'Problem type must be in testing_type = ["syn", "tai", "abz", "orb", "yn", "swv", "la"].')
+                'Problem type must be in testing_type = ["tai", "abz", "orb", "yn", "swv", "la", "ft", "syn"].')
 
         for p_j, p_m in zip(problem_j, problem_m):  # select problem size
 

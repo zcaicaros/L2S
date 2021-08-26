@@ -18,8 +18,8 @@ def main():
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # benchmark config
-    l = 1
-    h = 99
+    p_l = 1
+    p_h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
     testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft']  # ['syn', 'tai', 'abz', 'orb', 'yn', 'swv', 'la']
     syn_problem_j = [10, 15, 15, 20, 20, 100, 200]  # [10, 15, 15, 20, 20, 100, 200]
@@ -40,24 +40,30 @@ def main():
     ft_problem_m = [6, 10, 5]  # [6, 10, 5]
 
     # model config
-    embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
-    model_init_type = 'fdd-divide-mwkr'
     model_j = 20
     model_m = 15
-    heads = 1
-    drop_out = 0.
-    training_episode_length = 500
+    model_l = 1
+    model_h = 99
+    model_init_type = 'fdd-divide-mwkr'
     reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
-    model_type = 'incumbent'  # 'incumbent', 'last-step'
     gamma = 1
+
     hidden_dim = 128
     embedding_layer = 4
     policy_layer = 4
+    embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
+    heads = 1
+    drop_out = 0.
+
     lr = 5e-5
     steps_learn = 10
+    training_episode_length = 500
     batch_size = 64
     episodes = 128000
     step_validation = 10
+
+    model_type = 'incumbent'  # 'incumbent', 'last-step'
+
     if embedding_type == 'gin':
         dghan_param_for_saved_model = 'NAN'
     elif embedding_type == 'dghan' or embedding_type == 'gin+dghan':
@@ -120,7 +126,7 @@ def main():
                     np.save('./test_data/syn{}x{}_result.npy'.format(p_j, p_m), ortools_results)
                     gap_against = ortools_results[:, 1]
 
-            env = JsspN5(n_job=p_j, n_mch=p_m, low=l, high=h, reward_type='yaoxin', fea_norm_const=fea_norm_const)
+            env = JsspN5(n_job=p_j, n_mch=p_m, low=p_l, high=p_h, reward_type='yaoxin', fea_norm_const=fea_norm_const)
             torch.manual_seed(seed)
             policy = Actor(in_dim=3,
                            hidden_dim=hidden_dim,
@@ -134,7 +140,7 @@ def main():
                                '{}_{}_{}_{}_{}_' \
                                '{}_{}_{}_{}_{}_{}' \
                                '.pth' \
-                .format(model_type, model_j, model_m, l, h, model_init_type, reward_type, gamma,
+                .format(model_type, model_j, model_m, model_l, model_h, model_init_type, reward_type, gamma,
                         hidden_dim, embedding_layer, policy_layer, embedding_type, dghan_param_for_saved_model,
                         lr, steps_learn, training_episode_length, batch_size, episodes, step_validation)
             print('loading model from:', saved_model_path)
@@ -147,7 +153,7 @@ def main():
                               '{}_{}x{}[{},{}]_{}_{}_{}_' \
                               '{}_{}_{}_{}_{}_' \
                               '{}_{}_{}_{}_{}_{}/' \
-                    .format(model_type, model_j, model_m, l, h, model_init_type, reward_type, gamma,
+                    .format(model_type, model_j, model_m, model_l, model_h, model_init_type, reward_type, gamma,
                             hidden_dim, embedding_layer, policy_layer, embedding_type, dghan_param_for_saved_model,
                             lr, steps_learn, training_episode_length, batch_size, episodes, step_validation)
                 which_dateset = '{}_{}x{}_{}'.format(test_t, p_j, p_m, init)

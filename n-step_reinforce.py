@@ -91,10 +91,8 @@ class RL2S4JSSP:
                        '{}_{}_{}_{}_{}_{}'  # training parameters
                        '.pth'
                        .format(args.j, args.m, args.l, args.h, args.init_type, args.reward_type, args.gamma,
-                               args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
-                               self.dghan_param_for_saved_model,
-                               args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
-                               args.step_validation))
+                               args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type, self.dghan_param_for_saved_model,
+                               args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes, args.step_validation))
             self.incumbent_validation_result = validation_result1
         if validation_result2 < self.current_validation_result:
             print('Find better model w.r.t final step objs, saving model...')
@@ -105,10 +103,8 @@ class RL2S4JSSP:
                        '{}_{}_{}_{}_{}_{}'  # training parameters
                        '.pth'
                        .format(args.j, args.m, args.l, args.h, args.init_type, args.reward_type, args.gamma,
-                               args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type,
-                               self.dghan_param_for_saved_model,
-                               args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes,
-                               args.step_validation))
+                               args.hidden_dim, args.embedding_layer, args.policy_layer, args.embedding_type, self.dghan_param_for_saved_model,
+                               args.lr, args.steps_learn, args.transit, args.batch_size, args.episodes, args.step_validation))
             self.current_validation_result = validation_result2
 
         validation_end = time.time()

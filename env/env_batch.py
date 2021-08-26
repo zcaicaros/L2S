@@ -491,6 +491,6 @@ if __name__ == '__main__':
     # torch.cuda.manual_seed(1)
     np.random.seed(4)  # 123456324
 
-    # main()
-    import cProfile
-    cProfile.run('main()', filename='./restats_het')
+    main()
+    # import cProfile
+    # cProfile.run('main()', filename='./restats_het')

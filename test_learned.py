@@ -55,11 +55,11 @@ def main():
     heads = 1
     drop_out = 0.
 
-    lr = 5e-5  # 5e-5, 4e-5
+    lr = 4e-5  # 5e-5, 4e-5
     steps_learn = 10
     training_episode_length = 500
     batch_size = 64
-    episodes = 128000  # 128000, 256000
+    episodes = 256000  # 128000, 256000
     step_validation = 10
 
     model_type = 'incumbent'  # 'incumbent', 'last-step'

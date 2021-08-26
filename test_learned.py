@@ -41,7 +41,7 @@ def main():
 
     # model config
     model_j = 15  # 10， 15， 15， 20， 20
-    model_m = 10  # 10， 10， 15， 10， 15
+    model_m = 15  # 10， 10， 15， 10， 15
     model_l = 1
     model_h = 99
     model_init_type = 'fdd-divide-mwkr'
@@ -55,11 +55,11 @@ def main():
     heads = 1
     drop_out = 0.
 
-    lr = 4e-5  # 5e-5, 4e-5
+    lr = 5e-5  # 5e-5, 4e-5
     steps_learn = 10
     training_episode_length = 500
     batch_size = 64
-    episodes = 256000  # 128000, 256000
+    episodes = 128000  # 128000, 256000
     step_validation = 10
 
     model_type = 'incumbent'  # 'incumbent', 'last-step'

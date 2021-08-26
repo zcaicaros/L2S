@@ -41,4 +41,4 @@ for test_t in testing_type:  # select benchmark
 
     for p_j, p_m in zip(problem_j, problem_m):  # select problem size
         for init in init_type:
-            print(np.load('./results_npy/{}{}x{}_greedy-policy_{}_results.npy'.format(test_t, p_j, p_m, init)))
+            print(np.load('./conventional_results/{}{}x{}_greedy-policy_{}_results.npy'.format(test_t, p_j, p_m, init)))

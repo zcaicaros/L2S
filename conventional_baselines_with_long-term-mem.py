@@ -535,33 +535,46 @@ def main():
 
 
             for init in init_type:
+
+                from pathlib import Path
+
                 '''random_makespan, random_time = random_policy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
                 gap_random_policy = ((random_makespan - gap_against) / gap_against).mean(axis=-1)
                 print('Random policy gap for {} testing steps are: {}'.format(transit, gap_random_policy))
                 print('Random policy time for {} testing steps are: {}'.format(transit, random_time))'''
 
-                greedy_makespan, greedy_time = Greedy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
-                gap_greedy_policy = ((greedy_makespan - gap_against) / gap_against).mean(axis=-1)
-                print('Greedy policy gap for {} testing steps are: {}'.format(transit, gap_greedy_policy))
-                print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time))
-                
-                best_improvement_makespan, best_improvement_time = BestImprovement_baseline(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
-                gap_best_improvement_policy = ((best_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
-                print('Best-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_best_improvement_policy))
-                print('Best-Improvement policy time for {} testing steps are: {}'.format(transit, best_improvement_time))
+                greedy_path_result = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
+                greedy_path_time = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_time.npy'.format(test_t, p_j, p_m, init))
+                if not greedy_path_result.is_file() or not greedy_path_time.is_file():
+                    print('Testing Greedy Policy...')
+                    greedy_makespan, greedy_time = Greedy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
+                    gap_greedy_policy = ((greedy_makespan - gap_against) / gap_against).mean(axis=-1)
+                    print('Greedy policy gap for {} testing steps are: {}'.format(transit, gap_greedy_policy))
+                    print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time))
+                    np.save('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_result.npy'.format(test_t, p_j, p_m, init), greedy_makespan)
+                    np.save('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_time.npy'.format(test_t, p_j, p_m, init), greedy_time)
 
-                first_improvement_makespan, first_improvement_time = BestImprovement_baseline(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
-                gap_first_improvement_policy = ((first_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
-                print('First-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_first_improvement_policy))
-                print('First-Improvement policy time for {} testing steps are: {}'.format(transit, first_improvement_time))
+                best_improvement_path_result = Path('./test_results/conventional_results/{}{}x{}_best-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
+                best_improvement_path_time = Path('./test_results/conventional_results/{}{}x{}_best-improvement-policy_{}_time.npy'.format(test_t, p_j, p_m, init))
+                if not best_improvement_path_result.is_file() or not best_improvement_path_time.is_file():
+                    print('Testing Best-Improvement Policy...')
+                    best_improvement_makespan, best_improvement_time = BestImprovement_baseline(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
+                    gap_best_improvement_policy = ((best_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
+                    print('Best-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_best_improvement_policy))
+                    print('Best-Improvement policy time for {} testing steps are: {}'.format(transit, best_improvement_time))
+                    np.save('./test_results/conventional_results/{}{}x{}_best-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init), best_improvement_makespan)
+                    np.save('./test_results/conventional_results/{}{}x{}_best-improvement-policy_{}_time.npy'.format(test_t, p_j, p_m, init), best_improvement_time)
 
-                np.save('./test_results/results_npy/{}{}x{}_greedy-policy_{}_results.npy'.format(test_t, p_j, p_m, init), greedy_makespan)
-                np.save('./test_results/results_npy/{}{}x{}_best-improvement-policy_{}_results.npy'.format(test_t, p_j, p_m, init), best_improvement_makespan)
-                np.save('./test_results/results_npy/{}{}x{}_first-improvement-policy_{}_results.npy'.format(test_t, p_j, p_m, init), first_improvement_makespan)
-
-                np.save('./test_results/results_npy/{}{}x{}_greedy-policy_{}_times.npy'.format(test_t, p_j, p_m, init), greedy_time)
-                np.save('./test_results/results_npy/{}{}x{}_best-improvement-policy_{}_times.npy'.format(test_t, p_j, p_m, init), best_improvement_time)
-                np.save('./test_results/results_npy/{}{}x{}_first-improvement-policy_{}_times.npy'.format(test_t, p_j, p_m, init), first_improvement_time)
+                first_improvement_path_result = Path('./test_results/conventional_results/{}{}x{}_first-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
+                first_improvement_path_time = Path('./test_results/conventional_results/{}{}x{}_first-improvement-policy_{}_time.npy'.format(test_t, p_j, p_m, init))
+                if not first_improvement_path_result.is_file() or not first_improvement_path_time.is_file():
+                    print('Testing First-Improvement Policy...')
+                    first_improvement_makespan, first_improvement_time = FirstImprovement_baseline(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
+                    gap_first_improvement_policy = ((first_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
+                    print('First-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_first_improvement_policy))
+                    print('First-Improvement policy time for {} testing steps are: {}'.format(transit, first_improvement_time))
+                    np.save('./test_results/conventional_results/{}{}x{}_first-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init), first_improvement_makespan)
+                    np.save('./test_results/conventional_results/{}{}x{}_first-improvement-policy_{}_time.npy'.format(test_t, p_j, p_m, init), first_improvement_time)
 
 
 

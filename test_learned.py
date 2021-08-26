@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import torch
 import time
 import random
@@ -139,33 +140,48 @@ def main():
             print('loading model from:', saved_model_path)
             policy.load_state_dict(torch.load(saved_model_path, map_location=torch.device(dev)))
 
-            results_each_dateset = []  # save result
-            inference_time_each_dataset = []  # save inference time
             for init in init_type:
-                results_each_init, inference_time_each_init = [], []
-                print('Starting rollout DRL policy...')
-                batch_data = BatchGraph()
-                states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev, plot=show)
-                drl_start = time.time()
-                while env.itr < cap_horizon:
-                    batch_data.wrapper(*states)
-                    actions, _ = policy(batch_data, feasible_actions)
-                    states, _, feasible_actions, _ = env.step(actions, dev, plot=show)
-                    for log_horizon in performance_milestones:
-                        if env.itr == log_horizon:
-                            if result_type == 'incumbent':
-                                DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
-                            else:
-                                DRL_result = env.current_objs.cpu().squeeze().numpy()
-                            print('For testing steps: {}    '.format(env.itr),
-                                  'DRL Gap: {:.6f}    '.format(((DRL_result - gap_against) / gap_against).mean()),
-                                  'DRL results takes: {:.6f} per instance.'.format((time.time() - drl_start) / inst.shape[0]))
-                            results_each_init.append(((DRL_result - gap_against) / gap_against).mean())
-                            inference_time_each_init.append((time.time() - drl_start) / inst.shape[0])
-                results_each_dateset.append(results_each_init)
-                inference_time_each_dataset.append(inference_time_each_init)
-            # print(results_each_dateset)
-            # print(inference_time_each_dataset)
+                from pathlib import Path
+                print('Start to test initial solution: {}...'.format(init))
+                which_model = './test_results/DRL_results/' \
+                              '{}_{}x{}[{},{}]_{}_{}_{}_' \
+                              '{}_{}_{}_{}_{}_' \
+                              '{}_{}_{}_{}_{}_{}/' \
+                    .format(model_type, model_j, model_m, l, h, model_init_type, reward_type, gamma,
+                            hidden_dim, embedding_layer, policy_layer, embedding_type, dghan_param_for_saved_model,
+                            lr, steps_learn, training_episode_length, batch_size, episodes, step_validation)
+                which_dateset = '{}_{}x{}_{}'.format(test_t, p_j, p_m, init)
+                if not Path(which_model).is_dir():
+                    os.mkdir(which_model)
+                    with open(which_model + '__init__.py', 'w'): pass  # make created folder as python package by creating __init__.py
+                result_file = Path(which_model + which_dateset + '_result.npy')
+                time_file = Path(which_model + which_dateset + '_time.npy')
+                if not result_file.is_file() or not time_file.is_file():
+                    results_each_init, inference_time_each_init = [], []
+                    print('Starting rollout DRL policy...')
+                    batch_data = BatchGraph()
+                    states, feasible_actions, _ = env.reset(instances=inst, init_type=init, device=dev, plot=show)
+                    drl_start = time.time()
+                    while env.itr < cap_horizon:
+                        batch_data.wrapper(*states)
+                        actions, _ = policy(batch_data, feasible_actions)
+                        states, _, feasible_actions, _ = env.step(actions, dev, plot=show)
+                        for log_horizon in performance_milestones:
+                            if env.itr == log_horizon:
+                                if result_type == 'incumbent':
+                                    DRL_result = env.incumbent_objs.cpu().squeeze().numpy()
+                                else:
+                                    DRL_result = env.current_objs.cpu().squeeze().numpy()
+                                print('For testing steps: {}    '.format(env.itr),
+                                      'DRL Gap: {:.6f}    '.format(((DRL_result - gap_against) / gap_against).mean()),
+                                      'DRL results takes: {:.6f} per instance.'.format((time.time() - drl_start) / inst.shape[0]))
+                                results_each_init.append(DRL_result)
+                                inference_time_each_init.append((time.time() - drl_start) / inst.shape[0])
+                    results_each_init = np.stack(results_each_init)
+                    inference_time_each_init = np.array(inference_time_each_init).reshape(-1, 1)
+                    np.save(which_model + which_dateset + '-result.npy', results_each_init)
+                    np.save(which_model + which_dateset + '-time.npy', inference_time_each_init)
+
 
 
 if __name__ == '__main__':

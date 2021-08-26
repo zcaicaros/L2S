@@ -189,7 +189,6 @@ def main():
                     np.save(which_model + which_dateset + '-time.npy', inference_time_each_init)
 
 
-
 if __name__ == '__main__':
 
     main()

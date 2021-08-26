@@ -266,8 +266,8 @@ if __name__ == '__main__':
     # instances = np.load('../test_data/syn{}x{}.npy'.format(n_j, n_m))[0:1]
     instances = np.array([uni_instance_gen(n_j=n_j, n_m=n_m, low=l, high=h) for _ in range(b_size)])
     states, feasible_as, dones = env.reset(instances=instances, init_type=init_type, device=dev)
-    print(env.incumbent_objs)
-    print(feasible_as)
+    # print(env.incumbent_objs)
+    # print(feasible_as)
 
     actor = Actor(3, hid_dim, embedding_l=4, policy_l=4, embedding_type='gin+dghan').to(dev)
     while env.itr < transit:
@@ -275,7 +275,7 @@ if __name__ == '__main__':
         actions, log_ps = actor(batch_data, feasible_as)
         states, rewards, feasible_as, dones = env.step(actions, dev)
         # print(actions)
-        print(env.incumbent_objs)
-        print(feasible_as)
+        # print(env.incumbent_objs)
+        # print(feasible_as)
 
     # grad = torch.autograd.grad(log_ps.sum(), [param for param in actor.parameters()])

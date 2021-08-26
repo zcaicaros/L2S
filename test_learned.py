@@ -185,8 +185,10 @@ def main():
                                 inference_time_each_init.append((time.time() - drl_start) / inst.shape[0])
                     results_each_init = np.stack(results_each_init)
                     inference_time_each_init = np.array(inference_time_each_init).reshape(-1, 1)
-                    np.save(which_model + which_dateset + '-result.npy', results_each_init)
-                    np.save(which_model + which_dateset + '-time.npy', inference_time_each_init)
+                    np.save(which_model + which_dateset + '_result.npy', results_each_init)
+                    np.save(which_model + which_dateset + '_time.npy', inference_time_each_init)
+                else:
+                    print('Results already exist.')
 
 
 if __name__ == '__main__':

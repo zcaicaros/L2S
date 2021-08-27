@@ -2,16 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# env parameters
-j = 20
-m = 15
+j = 10  # 10， 15， 15， 20， 20
+m = 10  # 10， 10， 15， 10， 15
 l = 1
 h = 99
 init_type = 'fdd-divide-mwkr'
-reward_type = 'yaoxin'
+reward_type = 'yaoxin'  # 'yaoxin', 'consecutive'
 gamma = 1
 
-# model parameters
 hidden_dim = 128
 embedding_layer = 4
 policy_layer = 4
@@ -19,13 +17,14 @@ embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
 heads = 1
 drop_out = 0.
 
-# training parameters
-lr = 4e-5
+lr = 5e-5  # 5e-5, 4e-5
 steps_learn = 10
-transit = 500
+training_episode_length = 500
 batch_size = 64
-episodes = 256000
+episodes = 128000  # 128000, 256000
 step_validation = 10
+
+model_type = 'incumbent'  # 'incumbent', 'last-step'
 
 # plot parameters
 total_plt_steps = 100
@@ -49,7 +48,7 @@ file = '{}x{}[{},{}]_{}_{}_{}_' \
        '{}_{}_{}_{}_{}_{}' \
     .format(j, m, l, h, init_type, reward_type, gamma,
             hidden_dim, embedding_layer, policy_layer, embedding_type, dghan_param_for_saved_model,
-            lr, steps_learn, transit, batch_size, episodes, step_validation)
+            lr, steps_learn, training_episode_length, batch_size, episodes, step_validation)
 
 log = np.load('../log/'
               '{}_log_'

@@ -151,61 +151,6 @@ def feasible_action(G, tabu_list, instance):
         return [[0, 0]]
 
 
-def random_policy_baselines(instances, search_horizon, log_step, dev, init_type='fdd-divide-mwkr', low=1, high=99):
-    """
-    instances: np.array [batch_size, 2, j, m]
-    search_horizon: int
-    """
-
-    time_start = time.time()
-    time_log = []
-
-    j, m = instances[0][0].shape
-    n_op = j * m
-    horizon = 0
-    eva = Evaluator()
-    tabu_size = 1
-    tabu_lst = [[] for _ in range(instances.shape[0])]
-
-    x = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
-
-    Gs = get_initial_sols(instances=instances, low=low, high=high, init_type=init_type, dev=dev)
-    pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
-    _, _, make_span = eva.forward(pyg.edge_index.to(dev), duration=x.to(dev), n_j=j, n_m=m)
-
-    results = []
-    incumbent_makespan = make_span
-    while horizon < search_horizon:
-        feasible_actions = [feasible_action(G, tl, ins) for G, tl, ins in zip(Gs, tabu_lst, instances)]
-
-        # select random actions
-        actions = [random.choice(feasible_a) for feasible_a in feasible_actions]  # [[1, 2], [5, 8], ...]
-
-        # move...
-        action_reversed = [a[::-1] for a in actions]
-        for i, action in enumerate(action_reversed):
-            if action == [0, 0]:  # if dummy action, don't update tabu list
-                pass
-            else:
-                if len(tabu_lst[i]) == tabu_size:
-                    tabu_lst[i].pop(0)
-                    tabu_lst[i].append(action)
-                else:
-                    tabu_lst[i].append(action)
-        Gs = [change_nxgraph_topology(a, G, ins) for a, G, ins in zip(actions, Gs, instances)]
-        pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
-        _, _, make_span = eva.forward(pyg.edge_index.to(dev), duration=x.to(dev), n_j=j, n_m=m)
-        incumbent_makespan = torch.where(make_span - incumbent_makespan < 0, make_span, incumbent_makespan)
-        horizon += 1
-
-        for log_t in log_step:
-            if horizon == log_t:
-                time_log.append((time.time() - time_start)/instances.shape[0])
-                results.append(incumbent_makespan.cpu().numpy().reshape(-1))
-
-    return np.stack(results), np.array(time_log)
-
-
 def Greedy_baselines(instances, search_horizon, log_step, dev, init_type='fdd-divide-mwkr', low=1, high=99):
     """
     instances: np.array [batch_size, 2, j, m]
@@ -461,9 +406,9 @@ def main():
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
-    syn_problem_j = [10, 15, 15, 20, 20, 100, 150]  # [10, 15, 15, 20, 20, 100, 150]
-    syn_problem_m = [10, 10, 15, 10, 15, 20, 25]  # [10, 10, 15, 10, 15, 20, 25]
+    testing_type = ['syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
+    syn_problem_j = [150]  # [10, 15, 15, 20, 20, 100, 150]
+    syn_problem_m = [25]  # [10, 10, 15, 10, 15, 20, 25]
     tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]  # [15, 20, 20, 30, 30, 50, 50, 100]
     tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]  # [15, 15, 20, 15, 20, 15, 20, 20]
     abz_problem_j = [10, 20]  # [10, 20]
@@ -538,10 +483,36 @@ def main():
 
                 from pathlib import Path
 
-                '''random_makespan, random_time = random_policy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
-                gap_random_policy = ((random_makespan - gap_against) / gap_against).mean(axis=-1)
-                print('Random policy gap for {} testing steps are: {}'.format(transit, gap_random_policy))
-                print('Random policy time for {} testing steps are: {}'.format(transit, random_time))'''
+                '''greedy_path_result = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
+                greedy_path_time = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_time.npy'.format(test_t, p_j, p_m, init))
+                if not greedy_path_result.is_file() or not greedy_path_time.is_file():
+                    print('Testing Greedy Policy...')
+                    if p_j >= 100 and testing_instances.shape[0] >= 20:
+                        chunk_size = 100
+                        print('Problem of size {}x{} containing {} instances is too large to form a batch. Splitting into chunks and test seperately. Chunk size is {}.'.format(p_j, p_m, testing_instances.shape[0], chunk_size))
+                    else:
+                        chunk_size = testing_instances.shape[0]
+                    n_chunks = testing_instances.shape[0] // chunk_size
+                    greedy_policy, greedy_time = [], []
+                    for i in range(n_chunks):
+                        inst_chunk = testing_instances[i * chunk_size:(i + 1) * chunk_size]
+                        greedy_makespan_per_chunk, greedy_time_per_chunk = Greedy_baselines(instances=inst_chunk, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
+                        greedy_policy.append(greedy_makespan_per_chunk)
+                        greedy_time.append(greedy_time_per_chunk)
+                        if n_chunks == 1:
+                            gap_greedy_policy_per_chunk = ((greedy_makespan_per_chunk - gap_against) / gap_against).mean(axis=-1)
+                            print('Greedy policy gap for {} testing steps are: {}'.format(transit, gap_greedy_policy_per_chunk))
+                            print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time_per_chunk))
+
+                    greedy_policy = np.concatenate(greedy_policy, axis=-1)
+                    greedy_time = np.stack(greedy_time).sum(axis=0) / n_chunks
+                    if n_chunks > 1:
+                        for i, step in enumerate(transit):
+                            print('For testing steps: {}    '.format(step),
+                                  'DRL Gap: {:.6f}    '.format(((greedy_policy[i] - gap_against) / gap_against).mean()),
+                                  'DRL results takes: {:.6f} per instance.'.format(greedy_time[i]))
+                    np.save('./test_results/conventional_results/greedy-policy/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, init), greedy_policy)
+                    np.save('./test_results/conventional_results/greedy-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init), greedy_time)'''
 
                 greedy_path_result = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
                 greedy_path_time = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_time.npy'.format(test_t, p_j, p_m, init))
@@ -554,6 +525,8 @@ def main():
                     np.save('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_result.npy'.format(test_t, p_j, p_m, init), greedy_makespan)
                     np.save('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_time.npy'.format(test_t, p_j, p_m, init), greedy_time)
 
+
+
                 best_improvement_path_result = Path('./test_results/conventional_results/{}{}x{}_best-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
                 best_improvement_path_time = Path('./test_results/conventional_results/{}{}x{}_best-improvement-policy_{}_time.npy'.format(test_t, p_j, p_m, init))
                 if not best_improvement_path_result.is_file() or not best_improvement_path_time.is_file():
@@ -562,8 +535,8 @@ def main():
                     gap_best_improvement_policy = ((best_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
                     print('Best-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_best_improvement_policy))
                     print('Best-Improvement policy time for {} testing steps are: {}'.format(transit, best_improvement_time))
-                    np.save('./test_results/conventional_results/{}{}x{}_best-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init), best_improvement_makespan)
-                    np.save('./test_results/conventional_results/{}{}x{}_best-improvement-policy_{}_time.npy'.format(test_t, p_j, p_m, init), best_improvement_time)
+                    np.save('./test_results/conventional_results/best-improvement-policy/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, init), best_improvement_makespan)
+                    np.save('./test_results/conventional_results/best-improvement-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init), best_improvement_time)
 
                 first_improvement_path_result = Path('./test_results/conventional_results/{}{}x{}_first-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
                 first_improvement_path_time = Path('./test_results/conventional_results/{}{}x{}_first-improvement-policy_{}_time.npy'.format(test_t, p_j, p_m, init))
@@ -573,8 +546,8 @@ def main():
                     gap_first_improvement_policy = ((first_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
                     print('First-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_first_improvement_policy))
                     print('First-Improvement policy time for {} testing steps are: {}'.format(transit, first_improvement_time))
-                    np.save('./test_results/conventional_results/{}{}x{}_first-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init), first_improvement_makespan)
-                    np.save('./test_results/conventional_results/{}{}x{}_first-improvement-policy_{}_time.npy'.format(test_t, p_j, p_m, init), first_improvement_time)
+                    np.save('./test_results/conventional_results/first-improvement-policy/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, init), first_improvement_makespan)
+                    np.save('./test_results/conventional_results/first-improvement-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init), first_improvement_time)
 
 
 

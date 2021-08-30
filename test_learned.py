@@ -40,8 +40,8 @@ def main():
     ft_problem_m = [6, 10, 5]  # [6, 10, 5]
 
     # model config
-    model_j = 20  # 10， 15， 15， 20， 20
-    model_m = 15  # 10， 10， 15， 10， 15
+    model_j = 10  # 10， 15， 15， 20， 20
+    model_m = 10  # 10， 10， 15， 10， 15
     model_l = 1
     model_h = 99
     model_init_type = 'fdd-divide-mwkr'
@@ -188,24 +188,22 @@ def main():
                                     else:
                                         DRL_result = env.current_objs.cpu().squeeze().numpy()
                                     chunk_result.append(DRL_result)
-                                    chunk_time.append((time.time() - drl_start) / inst_chunk.shape[0])
+                                    chunk_time.append(time.time() - drl_start)
                                     if n_chunks == 1:
                                         print('For testing steps: {}    '.format(env.itr),
                                               'DRL Gap: {:.6f}    '.format(((DRL_result - gap_against) / gap_against).mean()),
-                                              'DRL results takes: {:.6f} per instance.'.format((time.time() - drl_start) / inst.shape[0]))
+                                              'DRL results takes: {:.6f} per instance.'.format((time.time() - drl_start) / chunk_size))
                         results_each_init.append(np.stack(chunk_result))
                         inference_time_each_init.append(np.array(chunk_time))
                     results_each_init = np.concatenate(results_each_init, axis=-1)
-                    inference_time_each_init = (np.stack(inference_time_each_init).sum(axis=0) / n_chunks) / chunk_size
+                    inference_time_each_init = ((np.stack(inference_time_each_init).sum(axis=0)) / n_chunks) / chunk_size
                     if n_chunks > 1:
                         for i, step in enumerate(performance_milestones):
                             print('For testing steps: {}    '.format(step),
                                   'DRL Gap: {:.6f}    '.format(((results_each_init[i] - gap_against) / gap_against).mean()),
                                   'DRL results takes: {:.6f} per instance.'.format(inference_time_each_init[i]))
-                    # np.save(which_model + which_dateset + '_result.npy', results_each_init)
-                    # np.save(which_model + which_dateset + '_time.npy', inference_time_each_init)
-                    print(results_each_init)
-                    print(inference_time_each_init)
+                    np.save(which_model + which_dateset + '_result.npy', results_each_init)
+                    np.save(which_model + which_dateset + '_time.npy', inference_time_each_init)
                 else:
                     print('Results already exist.')
 

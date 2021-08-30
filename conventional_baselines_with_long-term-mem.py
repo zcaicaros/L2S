@@ -421,7 +421,7 @@ def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_typ
         first_smaller_idx = [np.argmax(ms < target) for ms, target in zip(splited_make_span_for_find_moves, incumbent_makespan)]
         first_smaller_make_span = [ms[idx] for ms, idx in zip(splited_make_span_for_find_moves, first_smaller_idx)]
         flag_need_restart = incumbent_makespan < first_smaller_make_span
-        
+
         for i, (flag, fst_smaller_idx) in enumerate(zip(flag_need_restart, first_smaller_idx)):
             if flag:  # random restart from long-term memory
                 current_Gs[i], tabu_lst[i] = random.choice(batch_memory[i].mem)
@@ -517,7 +517,7 @@ def main():
                 from pathlib import Path
                 ortools_path = Path('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
                 if ortools_path.is_file():
-                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))[:, 1]
+                    gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
                 else:
                     ortools_results = []
                     print('Starting Ortools...')

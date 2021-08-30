@@ -40,8 +40,8 @@ def main():
     ft_problem_m = [6, 10, 5]  # [6, 10, 5]
 
     # model config
-    model_j = 10  # 10， 15， 15， 20， 20
-    model_m = 10  # 10， 10， 15， 10， 15
+    model_j = 20  # 10， 15， 15， 20， 20
+    model_m = 15  # 10， 10， 15， 10， 15
     model_l = 1
     model_h = 99
     model_init_type = 'fdd-divide-mwkr'

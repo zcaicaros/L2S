@@ -581,8 +581,5 @@ def main():
 
 
 if __name__ == "__main__":
-    # import sys
-    #
-    # sys.setrecursionlimit(10 ** 6)
 
     main()

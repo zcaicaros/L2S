@@ -162,8 +162,7 @@ def main():
                     with open(which_model + '__init__.py', 'w'): pass  # make created folder as python package by creating __init__.py
                 result_file = Path(which_model + which_dateset + '_result.npy')
                 time_file = Path(which_model + which_dateset + '_time.npy')
-                # if not result_file.is_file() or not time_file.is_file():
-                if True:
+                if not result_file.is_file() or not time_file.is_file():
                     print('Starting rollout DRL policy...')
                     if p_j >= 100 and inst.shape[0] >= 20:
                         chunk_size = 10

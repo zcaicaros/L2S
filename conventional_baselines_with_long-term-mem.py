@@ -317,7 +317,7 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
                         t_l.append(a[::-1])
                     else:
                         t_l.append(a[::-1])
-                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), copy.deepcopy(t_l)])
+                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), t_l])
                 else:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
         # batching all next G
@@ -403,7 +403,7 @@ def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_typ
                         t_l.append(a[::-1])
                     else:
                         t_l.append(a[::-1])
-                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), copy.deepcopy(t_l)])
+                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), t_l])
                 else:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
         # batching all next G

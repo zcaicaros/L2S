@@ -15,3 +15,5 @@ a_ele = random.choice(a)
 print(a_ele)
 a_ele = 3
 print(a)
+a_in = a[::-1]
+print(a)

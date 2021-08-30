@@ -100,7 +100,7 @@ def main():
 
         for p_j, p_m in zip(problem_j, problem_m):  # select problem size
 
-            inst = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))[:50]
+            inst = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))[:20]
             print('\nStart testing {}{}x{}...'.format(test_t, p_j, p_m))
 
             # read saved gap_against or use ortools to solve it.

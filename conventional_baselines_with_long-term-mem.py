@@ -312,13 +312,12 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
                 actions_for_find_move[i].append(a)
                 if a != [0, 0]:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
-                    t_l_cp = copy.deepcopy(t_l)
-                    if len(t_l_cp) == tabu_size:
-                        t_l_cp.pop(0)
-                        t_l_cp.append(a)
+                    if len(t_l) == tabu_size:
+                        t_l.pop(0)
+                        t_l.append(a[::-1])
                     else:
-                        t_l_cp.append(a)
-                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), t_l_cp])
+                        t_l.append(a[::-1])
+                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), copy.deepcopy(t_l)])
                 else:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
         # batching all next G
@@ -335,17 +334,17 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
         flag_need_restart = (incumbent_makespan < torch.tensor(min_make_span_for_find_moves, device=incumbent_makespan.device).reshape(-1, 1)).squeeze().cpu().numpy()
         for i, (flag, min_idx) in enumerate(zip(flag_need_restart, min_make_span_idx_for_find_moves)):
             if flag:  # random restart from long-term memory
-                current_Gs[i], tabu_lst[i] = copy.deepcopy(random.choice(batch_memory[i].mem))
+                current_Gs[i], tabu_lst[i] = random.choice(batch_memory[i].mem)
             else:  # move
                 if actions_for_find_move[i][min_idx] != [0, 0]:
-                    current_Gs[i] = copy.deepcopy(Gs_for_find_move[i][min_idx])
+                    current_Gs[i] = Gs_for_find_move[i][min_idx]
                     if len(tabu_lst[i]) == tabu_size:
                         tabu_lst[i].pop(0)
-                        tabu_lst[i].append(copy.deepcopy(actions_for_find_move[i][min_idx][::-1]))
+                        tabu_lst[i].append(actions_for_find_move[i][min_idx][::-1])
                     else:
-                        tabu_lst[i].append(copy.deepcopy(actions_for_find_move[i][min_idx][::-1]))
+                        tabu_lst[i].append(actions_for_find_move[i][min_idx][::-1])
                 else:
-                    current_Gs[i], tabu_lst[i] = copy.deepcopy(Gs_for_find_move[i][min_idx]), [copy.deepcopy(tabu_lst[i])]
+                    current_Gs[i], tabu_lst[i] = Gs_for_find_move[i][min_idx], [tabu_lst[i]]
 
         current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
         _, _, make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)
@@ -399,13 +398,12 @@ def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_typ
                 actions_for_find_move[i].append(a)
                 if a != [0, 0]:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
-                    t_l_cp = copy.deepcopy(t_l)
-                    if len(t_l_cp) == tabu_size:
-                        t_l_cp.pop(0)
-                        t_l_cp.append(a)
+                    if len(t_l) == tabu_size:
+                        t_l.pop(0)
+                        t_l.append(a[::-1])
                     else:
-                        t_l_cp.append(a)
-                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), t_l_cp])
+                        t_l.append(a[::-1])
+                    batch_memory[i].add_ele([change_nxgraph_topology(a, G, ins), copy.deepcopy(t_l)])
                 else:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
         # batching all next G
@@ -424,17 +422,17 @@ def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_typ
 
         for i, (flag, fst_smaller_idx) in enumerate(zip(flag_need_restart, first_smaller_idx)):
             if flag:  # random restart from long-term memory
-                current_Gs[i], tabu_lst[i] = copy.deepcopy(random.choice(batch_memory[i].mem))
+                current_Gs[i], tabu_lst[i] = random.choice(batch_memory[i].mem)
             else:  # move
                 if actions_for_find_move[i][fst_smaller_idx] != [0, 0]:
-                    current_Gs[i] = copy.deepcopy(Gs_for_find_move[i][fst_smaller_idx])
+                    current_Gs[i] = Gs_for_find_move[i][fst_smaller_idx]
                     if len(tabu_lst[i]) == tabu_size:
                         tabu_lst[i].pop(0)
-                        tabu_lst[i].append(copy.deepcopy(actions_for_find_move[i][fst_smaller_idx][::-1]))
+                        tabu_lst[i].append(actions_for_find_move[i][fst_smaller_idx][::-1])
                     else:
-                        tabu_lst[i].append(copy.deepcopy(actions_for_find_move[i][fst_smaller_idx][::-1]))
+                        tabu_lst[i].append(actions_for_find_move[i][fst_smaller_idx][::-1])
                 else:
-                    current_Gs[i], tabu_lst[i] = copy.deepcopy(Gs_for_find_move[i][fst_smaller_idx]), [copy.deepcopy(tabu_lst[i])]
+                    current_Gs[i], tabu_lst[i] = Gs_for_find_move[i][fst_smaller_idx], [tabu_lst[i]]
 
         current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
         _, _, make_span = eva.forward(current_pyg.edge_index.to(dev), duration=dur_for_move.to(dev), n_j=j, n_m=m)

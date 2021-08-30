@@ -17,3 +17,7 @@ a_ele = 3
 print(a)
 a_in = a[::-1]
 print(a)
+print()
+
+arr = np.load('./test_data/{}{}x{}_result.npy'.format('syn', 100, 20))
+print(arr)

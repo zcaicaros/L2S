@@ -332,6 +332,8 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
         min_make_span_idx_for_find_moves = [np.argmin(make_span_for_find_moves[start:end]) for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))]
         min_make_span_for_find_moves = [ms[idx][0] for ms, idx in zip([make_span_for_find_moves[start:end] for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))], min_make_span_idx_for_find_moves)]
         flag_need_restart = (incumbent_makespan < torch.tensor(min_make_span_for_find_moves, device=incumbent_makespan.device).reshape(-1, 1)).squeeze().cpu().numpy()
+        if flag_need_restart.size == 1:
+            flag_need_restart = flag_need_restart.reshape(1)
         for i, (flag, min_idx) in enumerate(zip(flag_need_restart, min_make_span_idx_for_find_moves)):
             if flag:  # random restart from long-term memory
                 current_Gs[i], tabu_lst[i] = random.choice(batch_memory[i].mem)
@@ -419,7 +421,7 @@ def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_typ
         first_smaller_idx = [np.argmax(ms < target) for ms, target in zip(splited_make_span_for_find_moves, incumbent_makespan)]
         first_smaller_make_span = [ms[idx] for ms, idx in zip(splited_make_span_for_find_moves, first_smaller_idx)]
         flag_need_restart = incumbent_makespan < first_smaller_make_span
-
+        
         for i, (flag, fst_smaller_idx) in enumerate(zip(flag_need_restart, first_smaller_idx)):
             if flag:  # random restart from long-term memory
                 current_Gs[i], tabu_lst[i] = random.choice(batch_memory[i].mem)

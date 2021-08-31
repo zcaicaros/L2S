@@ -62,7 +62,7 @@ for method in baseline:
             gap_against = np.load('../test_data/{}{}x{}_result.npy'.format(test_t, p_j, p_m))
             for init in init_type:
                 if method in ['greedy', 'best-improvement', 'first-improvement']:
-                    baseline_result = np.load('./conventional_results/{}{}x{}_{}-policy_{}_result.npy'.format(test_t, p_j, p_m, method, init))
+                    baseline_result = np.load('./conventional_results/{}-policy/{}{}x{}_{}_result.npy'.format(method, test_t, p_j, p_m, init))
                     mean_gap = ((baseline_result - gap_against)/gap_against).mean(axis=-1)
                     mean_gap_all_dataset.append(mean_gap.reshape(-1, len(init_type)))
                 else:

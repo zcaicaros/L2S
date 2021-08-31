@@ -488,7 +488,7 @@ def main():
 
                 from pathlib import Path
 
-                '''greedy_path_result = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
+                greedy_path_result = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
                 greedy_path_time = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_time.npy'.format(test_t, p_j, p_m, init))
                 if not greedy_path_result.is_file() or not greedy_path_time.is_file():
                     print('Testing Greedy Policy...')
@@ -497,10 +497,10 @@ def main():
                     print('Greedy policy gap for {} testing steps are: {}'.format(transit, gap_greedy_policy))
                     print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time))
                     np.save('./test_results/conventional_results/greedy-policy/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, init), greedy_makespan)
-                    np.save('./test_results/conventional_results/greedy-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init), greedy_time)'''
+                    np.save('./test_results/conventional_results/greedy-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init), greedy_time)
 
 
-                best_improvement_path_result = Path('./test_results/conventional_results/{}{}x{}_best-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
+                '''best_improvement_path_result = Path('./test_results/conventional_results/{}{}x{}_best-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
                 best_improvement_path_time = Path('./test_results/conventional_results/{}{}x{}_best-improvement-policy_{}_time.npy'.format(test_t, p_j, p_m, init))
                 if not best_improvement_path_result.is_file() or not best_improvement_path_time.is_file():
                     print('Testing Best-Improvement Policy...')
@@ -509,7 +509,7 @@ def main():
                     print('Best-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_best_improvement_policy))
                     print('Best-Improvement policy time for {} testing steps are: {}'.format(transit, best_improvement_time))
                     np.save('./test_results/conventional_results/best-improvement-policy/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, init), best_improvement_makespan)
-                    np.save('./test_results/conventional_results/best-improvement-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init), best_improvement_time)
+                    np.save('./test_results/conventional_results/best-improvement-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init), best_improvement_time)'''
 
 
                 '''first_improvement_path_result = Path('./test_results/conventional_results/{}{}x{}_first-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init))

@@ -22,7 +22,5 @@ print()
 arr = np.load('./test_data/{}{}x{}_result.npy'.format('syn', 150, 25))
 # print(arr)
 
-res = np.load('./test_results/conventional_results/first-improvement-policy/{}{}x{}_{}_result.npy'.format('syn', 150, 25, 'fdd-divide-mwkr'))
-print(res)
-print(((res - arr[:10])/arr[:10]).mean(axis=-1))
-print(np.load('./test_results/conventional_results/first-improvement-policy/{}{}x{}_{}_time.npy'.format('syn', 150, 25, 'fdd-divide-mwkr')))
+
+print(np.load('ortools_result/ortools_tai100x20_result.npy'))

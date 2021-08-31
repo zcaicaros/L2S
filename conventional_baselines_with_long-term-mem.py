@@ -407,8 +407,8 @@ def main():
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
     testing_type = ['syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
-    syn_problem_j = [150]  # [10, 15, 15, 20, 20, 100, 150]
-    syn_problem_m = [25]  # [10, 10, 15, 10, 15, 20, 25]
+    syn_problem_j = [10, 15, 15, 20, 20, 100, 150]  # [10, 15, 15, 20, 20, 100, 150]
+    syn_problem_m = [10, 10, 15, 10, 15, 20, 25]  # [10, 10, 15, 10, 15, 20, 25]
     tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]  # [15, 20, 20, 30, 30, 50, 50, 100]
     tai_problem_m = [15, 15, 20, 15, 20, 15, 20, 20]  # [15, 15, 20, 15, 20, 15, 20, 20]
     abz_problem_j = [10, 20]  # [10, 20]
@@ -451,7 +451,10 @@ def main():
 
         for p_j, p_m in zip(problem_j, problem_m):  # select problem size
 
-            testing_instances = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))
+            if p_j == 150:
+                testing_instances = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))[:10]
+            else:
+                testing_instances = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))
             print('\nStart testing {}{}x{}...\n'.format(test_t, p_j, p_m))
 
             # read saved gap_against or use ortools to solve it.
@@ -476,43 +479,14 @@ def main():
                     ortools_results = np.array(ortools_results)
                     np.save('./test_data/syn{}x{}_result.npy'.format(p_j, p_m), ortools_results)
                     gap_against = ortools_results[:, 1]
+            if p_j == 150:
+                gap_against = gap_against[:10]
 
 
 
             for init in init_type:
 
                 from pathlib import Path
-
-                '''greedy_path_result = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
-                greedy_path_time = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_time.npy'.format(test_t, p_j, p_m, init))
-                if not greedy_path_result.is_file() or not greedy_path_time.is_file():
-                    print('Testing Greedy Policy...')
-                    if p_j >= 100 and testing_instances.shape[0] >= 20:
-                        chunk_size = 100
-                        print('Problem of size {}x{} containing {} instances is too large to form a batch. Splitting into chunks and test seperately. Chunk size is {}.'.format(p_j, p_m, testing_instances.shape[0], chunk_size))
-                    else:
-                        chunk_size = testing_instances.shape[0]
-                    n_chunks = testing_instances.shape[0] // chunk_size
-                    greedy_policy, greedy_time = [], []
-                    for i in range(n_chunks):
-                        inst_chunk = testing_instances[i * chunk_size:(i + 1) * chunk_size]
-                        greedy_makespan_per_chunk, greedy_time_per_chunk = Greedy_baselines(instances=inst_chunk, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
-                        greedy_policy.append(greedy_makespan_per_chunk)
-                        greedy_time.append(greedy_time_per_chunk)
-                        if n_chunks == 1:
-                            gap_greedy_policy_per_chunk = ((greedy_makespan_per_chunk - gap_against) / gap_against).mean(axis=-1)
-                            print('Greedy policy gap for {} testing steps are: {}'.format(transit, gap_greedy_policy_per_chunk))
-                            print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time_per_chunk))
-
-                    greedy_policy = np.concatenate(greedy_policy, axis=-1)
-                    greedy_time = np.stack(greedy_time).sum(axis=0) / n_chunks
-                    if n_chunks > 1:
-                        for i, step in enumerate(transit):
-                            print('For testing steps: {}    '.format(step),
-                                  'DRL Gap: {:.6f}    '.format(((greedy_policy[i] - gap_against) / gap_against).mean()),
-                                  'DRL results takes: {:.6f} per instance.'.format(greedy_time[i]))
-                    np.save('./test_results/conventional_results/greedy-policy/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, init), greedy_policy)
-                    np.save('./test_results/conventional_results/greedy-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init), greedy_time)'''
 
                 greedy_path_result = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
                 greedy_path_time = Path('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_time.npy'.format(test_t, p_j, p_m, init))
@@ -522,8 +496,8 @@ def main():
                     gap_greedy_policy = ((greedy_makespan - gap_against) / gap_against).mean(axis=-1)
                     print('Greedy policy gap for {} testing steps are: {}'.format(transit, gap_greedy_policy))
                     print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time))
-                    np.save('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_result.npy'.format(test_t, p_j, p_m, init), greedy_makespan)
-                    np.save('./test_results/conventional_results/{}{}x{}_greedy-policy_{}_time.npy'.format(test_t, p_j, p_m, init), greedy_time)
+                    np.save('./test_results/conventional_results/greedy-policy/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, init), greedy_makespan)
+                    np.save('./test_results/conventional_results/greedy-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init), greedy_time)
 
 
                 best_improvement_path_result = Path('./test_results/conventional_results/{}{}x{}_best-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
@@ -538,7 +512,7 @@ def main():
                     np.save('./test_results/conventional_results/best-improvement-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init), best_improvement_time)
 
 
-                first_improvement_path_result = Path('./test_results/conventional_results/{}{}x{}_first-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
+                '''first_improvement_path_result = Path('./test_results/conventional_results/{}{}x{}_first-improvement-policy_{}_result.npy'.format(test_t, p_j, p_m, init))
                 first_improvement_path_time = Path('./test_results/conventional_results/{}{}x{}_first-improvement-policy_{}_time.npy'.format(test_t, p_j, p_m, init))
                 if not first_improvement_path_result.is_file() or not first_improvement_path_time.is_file():
                     print('Testing First-Improvement Policy...')
@@ -547,7 +521,7 @@ def main():
                     print('First-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_first_improvement_policy))
                     print('First-Improvement policy time for {} testing steps are: {}'.format(transit, first_improvement_time))
                     np.save('./test_results/conventional_results/first-improvement-policy/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, init), first_improvement_makespan)
-                    np.save('./test_results/conventional_results/first-improvement-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init), first_improvement_time)
+                    np.save('./test_results/conventional_results/first-improvement-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init), first_improvement_time)'''
 
 
 

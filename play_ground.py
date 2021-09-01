@@ -24,3 +24,13 @@ arr = np.load('./test_data/{}{}x{}_result.npy'.format('syn', 150, 25))
 
 
 print(np.load('ortools_result/ortools_tai100x20_result.npy'))
+
+print()
+
+print(np.load('./test_results/DRL_results/'
+              'incumbent_20x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10/'
+              'syn_150x25_fdd-divide-mwkr_result.npy'))
+
+print(np.load('./test_results/DRL_results/'
+              'incumbent_20x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10/'
+              'syn_150x25_fdd-divide-mwkr_time.npy'))

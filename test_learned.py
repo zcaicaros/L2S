@@ -51,8 +51,8 @@ def main():
     hidden_dim = 128
     embedding_layer = 4
     policy_layer = 4
-    embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
-    heads = 2
+    embedding_type = 'gin'  # 'gin', 'dghan', 'gin+dghan'
+    heads = 1
     drop_out = 0.
 
     lr = 5e-5  # 5e-5, 4e-5

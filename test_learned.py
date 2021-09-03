@@ -40,8 +40,8 @@ def main():
     ft_problem_m = [6, 10, 5]  # [6, 10, 5]
 
     # model config
-    model_j = 20  # 10， 15， 15， 20， 20
-    model_m = 15  # 10， 10， 15， 10， 15
+    model_j = 10  # 10， 15， 15， 20， 20
+    model_m = 10  # 10， 10， 15， 10， 15
     model_l = 1
     model_h = 99
     model_init_type = 'fdd-divide-mwkr'
@@ -52,7 +52,7 @@ def main():
     embedding_layer = 4
     policy_layer = 4
     embedding_type = 'gin+dghan'  # 'gin', 'dghan', 'gin+dghan'
-    heads = 1
+    heads = 2
     drop_out = 0.
 
     lr = 5e-5  # 5e-5, 4e-5

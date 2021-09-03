@@ -22,17 +22,20 @@ heads = 1
 drop_out = 0.
 
 # training parameters
-lr = 4e-5
+lr = 5e-5
 steps_learn = 10
 transit = 500
 batch_size = 64
-episodes = 256000
+episodes = 128000
 step_validation = 10
 
 # plot parameters
+x_label_scale = 15
+y_label_scale = 15
+anchor_text_size = 15
 total_plt_steps = 100
 show = True
-save = False
+save = True
 log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = (episodes // batch_size) // total_plt_steps
 plot_step_size_validation = (episodes // batch_size) // (total_plt_steps * 10)
@@ -70,14 +73,14 @@ if log_type == 'training':
     obj1 = log1[:log1.shape[0] // plot_step_size_training * plot_step_size_training].reshape(log1.shape[0] // plot_step_size_training, -1).mean(axis=1)
     obj2 = log2[:log2.shape[0] // plot_step_size_training * plot_step_size_training].reshape(log2.shape[0] // plot_step_size_training, -1).mean(axis=1)
     # plotting...
-    plt.xlabel('iteration(stride-{})'.format(plot_step_size_training))
-    plt.ylabel('make span')
+    plt.xlabel('iteration(stride-{})'.format(plot_step_size_training), {'size': x_label_scale})
+    plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj1.shape[0])])
-    plt.plot(x, obj1, color='tab:blue', label='1 head')
-    plt.plot(x, obj2, color='tab:red', label='2 head')
+    plt.plot(x, obj1, color='tab:blue', label='GIN + DGHAN-1-Head: {}×{}'.format(j, m))
+    plt.plot(x, obj2, color='tab:red', label='GIN + DGHAN-2-Heads: {}×{}'.format(j, m))
     plt.tight_layout()
-    plt.legend()
+    plt.legend(fontsize=anchor_text_size)
     if save:
         plt.savefig('./{}{}'.format('compare_heads_training', save_file_type))
     if show:
@@ -87,14 +90,14 @@ else:
     obj_incumbent1 = log1[:log1.shape[0]//plot_step_size_validation*plot_step_size_validation, 0].reshape(log1.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     obj_incumbent2 = log2[:log2.shape[0] // plot_step_size_validation * plot_step_size_validation, 0].reshape(log2.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plotting...
-    plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation))
-    plt.ylabel('make span')
+    plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation), {'size': x_label_scale})
+    plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj_incumbent1.shape[0])])
-    plt.plot(x, obj_incumbent1, color='tab:blue', label='1 head')
-    plt.plot(x, obj_incumbent2, color='tab:red', label='2 head')
+    plt.plot(x, obj_incumbent1, color='tab:blue', label='GIN + DGHAN-1-Head: {}×{}'.format(j, m))
+    plt.plot(x, obj_incumbent2, color='tab:red', label='GIN + DGHAN-2-Head: {}×{}'.format(j, m))
     plt.tight_layout()
-    plt.legend()
+    plt.legend(fontsize=anchor_text_size)
     if save:
         plt.savefig('./{}{}'.format('compare_heads_validation_incumbent', save_file_type))
     if show:
@@ -103,14 +106,14 @@ else:
     obj_last_step1 = log1[:log1.shape[0] // plot_step_size_validation * plot_step_size_validation, 1].reshape(log1.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     obj_last_step2 = log2[:log2.shape[0] // plot_step_size_validation * plot_step_size_validation, 1].reshape(log2.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plotting...
-    plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation))
-    plt.ylabel('make span')
+    plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation), {'size': x_label_scale})
+    plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj_last_step1.shape[0])])
-    plt.plot(x, obj_last_step1, color='tab:blue', label='1 head')
-    plt.plot(x, obj_last_step2, color='tab:red', label='2 head')
+    plt.plot(x, obj_last_step1, color='tab:blue', label='GIN + DGHAN-1-Head: {}×{}'.format(j, m))
+    plt.plot(x, obj_last_step2, color='tab:red', label='GIN + DGHAN-2-Head: {}×{}'.format(j, m))
     plt.tight_layout()
-    plt.legend()
+    plt.legend(fontsize=anchor_text_size)
     if save:
         plt.savefig('./{}{}'.format('compare_heads_validation_last-step', save_file_type))
     if show:

@@ -406,7 +406,7 @@ def main():
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
+    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
     syn_problem_j = [10, 15, 15, 20, 20, 100, 150]  # [10, 15, 15, 20, 20, 100, 150]
     syn_problem_m = [10, 10, 15, 10, 15, 20, 25]  # [10, 10, 15, 10, 15, 20, 25]
     tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]  # [15, 20, 20, 30, 30, 50, 50, 100]
@@ -451,10 +451,7 @@ def main():
 
         for p_j, p_m in zip(problem_j, problem_m):  # select problem size
 
-            if p_j == 150:
-                testing_instances = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))[:10]
-            else:
-                testing_instances = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))
+            testing_instances = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))
             print('\nStart testing {}{}x{}...\n'.format(test_t, p_j, p_m))
 
             # read saved gap_against or use ortools to solve it.
@@ -479,10 +476,6 @@ def main():
                     ortools_results = np.array(ortools_results)
                     np.save('./test_data/syn{}x{}_result.npy'.format(p_j, p_m), ortools_results)
                     gap_against = ortools_results[:, 1]
-            if p_j == 150:
-                gap_against = gap_against[:10]
-
-
 
             for init in init_type:
 

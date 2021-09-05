@@ -15,11 +15,17 @@ drl_time = np.load('./test_results/DRL_results/incumbent_20x10[1,99]_fdd-divide-
 # print(drl_time)
 
 
-problem = 'yn'
-j = 20
+# problem = 'yn'
+# j = 20
+# m = 20
+# gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(problem, j, m))
+# ortools_result = np.load('./ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+# ortools_time = np.load('./ortools_result/ortools_{}{}x{}_time.npy'.format(problem, j, m))
+# print(((ortools_result - gap_against)/gap_against).mean(axis=-1))
+# print(ortools_time.mean())
+
+problem = 'syn'
+j = 100
 m = 20
-gap_against = np.load('./test_data/{}{}x{}_result.npy'.format(problem, j, m))
-ortools_result = np.load('./ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
-ortools_time = np.load('./ortools_result/ortools_{}{}x{}_time.npy'.format(problem, j, m))
-print(((ortools_result - gap_against)/gap_against).mean(axis=-1))
+ortools_time = np.load('./test_data/{}{}x{}_time.npy'.format(problem, j, m))
 print(ortools_time.mean())

@@ -15,7 +15,7 @@ def main():
     # torch.use_deterministic_algorithms(True)  # bug, refer to https://github.com/pytorch/pytorch/issues/61032
 
     show = False
-    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+    dev = 'cpu' if torch.cuda.is_available() else 'cpu'
 
     # benchmark config
     p_l = 1

@@ -240,7 +240,7 @@ class Actor(nn.Module):
 
 if __name__ == '__main__':
     import random
-    from env.env_batch import JsspN5, BatchGraph
+    from env.environment import JsspN5, BatchGraph
     from env.generateJSP import uni_instance_gen
 
     dev = 'cpu' if torch.cuda.is_available() else 'cpu'

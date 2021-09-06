@@ -5,7 +5,7 @@ import numpy.random
 from parameters import args
 import torch
 import torch.optim as optim
-from env.env_batch import JsspN5, BatchGraph
+from env.environment import JsspN5, BatchGraph
 from model.actor import Actor
 from env.generateJSP import uni_instance_gen
 from pathlib import Path

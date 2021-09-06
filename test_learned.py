@@ -3,7 +3,7 @@ import os
 import torch
 import time
 import random
-from env.env_batch import JsspN5, BatchGraph
+from env.environment import JsspN5, BatchGraph
 from model.actor import Actor
 from ortools_solver import MinimalJobshopSat
 

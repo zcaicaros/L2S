@@ -241,10 +241,13 @@ class JsspN5:
     def _instances_gen(self):
         return numpy.stack(uni_instance_gen(self.n_job, self.n_mch, self.low, self.high))
 
-    def _init(self, plot=False):
+    def _init(self, plot=False, p_list=None):
         if self.init == 'p_list':
             # p_list = np.random.permutation(np.arange(self.n_job).repeat(self.n_mch))
-            p_list = np.arange(self.n_job).repeat(self.n_mch)  # fixed priority list: [0, 0, 0, ..., n-1, n-1, n-1]
+            if p_list is None:
+                p_list = np.arange(self.n_job).repeat(self.n_mch)  # fixed priority list: [0, 0, 0, ..., n-1, n-1, n-1]
+            else:
+                p_list = p_list
             data, G = self._p_list_solver_single_instance(plot, args=[self.instance, p_list])
             return data, G
         elif self.init == 'rule':
@@ -253,12 +256,12 @@ class JsspN5:
         else:
             print('env.init = "p_list" or "rule". ')
 
-    def reset(self, instance=None, fix_instance=False, plot=False):
+    def reset(self, instance=None, fix_instance=False, p_list=None, plot=False):
         if fix_instance:
             self.instance = instance
         else:
             self.instance = self._instances_gen()
-        init_state, init_graph = self._init(plot)
+        init_state, init_graph = self._init(plot, p_list)
         self.current_graph = init_graph
         self.current_objs = init_state.y
         self.incumbent_obj = init_state.y

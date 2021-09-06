@@ -165,7 +165,7 @@ def main():
                 # if not result_file.is_file() or not time_file.is_file():
                 print('Starting rollout DRL policy...')
                 if p_j >= 100 and inst.shape[0] >= 20:
-                    chunk_size = 20
+                    chunk_size = 100
                     print('Problem of size {}x{} containing {} instances is too large to form a batch. Splitting into chunks and test seperately. Chunk size is {}.'.format(p_j, p_m, inst.shape[0], chunk_size))
                 else:
                     chunk_size = inst.shape[0]

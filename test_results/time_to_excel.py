@@ -16,9 +16,13 @@ import numpy as np
 # 'incumbent_15x15[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10'
 # 'incumbent_20x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10'
 # 'incumbent_20x15[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10'
-baseline = ['greedy', 'first-improvement', 'best-improvement']
+baseline = ['incumbent_10x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
+            'incumbent_15x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
+            'incumbent_15x15[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
+            'incumbent_20x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
+            'incumbent_20x15[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10']
 init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
+testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
 syn_problem_j = [10, 15, 15, 20, 20, 100, 150]  # [10, 15, 15, 20, 20, 100, 200]
 syn_problem_m = [10, 10, 15, 10, 15, 20, 25]  # [10, 10, 15, 10, 15, 20, 50]
 tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
@@ -60,8 +64,13 @@ for method in baseline:
 
         for p_j, p_m in zip(problem_j, problem_m):  # select problem size
             for init in init_type:
-                baseline_time = np.load('./conventional_results/{}-policy/{}{}x{}_{}_time.npy'.format(method, test_t, p_j, p_m, init))
-                mean_time_all_dataset.append(baseline_time.reshape(-1, 1))
+                if method in ['greedy', 'best-improvement', 'first-improvement',]:
+                    baseline_time = np.load('./conventional_results/{}-policy/{}{}x{}_{}_time.npy'.format(method, test_t, p_j, p_m, init))
+                    mean_time_all_dataset.append(baseline_time.reshape(-1, 1))
+                else:
+                    baseline_time = np.load(
+                        './DRL_results/{}/{}_{}x{}_{}_time.npy'.format(method, test_t, p_j, p_m, init))
+                    mean_time_all_dataset.append(baseline_time.reshape(-1, 1))
         mean_time_all_dataset.append(-np.ones(shape=[1, len(init_type)], dtype=float))
 
     # print(mean_time_all_dataset)

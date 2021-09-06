@@ -226,105 +226,38 @@ def processing_order_to_edge_index(order, instance):
 
 if __name__ == "__main__":
     from generateJSP import uni_instance_gen
-    from env.env_single import JsspN5
-    import time
-    from torch_geometric.data.batch import Batch
 
-    j = 15
-    m = 15
+    j = 10
+    m = 10
     l = 1
     h = 99
-    batch_size = 10
+    batch_size = 100
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     np.random.seed(1)
 
-    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, init='rule', rule='fdd-divide-mwkr', transition=0)
     insts = [np.concatenate([uni_instance_gen(n_j=j, n_m=m, low=l, high=h)]) for _ in range(batch_size)]
 
-    '''for _ in range(1, batch_size):
-        state, feasible_action, done = env.reset(instance=insts[_], fix_instance=True)'''
-
-    for inst in insts:
-
-        # test networkx forward and backward pass...
-        t1 = time.time()
-        state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
-        t2 = time.time()
-
-        # testing forward pass...
-        dur_earliest_st = torch.from_numpy(np.pad(inst[0].reshape(-1), (1, 1), 'constant', constant_values=0)).reshape(-1, 1).to(dev)
-        forward_pass = ForwardPass(aggr='max', flow="source_to_target")
-        earliest_st = torch.zeros(size=[j * m + 2, 1], dtype=torch.float32, device=dev)
-        adj_earliest_st = state.edge_index[:, state.edge_index[0] != state.edge_index[1]].to(dev)
-        ma_earliest_st = torch.ones(size=[j * m + 2, 1], dtype=torch.int8, device=dev)
-        ma_earliest_st[0] = 0
-
-        t3 = time.time()
-        for _ in range(j*m+2):
-            if ma_earliest_st.sum() == 0:
-                print('finish forward pass at step:', _)
-                break
-            x = dur_earliest_st + earliest_st.masked_fill(ma_earliest_st.bool(), 0)
-            earliest_st = forward_pass(x=x, edge_index=adj_earliest_st)
-            ma_earliest_st = forward_pass(x=ma_earliest_st, edge_index=adj_earliest_st)
-        t4 = time.time()
-        if torch.equal(earliest_st.cpu().squeeze() / 1000, state.x[:, 1]):
-            print('forward pass is OK! It takes:', t4 - t3, 'networkx version forward pass and backward pass take:', t2 - t1)
-
-        # testing backward pass...
-        state, feasible_action, done = env.reset(instance=inst, fix_instance=True)
-        dur_latest_st = torch.from_numpy(np.pad(inst[0].reshape(-1), (1, 1), 'constant', constant_values=0)).reshape(-1, 1).to(dev)
-        backward_pass = BackwardPass(aggr='max', flow="target_to_source")
-        latest_st = torch.zeros(size=[j * m + 2, 1], dtype=torch.float32, device=dev)
-        latest_st[-1] = - float(state.y)
-        adj_latest_st = state.edge_index[:, state.edge_index[0] != state.edge_index[1]].to(dev)
-        ma_latest_st = torch.ones(size=[j * m + 2, 1], dtype=torch.int8, device=dev)
-        ma_latest_st[-1] = 0
-        t3 = time.time()
-        for _ in range(j * m + 2):  # j * m + 2
-            if ma_latest_st.sum() == 0:
-                print('finish backward pass at step:', _)
-                break
-            x = latest_st.masked_fill(ma_latest_st.bool(), 0)
-            latest_st = backward_pass(x=x, edge_index=adj_latest_st) + dur_latest_st
-            latest_st[-1] = - float(state.y)
-            ma_latest_st = backward_pass(x=ma_latest_st, edge_index=adj_latest_st)
-        t4 = time.time()
-        if torch.equal(- latest_st.squeeze().cpu() / 1000, state.x[:, 2]):
-            print('backward pass is OK! It takes:', t4 - t3, 'networkx version forward pass and backward pass take:', t2 - t1)
-
-        # test hybrid evaluator
-        state_list = []
-        dur_list = []
-        for _ in range(batch_size):
-            state, feasible_action, done = env.reset(instance=insts[_], fix_instance=True)
-            state_list.append(state)
-            dur_list.append(np.pad(insts[_][0].reshape(-1), (1, 1), 'constant', constant_values=0))
-        batch_data = Batch.from_data_list(state_list)
-        edge_idx = batch_data.edge_index[:, batch_data.edge_index[0] != batch_data.edge_index[1]].to(dev)
-        dur = np.concatenate(dur_list)
-        dur = torch.from_numpy(dur).reshape(-1, 1).to(dev)
-        eva = Evaluator()
-        t5 = time.time()
-        est, lst, makespan = eva.forward(edge_index=edge_idx, duration=dur, n_j=j, n_m=m)
-        t6 = time.time()
-        # print(makespan)
-        # print(est.cpu().reshape(batch_size, -1, 1).max(dim=1))
-        # print(lst.cpu().reshape(batch_size, -1, 1).max(dim=1))
-        if torch.equal(est.cpu().squeeze() / 1000, batch_data.x[:, 1]) and torch.equal(lst.squeeze().cpu() / 1000, batch_data.x[:, 2]):
-            print('forward pass and backward pass are all OK! It takes:', t6 - t5, 'networkx version forward pass and backward pass take:', t2 - t1)
-
-        # get ortools solution...
+    edge_idx_batch = []
+    dur_batch = []
+    ortools_makespan = []
+    eva = Evaluator()
+    for i, inst in enumerate(insts):
+        print('Processing instance:', i+1)
         times_rearrange = np.expand_dims(inst[0], axis=-1)
         machines_rearrange = np.expand_dims(inst[1], axis=-1)
         data = np.concatenate((machines_rearrange, times_rearrange), axis=-1)
         val, sol = MinimalJobshopSat(data.tolist())
-        edg_idx = processing_order_to_edge_index(order=sol, instance=inst)
-        eva_for_ortools = Evaluator()
+        edg_idx = processing_order_to_edge_index(order=sol, instance=inst) + i*(j*m+2)
+        edge_idx_batch.append(edg_idx)
         dur = torch.from_numpy(np.pad(inst[0].reshape(-1), (1, 1), 'constant', constant_values=0)).reshape(-1, 1)
-        _, _, makespan = eva.forward(edge_index=edg_idx, duration=dur, n_j=j, n_m=m)
-        print('makespan of message-passing evaluator:', makespan.cpu().numpy()[0][0])
-        print('makespan of ortools:', val)
-
-        print()
-
+        dur_batch.append(dur)
+        ortools_makespan.append(val)
+    edge_idx_batch = torch.cat(edge_idx_batch, dim=-1)
+    dur_batch = torch.cat(dur_batch, dim=0)
+    _, _, makespan = eva.forward(edge_index=edge_idx_batch.to(dev), duration=dur_batch.to(dev), n_j=j, n_m=m)
+    # print(makespan.squeeze().cpu().numpy())
+    # print(ortools_makespan)
+    if np.array_equal(makespan.squeeze().cpu().numpy(), np.array(ortools_makespan)):
+        print('message-passing evaluator get the same makespan when it rollouts ortools solution.')
+    else:
+        print('message-passing evaluator get the different makespan when it rollouts ortools solution.')

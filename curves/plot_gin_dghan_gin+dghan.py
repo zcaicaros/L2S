@@ -34,7 +34,7 @@ x_label_scale = 15
 y_label_scale = 15
 anchor_text_size = 15
 total_plt_steps = 100
-show = True
+show = False
 save = True
 log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = (episodes // batch_size) // total_plt_steps
@@ -108,9 +108,9 @@ if log_type == 'training':
     plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj1.shape[0])])
-    plt.plot(x, obj1, color='tab:blue', label='GIN: {}×{}'.format(j, m))
-    plt.plot(x, obj2, color='tab:red', label='DGHAN: {}×{}'.format(j, m))
-    plt.plot(x, obj3, color='tab:green', label='GIN + DGHAN: {}×{}'.format(j, m))
+    plt.plot(x, obj1, color='tab:blue', label='TPM: {}×{}'.format(j, m))
+    plt.plot(x, obj2, color='tab:red', label='CAM: {}×{}'.format(j, m))
+    plt.plot(x, obj3, color='tab:green', label='TPM + CAM: {}×{}'.format(j, m))
     plt.tight_layout()
     plt.legend(fontsize=anchor_text_size)
     if save:
@@ -127,9 +127,9 @@ else:
     plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj_incumbent1.shape[0])])
-    plt.plot(x, obj_incumbent1, color='tab:blue', label='GIN: {}×{}'.format(j, m))
-    plt.plot(x, obj_incumbent2, color='tab:red', label='DGHAN: {}×{}'.format(j, m))
-    plt.plot(x, obj_incumbent3, color='tab:green', label='GIN + DGHAN: {}×{}'.format(j, m))
+    plt.plot(x, obj_incumbent1, color='tab:blue', label='TPM: {}×{}'.format(j, m))
+    plt.plot(x, obj_incumbent2, color='tab:red', label='CAM: {}×{}'.format(j, m))
+    plt.plot(x, obj_incumbent3, color='tab:green', label='TPM + CAM: {}×{}'.format(j, m))
     plt.tight_layout()
     plt.legend(fontsize=anchor_text_size)
     if save:
@@ -145,9 +145,9 @@ else:
     plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj_last_step1.shape[0])])
-    plt.plot(x, obj_last_step1, color='tab:blue', label='GIN: {}×{}'.format(j, m))
-    plt.plot(x, obj_last_step2, color='tab:red', label='DGHAN: {}×{}'.format(j, m))
-    plt.plot(x, obj_last_step3, color='tab:green', label='GIN + DGHAN: {}×{}'.format(j, m))
+    plt.plot(x, obj_last_step1, color='tab:blue', label='TPM: {}×{}'.format(j, m))
+    plt.plot(x, obj_last_step2, color='tab:red', label='CAM: {}×{}'.format(j, m))
+    plt.plot(x, obj_last_step3, color='tab:green', label='TPM + CAM: {}×{}'.format(j, m))
     plt.tight_layout()
     plt.legend(fontsize=anchor_text_size)
     if save:

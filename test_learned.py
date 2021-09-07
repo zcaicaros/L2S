@@ -22,7 +22,7 @@ def main():
     p_l = 1
     p_h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
+    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
     syn_problem_j = [10, 15, 15, 20, 20, 100, 150]  # [10, 15, 15, 20, 20, 100, 150]
     syn_problem_m = [10, 10, 15, 10, 15, 20, 25]  # [10, 10, 15, 10, 15, 20, 25]
     tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
@@ -173,21 +173,19 @@ def main():
                     n_chunks = inst.shape[0] // chunk_size
                     results_each_init, inference_time_each_init = [], []
                     for i in range(n_chunks):
-                        t3 = time.time()
+                        # t3 = time.time()
                         chunk_result, chunk_time = [], []
                         inst_chunk = inst[i*chunk_size:(i+1)*chunk_size]
                         batch_data = BatchGraph()
                         states, feasible_actions, _ = env.reset(instances=inst_chunk, init_type=init, device=dev, plot=show)
-                        t4 = time.time()
-                        print("reset:", t4 - t3)
+                        # t4 = time.time()
                         drl_start = time.time()
                         while env.itr < cap_horizon:
-                            t1 = time.time()
+                            # t1 = time.time()
                             batch_data.wrapper(*states)
                             actions, _ = policy(batch_data, feasible_actions)
                             states, _, feasible_actions, _ = env.step(actions, dev, plot=show)
-                            t2 = time.time()
-                            print('transit:', t2 - t1)
+                            # t2 = time.time()
                             for log_horizon in performance_milestones:
                                 if env.itr == log_horizon:
                                     if result_type == 'incumbent':
@@ -209,10 +207,10 @@ def main():
                             print('For testing steps: {}    '.format(step),
                                   'DRL Gap: {:.6f}    '.format(((results_each_init[i] - gap_against) / gap_against).mean()),
                                   'DRL results takes: {:.6f} per instance.'.format(inference_time_each_init[i]))
-                    # np.save(which_model + which_dateset + '_result.npy', results_each_init)
-                    # np.save(which_model + which_dateset + '_time.npy', inference_time_each_init)
-            else:
-                print('Results already exist.')
+                    np.save(which_model + which_dateset + '_result.npy', results_each_init)
+                    np.save(which_model + which_dateset + '_time.npy', inference_time_each_init)
+                else:
+                    print('Results already exist.')
 
 
 if __name__ == '__main__':

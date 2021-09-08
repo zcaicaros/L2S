@@ -51,8 +51,8 @@ x = np.arange(len(x_labels))  # the label locations
 width = 0.25  # the width of the bars
 
 fig, ax = plt.subplots()
-rects1 = ax.bar(x - (1/2)*width, tpm_cam, width, label='TPM + CAM 1-Head: 10×10', color='#f19b61', hatch='//')
-rects2 = ax.bar(x + (1/2)*width, tpm, width, label='TPM + CAM 2-Head: 10×10', color='#b0c4de', hatch="\\\\")
+rects1 = ax.bar(x - (1/2)*width, tpm_cam, width, label='TPM + CAM 1-Head: 10×10', color='#f19b61')
+rects2 = ax.bar(x + (1/2)*width, tpm, width, label='TPM + CAM 2-Head: 10×10', color='#b0c4de')
 # rects3 = ax.bar(x + width, cam, width, label='CAM', color='#b0c4de', hatch='//')
 
 # Add some text for labels, title and custom x-axis tick labels, etc.

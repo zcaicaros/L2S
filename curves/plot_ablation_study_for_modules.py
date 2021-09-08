@@ -52,9 +52,9 @@ x = np.arange(len(x_labels))  # the label locations
 width = 0.25  # the width of the bars
 
 fig, ax = plt.subplots()
-rects1 = ax.bar(x - width, tpm_cam, width, label='TPM + CAM: 10×10', color='#f19b61', hatch='//')
-rects2 = ax.bar(x + 0, tpm, width, label='TPM: 10×10', color='#b0c4de', hatch="\\\\")
-rects3 = ax.bar(x + width, cam, width, label='CAM: 10×10', color='#8fbc8f', hatch='//')
+rects1 = ax.bar(x - width, tpm_cam, width, label='TPM + CAM: 10×10', color='#f19b61')
+rects2 = ax.bar(x + 0, tpm, width, label='TPM: 10×10', color='#b0c4de')
+rects3 = ax.bar(x + width, cam, width, label='CAM: 10×10', color='#8fbc8f')
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
 ax.set_ylabel('Optimal gaps', {'size': y_label_scale})

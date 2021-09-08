@@ -7,7 +7,7 @@ methods = ['L2D', 'RL-GNN', 'Ours']
 x_labels = ['5', '10', '15', '20', '25', '30']
 steps = [500, 1000, 1500]
 
-fixed = 'm=5'  # 'j=30', 'm=5'
+fixed = 'j=30'  # 'j=30', 'm=5'
 
 
 times_for_plot = []
@@ -25,7 +25,7 @@ x_label_scale = 15
 y_label_scale = 15
 anchor_text_size = 15
 title_size = 15
-show = True
+show = False
 save = True
 save_file_type = '.pdf'
 
@@ -39,7 +39,10 @@ obj3_3 = times_for_plot[2][:, 2].reshape(-1)
 # plotting...
 # plt.xlabel('Iteration(stride-{})'.format(plot_step_size_training), {'size': x_label_scale})
 # plt.title('Computation time of m=5', {'size': title_size})
-plt.xlabel('Number of jobs', {'size': x_label_scale})
+if fixed == 'm=5':
+    plt.xlabel('Number of jobs', {'size': x_label_scale})
+else:
+    plt.xlabel('Number of machines', {'size': x_label_scale})
 plt.ylabel('Time (seconds)', {'size': y_label_scale})
 plt.grid()
 x = np.array(x_labels)

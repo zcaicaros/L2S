@@ -38,8 +38,8 @@ gaps_for_plot = np.array(gaps_for_plot).reshape(len(baseline), -1) * 100
 x_label_scale = 15
 y_label_scale = 15
 anchor_text_size = 14
-show = True
-save = False
+show = False
+save = True
 save_file_type = '.pdf'
 
 

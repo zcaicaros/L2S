@@ -28,8 +28,8 @@ model_type = 'incumbent'  # 'incumbent', 'last-step'
 
 # plot parameters
 total_plt_steps = 100
-show = True
-save = False
+show = False
+save = True
 log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = (episodes // batch_size) // total_plt_steps
 plot_step_size_validation = (episodes // batch_size) // (total_plt_steps * 10)

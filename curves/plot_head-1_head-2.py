@@ -34,8 +34,8 @@ x_label_scale = 15
 y_label_scale = 15
 anchor_text_size = 15
 total_plt_steps = 100
-show = True
-save = False
+show = False
+save = True
 log_type = 'training'  # 'training', 'validation'
 plot_step_size_training = (episodes // batch_size) // total_plt_steps
 plot_step_size_validation = (episodes // batch_size) // (total_plt_steps * 10)
@@ -73,8 +73,9 @@ if log_type == 'training':
     obj1 = log1[:log1.shape[0] // plot_step_size_training * plot_step_size_training].reshape(log1.shape[0] // plot_step_size_training, -1).mean(axis=1)
     obj2 = log2[:log2.shape[0] // plot_step_size_training * plot_step_size_training].reshape(log2.shape[0] // plot_step_size_training, -1).mean(axis=1)
     # plotting...
-    plt.xlabel('iteration(stride-{})'.format(plot_step_size_training), {'size': x_label_scale})
-    plt.ylabel('make span', {'size': y_label_scale})
+    # plt.xlabel('Iteration(stride-{})'.format(plot_step_size_training), {'size': x_label_scale})
+    plt.xlabel('Iterations', {'size': x_label_scale})
+    plt.ylabel('Makespan', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj1.shape[0])])
     plt.plot(x, obj1, color='tab:blue', label='GIN + DGHAN-1-Head: {}×{}'.format(j, m))
@@ -90,7 +91,8 @@ else:
     obj_incumbent1 = log1[:log1.shape[0]//plot_step_size_validation*plot_step_size_validation, 0].reshape(log1.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     obj_incumbent2 = log2[:log2.shape[0] // plot_step_size_validation * plot_step_size_validation, 0].reshape(log2.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plotting...
-    plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation), {'size': x_label_scale})
+    # plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation), {'size': x_label_scale})
+    plt.xlabel('Iterations', {'size': x_label_scale})
     plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj_incumbent1.shape[0])])
@@ -106,7 +108,8 @@ else:
     obj_last_step1 = log1[:log1.shape[0] // plot_step_size_validation * plot_step_size_validation, 1].reshape(log1.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     obj_last_step2 = log2[:log2.shape[0] // plot_step_size_validation * plot_step_size_validation, 1].reshape(log2.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plotting...
-    plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation), {'size': x_label_scale})
+    # plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation), {'size': x_label_scale})
+    plt.xlabel('Iterations', {'size': x_label_scale})
     plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj_last_step1.shape[0])])

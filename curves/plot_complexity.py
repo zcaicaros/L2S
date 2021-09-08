@@ -5,7 +5,6 @@ import time
 import random
 from env.environment import JsspN5, BatchGraph
 from model.actor import Actor
-from ortools_solver import MinimalJobshopSat
 from env.generateJSP import uni_instance_gen
 
 
@@ -16,8 +15,9 @@ def main():
     # torch.use_deterministic_algorithms(True)  # bug, refer to https://github.com/pytorch/pytorch/issues/61032
 
     show = False
-    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print('using cuda to test...')
+    # dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+    dev = 'cpu'
+    print('using {} to test...'.format(dev))
 
     p_l = 1
     p_h = 99

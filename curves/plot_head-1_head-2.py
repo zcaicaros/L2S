@@ -78,8 +78,8 @@ if log_type == 'training':
     plt.ylabel('Makespan', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj1.shape[0])])
-    plt.plot(x, obj1, color='tab:blue', label='GIN + DGHAN-1-Head: {}×{}'.format(j, m))
-    plt.plot(x, obj2, color='tab:red', label='GIN + DGHAN-2-Heads: {}×{}'.format(j, m))
+    plt.plot(x, obj1, color='tab:blue', label='TPM + CAM-1-Head: {}x{}'.format(j, m))
+    plt.plot(x, obj2, color='tab:red', label='TPM + CAM-2-Head: {}x{}'.format(j, m))
     plt.tight_layout()
     plt.legend(fontsize=anchor_text_size)
     if save:
@@ -96,8 +96,8 @@ else:
     plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj_incumbent1.shape[0])])
-    plt.plot(x, obj_incumbent1, color='tab:blue', label='GIN + DGHAN-1-Head: {}×{}'.format(j, m))
-    plt.plot(x, obj_incumbent2, color='tab:red', label='GIN + DGHAN-2-Head: {}×{}'.format(j, m))
+    plt.plot(x, obj_incumbent1, color='tab:blue', label='TPM + CAM-1-Head: {}x{}'.format(j, m))
+    plt.plot(x, obj_incumbent2, color='tab:red', label='TPM + CAM-2-Head: {}x{}'.format(j, m))
     plt.tight_layout()
     plt.legend(fontsize=anchor_text_size)
     if save:
@@ -113,8 +113,8 @@ else:
     plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj_last_step1.shape[0])])
-    plt.plot(x, obj_last_step1, color='tab:blue', label='GIN + DGHAN-1-Head: {}×{}'.format(j, m))
-    plt.plot(x, obj_last_step2, color='tab:red', label='GIN + DGHAN-2-Head: {}×{}'.format(j, m))
+    plt.plot(x, obj_last_step1, color='tab:blue', label='TPM + CAM-1-Head: {}x{}'.format(j, m))
+    plt.plot(x, obj_last_step2, color='tab:red', label='TPM + CAM-2-Head: {}x{}'.format(j, m))
     plt.tight_layout()
     plt.legend(fontsize=anchor_text_size)
     if save:

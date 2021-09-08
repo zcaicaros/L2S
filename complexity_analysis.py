@@ -76,7 +76,7 @@ def main():
                        embedding_type=embedding_type,
                        heads=heads,
                        dropout=drop_out).to(dev)
-        saved_model_path = '../saved_model/' \
+        saved_model_path = './saved_model/' \
                            '{}_{}x{}[{},{}]_{}_{}_{}_' \
                            '{}_{}_{}_{}_{}_' \
                            '{}_{}_{}_{}_{}_{}' \

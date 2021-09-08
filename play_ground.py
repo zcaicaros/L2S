@@ -28,4 +28,11 @@ problem = 'syn'
 j = 100
 m = 20
 ortools_time = np.load('./test_data/{}{}x{}_time.npy'.format(problem, j, m))
-print(ortools_time.mean())
+# print(ortools_time.mean())
+
+
+print(np.load('complexity/L2S_complexity_fixed_m=5_[500, 1000, 1500].npy'))
+print(np.load('complexity/L2D_complexity_fixed_j=30.npy'))
+
+np.save('complexity/RL-GNN_complexity_fixed_m=5.npy', np.array([0.15, 0.27, 0.88, 2, 3.9, 6.6]))
+np.save('complexity/RL-GNN_complexity_fixed_j=30.npy', np.array([7.5, 20, 38, 59.5, 82, 113]))

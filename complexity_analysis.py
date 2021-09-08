@@ -17,13 +17,17 @@ def main():
     show = False
     # dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     dev = 'cpu'
-    print('using {} to test...'.format(dev))
+    print('\nusing {} to test...'.format(dev))
 
     p_l = 1
     p_h = 99
     init_type = 'fdd-divide-mwkr'
-    problem_j = [30, 30, 30, 30, 30, 30]
+    fixed_j = 30
     problem_m = [5, 10, 15, 20, 25, 30]
+    problem_j = [fixed_j for _ in range(len(problem_m))]
+    # fixed_m = 5
+    # problem_j = [5, 10, 15, 20, 25, 30]
+    # problem_m = [fixed_m for _ in range(len(problem_m))]
     instance_batch_size = 1
 
     # model config
@@ -59,8 +63,10 @@ def main():
     fea_norm_const = 1000
 
 
-
+    times = []
     for p_j, p_m in zip(problem_j, problem_m):  # select problem size
+
+        times_each_size = []
 
         inst = np.array([uni_instance_gen(p_j, p_m, p_l, p_h) for _ in range(instance_batch_size)])
         print('\nStart testing {}x{}...'.format(p_j, p_m))
@@ -97,9 +103,15 @@ def main():
             states, _, feasible_actions, _ = env.step(actions, dev, plot=show)
             for log_horizon in performance_milestones:
                 if env.itr == log_horizon:
+                    times_each_size.append((time.time() - drl_start) / inst.shape[0])
                     print('For testing steps: {}    '.format(env.itr),
                           'DRL results takes: {:.6f} per instance.'.format((time.time() - drl_start) / inst.shape[0]))
 
+        times.append(times_each_size)
+
+    times = np.array(times)
+    np.save('./complexity_fixed_{}.npy'.format(fixed_j), times)
+    # np.save('./complexity_fixed_{}.npy'.format(fixed_m), times)
 
 
 if __name__ == '__main__':

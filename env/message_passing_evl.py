@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os
 import sys
+import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
@@ -9,6 +10,7 @@ from torch_geometric.typing import OptPairTensor, Adj, Size
 import torch
 from torch import Tensor
 from torch_geometric.nn.conv import MessagePassing
+import networkx as nx
 
 import collections
 # Import Python wrapper for or-tools CP-SAT solver.
@@ -223,11 +225,23 @@ def processing_order_to_edge_index(order, instance):
     return torch.nonzero(torch.from_numpy(adj)).t().contiguous()
 
 
+def forward_pass(graph):  # graph is a nx.DiGraph;
+    # assert (graph.in_degree(topological_order[0]) == 0)
+    earliest_ST = dict.fromkeys(graph.nodes, -float('inf'))
+    topo_order = list(nx.topological_sort(graph))
+    earliest_ST[topo_order[0]] = 0.
+    for n in topo_order:
+        for s in graph.successors(n):
+            if earliest_ST[s] < earliest_ST[n] + graph.edges[n, s]['weight']:
+                earliest_ST[s] = earliest_ST[n] + graph.edges[n, s]['weight']
+    # return is a dict where key is each node's ID, value is the length from source node s
+    return earliest_ST
+
 
 if __name__ == "__main__":
     from generateJSP import uni_instance_gen
 
-    j = 10
+    '''j = 10
     m = 10
     l = 1
     h = 99
@@ -260,4 +274,45 @@ if __name__ == "__main__":
     if np.array_equal(makespan.squeeze().cpu().numpy(), np.array(ortools_makespan)):
         print('message-passing evaluator get the same makespan when it rollouts ortools solution.')
     else:
-        print('message-passing evaluator get the different makespan when it rollouts ortools solution.')
+        print('message-passing evaluator get the different makespan when it rollouts ortools solution.')'''
+
+
+    # start comparing with CPM
+    from environment import JsspN5
+    from torch_geometric.utils import from_networkx
+    from torch_geometric.data.batch import Batch
+    j = 100
+    m = 20
+    l = 1
+    h = 99
+    batch_size = 128
+    dev = 'cuda'
+    np.random.seed(1)
+
+    insts = np.array([np.concatenate([uni_instance_gen(n_j=j, n_m=m, low=l, high=h)]) for _ in range(batch_size)])
+
+    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, reward_type='yaoxin', fea_norm_const=1000)
+    env.reset(instances=insts, init_type='fdd-divide-mwkr', device=dev)
+
+    nx_Gs = env.current_graphs
+
+    # rollout CPM
+    t1 = time.time()
+    for G in nx_Gs:
+        forward_pass(G)
+    t2 = time.time()
+    print('CPM takes {} seconds to rollout {} {}x{} instances'.format(t2 - t1, batch_size, j, m))
+
+    pyg_states = []
+    for i in range(batch_size):
+        dur = torch.from_numpy(np.pad(insts[i][0].reshape(-1), (1, 1), 'constant', constant_values=0)).reshape(-1, 1)
+        pyg_state = from_networkx(nx_Gs[i])
+        pyg_state.x = dur
+        pyg_states.append(pyg_state)
+    pyg_states = Batch.from_data_list(pyg_states).to(dev)
+    # rollout message-passing evaluator
+    eva = ForwardPass()
+    t3 = time.time()
+    eva.forward(edge_index=pyg_states.edge_index.to(dev), x=pyg_states.x.to(dev))
+    t4 = time.time()
+    print('Message-passing takes {} seconds to rollout {} {}x{} instances'.format(t4 - t3, batch_size, j, m))

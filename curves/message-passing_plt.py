@@ -6,7 +6,7 @@ x_label_scale = 15
 y_label_scale = 15
 anchor_text_size = 15
 show = True
-save = True
+save = False
 save_file_type = '.pdf'
 
 message_passing_cpu = np.array([0.25, 1.32, 2.61])

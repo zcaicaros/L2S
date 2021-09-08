@@ -16,7 +16,8 @@ import numpy as np
 # 'incumbent_15x15[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10'
 # 'incumbent_20x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10'
 # 'incumbent_20x15[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10'
-baseline = ['incumbent_10x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_2_0.0_5e-05_10_500_64_128000_10',
+baseline = ['incumbent_10x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
+            'incumbent_10x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_2_0.0_5e-05_10_500_64_128000_10',
             'incumbent_10x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin_NAN_5e-05_10_500_64_128000_10',
             'incumbent_10x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_dghan_1_0.0_5e-05_10_500_64_128000_10']
 init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']

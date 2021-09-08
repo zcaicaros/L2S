@@ -39,7 +39,7 @@ x_label_scale = 15
 y_label_scale = 15
 anchor_text_size = 14
 show = True
-save = True
+save = False
 save_file_type = '.pdf'
 
 
@@ -52,9 +52,9 @@ x = np.arange(len(x_labels))  # the label locations
 width = 0.25  # the width of the bars
 
 fig, ax = plt.subplots()
-rects1 = ax.bar(x - width, tpm_cam, width, label='TPM + CAM', color='#f19b61', hatch='//')
-rects2 = ax.bar(x + 0, tpm, width, label='TPM', color='#b0c4de', hatch="\\\\")
-rects3 = ax.bar(x + width, cam, width, label='CAM', color='#8fbc8f', hatch='//')
+rects1 = ax.bar(x - width, tpm_cam, width, label='TPM + CAM: 10×10', color='#f19b61', hatch='//')
+rects2 = ax.bar(x + 0, tpm, width, label='TPM: 10×10', color='#b0c4de', hatch="\\\\")
+rects3 = ax.bar(x + width, cam, width, label='CAM: 10×10', color='#8fbc8f', hatch='//')
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
 ax.set_ylabel('Optimal gaps', {'size': y_label_scale})

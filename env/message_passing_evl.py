@@ -241,11 +241,11 @@ def forward_pass(graph):  # graph is a nx.DiGraph;
 if __name__ == "__main__":
     from generateJSP import uni_instance_gen
 
-    '''j = 10
+    j = 10
     m = 10
     l = 1
     h = 99
-    batch_size = 100
+    batch_size = 1000
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
     np.random.seed(1)
 
@@ -274,10 +274,10 @@ if __name__ == "__main__":
     if np.array_equal(makespan.squeeze().cpu().numpy(), np.array(ortools_makespan)):
         print('message-passing evaluator get the same makespan when it rollouts ortools solution.')
     else:
-        print('message-passing evaluator get the different makespan when it rollouts ortools solution.')'''
+        print('message-passing evaluator get the different makespan when it rollouts ortools solution.')
 
 
-    # start comparing with CPM
+    '''# start comparing with CPM
     from environment import JsspN5
     from torch_geometric.utils import from_networkx
     from torch_geometric.data.batch import Batch
@@ -329,7 +329,7 @@ if __name__ == "__main__":
         earliest_start_time = forward_passer(x=x_forward, edge_index=pyg_states.edge_index)
         mask_earliest_start_time = forward_passer(x=mask_earliest_start_time, edge_index=pyg_states.edge_index)
     t4 = time.time()
-    print('Message-passing takes {} seconds to rollout {} {}x{} instances'.format(t4 - t3, batch_size, j, m))
+    print('Message-passing takes {} seconds to rollout {} {}x{} instances'.format(t4 - t3, batch_size, j, m))'''
 
 
 

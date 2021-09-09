@@ -30,9 +30,9 @@ episodes = 128000
 step_validation = 10
 
 # plot parameters
-x_label_scale = 15
-y_label_scale = 15
-anchor_text_size = 15
+x_label_scale = 17
+y_label_scale = 17
+anchor_text_size = 17
 total_plt_steps = 100
 show = False
 save = True
@@ -74,6 +74,7 @@ if log_type == 'training':
     obj2 = log2[:log2.shape[0] // plot_step_size_training * plot_step_size_training].reshape(log2.shape[0] // plot_step_size_training, -1).mean(axis=1)
     # plotting...
     # plt.xlabel('Iteration(stride-{})'.format(plot_step_size_training), {'size': x_label_scale})
+    plt.figure(figsize=(8, 5.5))
     plt.xlabel('Number of iterations', {'size': x_label_scale})
     plt.ylabel('Makespan', {'size': y_label_scale})
     plt.grid()
@@ -92,6 +93,7 @@ else:
     obj_incumbent2 = log2[:log2.shape[0] // plot_step_size_validation * plot_step_size_validation, 0].reshape(log2.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plotting...
     # plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation), {'size': x_label_scale})
+    plt.figure(figsize=(8, 5.5))
     plt.xlabel('Number of iterations', {'size': x_label_scale})
     plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()

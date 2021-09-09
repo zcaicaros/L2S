@@ -241,7 +241,7 @@ def forward_pass(graph):  # graph is a nx.DiGraph;
 if __name__ == "__main__":
     from generateJSP import uni_instance_gen
 
-    j = 10
+    '''j = 10
     m = 10
     l = 1
     h = 99
@@ -274,19 +274,19 @@ if __name__ == "__main__":
     if np.array_equal(makespan.squeeze().cpu().numpy(), np.array(ortools_makespan)):
         print('message-passing evaluator get the same makespan when it rollouts ortools solution.')
     else:
-        print('message-passing evaluator get the different makespan when it rollouts ortools solution.')
+        print('message-passing evaluator get the different makespan when it rollouts ortools solution.')'''
 
 
-    '''# start comparing with CPM
+    # start comparing with CPM
     from environment import JsspN5
     from torch_geometric.utils import from_networkx
     from torch_geometric.data.batch import Batch
-    j = 150
-    m = 25
+    j = 50
+    m = 20
     l = 1
     h = 99
-    batch_size = 128
-    dev = 'cpu'
+    batch_size = 1000
+    dev = 'cuda'
     np.random.seed(1)
 
     insts = np.array([np.concatenate([uni_instance_gen(n_j=j, n_m=m, low=l, high=h)]) for _ in range(batch_size)])
@@ -297,11 +297,17 @@ if __name__ == "__main__":
     nx_Gs = env.current_graphs
 
     # rollout CPM
+    cmax = []
     t1 = time.time()
     for G in nx_Gs:
-        forward_pass(G)
+        est = forward_pass(G)
+        cmax.append(max(est.values()))
     t2 = time.time()
     print('CPM takes {} seconds to rollout {} {}x{} instances'.format(t2 - t1, batch_size, j, m))
+    cmax = np.array(cmax)
+
+    if np.array_equal(cmax, env.incumbent_objs.cpu().numpy().reshape(-1)):
+        print('Env reset cmax == CPM cmax!')
 
     pyg_states = []
     for i in range(batch_size):
@@ -329,7 +335,7 @@ if __name__ == "__main__":
         earliest_start_time = forward_passer(x=x_forward, edge_index=pyg_states.edge_index)
         mask_earliest_start_time = forward_passer(x=mask_earliest_start_time, edge_index=pyg_states.edge_index)
     t4 = time.time()
-    print('Message-passing takes {} seconds to rollout {} {}x{} instances'.format(t4 - t3, batch_size, j, m))'''
+    print('Message-passing takes {} seconds to rollout {} {}x{} instances'.format(t4 - t3, batch_size, j, m))
 
 
 

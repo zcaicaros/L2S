@@ -281,12 +281,12 @@ if __name__ == "__main__":
     from environment import JsspN5
     from torch_geometric.utils import from_networkx
     from torch_geometric.data.batch import Batch
-    j = 100
-    m = 20
+    j = 150
+    m = 25
     l = 1
     h = 99
     batch_size = 128
-    dev = 'cuda'
+    dev = 'cpu'
     np.random.seed(1)
 
     insts = np.array([np.concatenate([uni_instance_gen(n_j=j, n_m=m, low=l, high=h)]) for _ in range(batch_size)])
@@ -310,9 +310,26 @@ if __name__ == "__main__":
         pyg_state.x = dur
         pyg_states.append(pyg_state)
     pyg_states = Batch.from_data_list(pyg_states).to(dev)
+
     # rollout message-passing evaluator
-    eva = ForwardPass()
+    print('Using {}'.format(dev))
+    forward_passer = ForwardPass()
     t3 = time.time()
-    eva.forward(edge_index=pyg_states.edge_index.to(dev), x=pyg_states.x.to(dev))
+    n_nodes = pyg_states.x.shape[0]
+    n_nodes_each_graph = j * m + 2
+    # forward pass...
+    index_S = np.arange(n_nodes // n_nodes_each_graph, dtype=int) * n_nodes_each_graph
+    earliest_start_time = torch.zeros_like(pyg_states.x, dtype=torch.float32, device=dev)
+    mask_earliest_start_time = torch.ones_like(pyg_states.x, dtype=torch.int8, device=dev)
+    mask_earliest_start_time[index_S] = 0
+    for _ in range(n_nodes):
+        if mask_earliest_start_time.sum() == 0:
+            break
+        x_forward = pyg_states.x + earliest_start_time.masked_fill(mask_earliest_start_time.bool(), 0)
+        earliest_start_time = forward_passer(x=x_forward, edge_index=pyg_states.edge_index)
+        mask_earliest_start_time = forward_passer(x=mask_earliest_start_time, edge_index=pyg_states.edge_index)
     t4 = time.time()
     print('Message-passing takes {} seconds to rollout {} {}x{} instances'.format(t4 - t3, batch_size, j, m))
+
+
+

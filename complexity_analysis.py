@@ -22,12 +22,12 @@ def main():
     p_l = 1
     p_h = 99
     init_type = 'fdd-divide-mwkr'
-    fixed_j = 30
-    problem_m = [5, 10, 15, 20, 25, 30]
-    problem_j = [fixed_j for _ in range(len(problem_m))]
-    # fixed_m = 5
-    # problem_j = [5, 10, 15, 20, 25, 30]
-    # problem_m = [fixed_m for _ in range(len(problem_j))]
+    # fixed_j = 30
+    # problem_m = [5, 10, 15, 20, 25, 30]
+    # problem_j = [fixed_j for _ in range(len(problem_m))]
+    fixed_m = 5
+    problem_j = [5, 10, 15, 20, 25, 30]
+    problem_m = [fixed_m for _ in range(len(problem_j))]
     instance_batch_size = 1
 
     # model config
@@ -110,8 +110,8 @@ def main():
         times.append(times_each_size)
 
     times = np.array(times)
-    np.save('./complexity/L2S_complexity_fixed_j={}_{}.npy'.format(fixed_j, performance_milestones), times)
-    # np.save('./complexity/L2S_complexity_fixed_m={}_{}.npy'.format(fixed_m, performance_milestones), times)
+    # np.save('./complexity/L2S_complexity_fixed_j={}_{}.npy'.format(fixed_j, performance_milestones), times)
+    np.save('./complexity/L2S_complexity_fixed_m={}_{}.npy'.format(fixed_m, performance_milestones), times)
 
 
 if __name__ == '__main__':

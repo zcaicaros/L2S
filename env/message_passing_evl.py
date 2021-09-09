@@ -297,17 +297,17 @@ if __name__ == "__main__":
     nx_Gs = env.current_graphs
 
     # rollout CPM
-    cmax = []
+    CPM_cmax = []
     t1 = time.time()
     for G in nx_Gs:
         est = forward_pass(G)
-        cmax.append(max(est.values()))
+        CPM_cmax.append(max(est.values()))
     t2 = time.time()
     print('CPM takes {} seconds to rollout {} {}x{} instances'.format(t2 - t1, batch_size, j, m))
-    cmax = np.array(cmax)
+    CPM_cmax = np.array(CPM_cmax)
 
-    if np.array_equal(cmax, env.incumbent_objs.cpu().numpy().reshape(-1)):
-        print('Env reset cmax == CPM cmax!')
+    if np.array_equal(CPM_cmax, env.incumbent_objs.cpu().numpy().reshape(-1)):
+        print('Env reset cmax == CPM cmax ! Congratulations!')
 
     pyg_states = []
     for i in range(batch_size):

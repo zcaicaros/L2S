@@ -285,7 +285,7 @@ if __name__ == "__main__":
     m = 20
     l = 1
     h = 99
-    batch_size = 1000
+    batch_size = 2000
     dev = 'cuda'
     np.random.seed(1)
 

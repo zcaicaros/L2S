@@ -290,7 +290,7 @@ if __name__ == "__main__":
     m = 20
     l = 1
     h = 99
-    batch_size = 1000
+    batch_size = 1
     dev = 'cpu'
     np.random.seed(1)
 
@@ -308,8 +308,7 @@ if __name__ == "__main__":
     for G in nx_Gs:
         est = forward_pass(G)
         CPM_cmax.append(max(est.values()))
-        CPM_schedule.append(np.fromiter(est.values(), dtype=float)
-)
+        CPM_schedule.append(np.fromiter(est.values(), dtype=float))
     t2 = time.time()
     print('CPM takes {} seconds to rollout {} {}x{} instances'.format(t2 - t1, batch_size, j, m))
     CPM_cmax = np.array(CPM_cmax)

@@ -285,29 +285,36 @@ if __name__ == "__main__":
     m = 20
     l = 1
     h = 99
-    batch_size = 2000
-    dev = 'cuda'
+    batch_size = 1000
+    dev = 'cpu'
     np.random.seed(1)
 
     insts = np.array([np.concatenate([uni_instance_gen(n_j=j, n_m=m, low=l, high=h)]) for _ in range(batch_size)])
 
-    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, reward_type='yaoxin', fea_norm_const=1000)
-    env.reset(instances=insts, init_type='fdd-divide-mwkr', device=dev)
+    env = JsspN5(n_job=j, n_mch=m, low=l, high=h, reward_type='yaoxin', fea_norm_const=1)
+    states, _, _ = env.reset(instances=insts, init_type='fdd-divide-mwkr', device=dev)
 
     nx_Gs = env.current_graphs
 
     # rollout CPM
     CPM_cmax = []
+    CPM_schedule = []
     t1 = time.time()
     for G in nx_Gs:
         est = forward_pass(G)
         CPM_cmax.append(max(est.values()))
+        CPM_schedule.append(np.fromiter(est.values(), dtype=float)
+)
     t2 = time.time()
     print('CPM takes {} seconds to rollout {} {}x{} instances'.format(t2 - t1, batch_size, j, m))
     CPM_cmax = np.array(CPM_cmax)
+    CPM_schedule = np.float32(CPM_schedule)
 
     if np.array_equal(CPM_cmax, env.incumbent_objs.cpu().numpy().reshape(-1)):
         print('Env reset cmax == CPM cmax ! Congratulations!')
+
+    if np.array_equal(CPM_schedule, np.float32(states[0].cpu().numpy().astype(dtype=float)[:, 1].reshape(batch_size, -1) * env.fea_norm_const)):
+        print('Env reset schedule == CPM schedule ! Congratulations!')
 
     pyg_states = []
     for i in range(batch_size):

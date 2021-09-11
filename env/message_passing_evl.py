@@ -199,6 +199,11 @@ class Evaluator:
 
 
 def processing_order_to_edge_index(order, instance):
+    """
+    order: [n_m, n_j] a numpy array specifying the processing order on each machine, each row is a machine
+    instance: [1, n_j, n_m] an instance as numpy array
+    RETURN: edge index: [2, n_j * n_m +2] tensor for the directed disjunctive graph
+    """
     dur, mch = instance[0], instance[1]
     n_j, n_m = dur.shape[0], dur.shape[1]
     n_opr = n_j*n_m

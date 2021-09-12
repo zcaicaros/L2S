@@ -183,7 +183,8 @@ class Evaluator:
         # backward pass...
         index_T = np.cumsum(np.ones(shape=[n_nodes // n_nodes_each_graph], dtype=int) * n_nodes_each_graph) - 1
         make_span = earliest_start_time[index_T]
-        latest_start_time = torch.zeros_like(duration, dtype=torch.float32, device=device)
+        # latest_start_time = torch.zeros_like(duration, dtype=torch.float32, device=device)
+        latest_start_time = - torch.ones_like(duration, dtype=torch.float32, device=device)
         latest_start_time[index_T] = - make_span
         mask_latest_start_time = torch.ones_like(duration, dtype=torch.int8, device=device)
         mask_latest_start_time[index_T] = 0

@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
  && rm -rf /var/lib/apt/lists/*
 
 # install cuda-toolkit
-RUN wget https://developer.download.nvidia.com/compute/cuda/11.1.0/local_installers/cuda_11.1.0_455.23.05_linux.run \
- && sudo sh cuda_11.1.0_455.23.05_linux.run
+#RUN wget https://developer.download.nvidia.com/compute/cuda/11.1.0/local_installers/cuda_11.1.0_455.23.05_linux.run \
+# && sudo sh ./cuda_11.1.0_455.23.05_linux.run
 
 

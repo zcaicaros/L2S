@@ -11,13 +11,14 @@ RUN apt-get update && apt-get install -y \
     sudo \
  && rm -rf /var/lib/apt/lists/*
 
-
+# add user "l2s_user" with home dir "/home/l2s_user"
 RUN useradd -md /home/l2s_user l2s_user \
  && chown -R l2s_user:l2s_user /home/l2s_user
 USER l2s_user
+# add PATH otherwise warning
 ENV PATH="/home/l2s_user/.local/bin:${PATH}"
 
-
+# install dependencies
 RUN pip install --user \
     --upgrade pip \
     torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html \

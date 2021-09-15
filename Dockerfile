@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -md /home/l2s_user l2s_user \
  && chown -R l2s_user:l2s_user /home/l2s_user
 USER l2s_user
+ENV PATH="/home/l2s_user/.local/bin:${PATH}"
 
 
 RUN pip install --user \

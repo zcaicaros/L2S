@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 
 
 RUN useradd l2s_user \
- && chown -R l2s_user:l2s_user \home\l2s_user
+ && chown -R l2s_user:l2s_user /home/l2s_user
 USER l2s_user
 
 

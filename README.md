@@ -17,3 +17,15 @@ To create a docker image named `l2s_image` with all dependencies installed, run:
 ```
 docker build -t l2s_image
 ```
+To create a container named `l2s_container` with the image `l2s_image` and stay within it:
+```
+docker run --gpus all --name l2s_container -it l2s_image
+```
+To reproduce the result in the paper, first clone the whole repo:
+```
+git clone https://github.com/zcaicaros/L2S.git
+```
+Then run:
+```
+python3 test_learned.py
+```

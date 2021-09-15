@@ -28,5 +28,6 @@ RUN pip install --user \
     torch-cluster -f https://data.pyg.org/whl/torch-1.9.0+cu111.html \
     torch-spline-conv -f https://data.pyg.org/whl/torch-1.9.0+cu111.html \
     matplotlib \
-    ortools
+    ortools \
+    --upgrade pip
 

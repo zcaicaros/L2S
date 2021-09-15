@@ -13,9 +13,9 @@ Matplotlib 3.4.3
 
 [Or-Tools](https://github.com/google/or-tools) 9.0.9048
 
-To create a docker image named `l2s_image` with all dependencies installed, `cd` inside the project folder and run:
+To create a docker image named `l2s_image` with all dependencies installed:
 ```
-docker build -t l2s_image .
+docker build -t l2s_image <dir-to-dockerfile>
 ```
 To create a container named `l2s_container` with the image `l2s_image` and stay within it:
 ```

@@ -12,3 +12,8 @@ pytorch 1.9.0 with CUDA 11.1
 Matplotlib 3.4.3
 
 [Or-Tools](https://github.com/google/or-tools) 9.0.9048
+
+To create a docker image named `l2s_image` with all dependencies installed, run:
+```
+docker build -t l2s_image
+```

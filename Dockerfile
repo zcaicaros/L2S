@@ -3,7 +3,6 @@ FROM python:3.8.10
 
 USER l2s_user
 
-
 # Install some basic utilities
 RUN apt-get update && apt-get install -y --user \
     git \

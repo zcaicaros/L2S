@@ -1,5 +1,13 @@
 FROM python:3.8.10
 
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+ && rm -rf /var/lib/apt/lists/*
+
+
 RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-ubuntu1804.pin
 RUN sudo mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600
 RUN wget https://developer.download.nvidia.com/compute/cuda/11.4.2/local_installers/cuda-repo-ubuntu1804-11-4-local_11.4.2-470.57.02-1_amd64.deb

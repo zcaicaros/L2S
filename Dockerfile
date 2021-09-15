@@ -8,10 +8,10 @@ RUN apt-get update && apt-get install -y \
     sudo \
  && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y  \
-    software-properties-common \
- && add-apt-repository ppa:deadsnakes/ppa \
- && apt-get update \
- && apt-get install -y python3.8.10
+#RUN apt-get update && apt-get install -y  \
+#    software-properties-common \
+# && add-apt-repository ppa:deadsnakes/ppa \
+# && apt-get update \
+# && apt-get install -y python3.8.10
 
 

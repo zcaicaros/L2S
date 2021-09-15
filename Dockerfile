@@ -9,8 +9,8 @@ FROM python:3.8.10
 RUN apt-get update && apt-get install -y \
     git \
     sudo \
- && rm -rf /var/lib/apt/lists/* \
-    
+ && rm -rf /var/lib/apt/lists/*
+
 RUN useradd user_l2s \
  && adduser user_l2s sudo
 USER user_l2s

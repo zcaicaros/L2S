@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y \
  && rm -rf /var/lib/apt/lists/*
 
 
-RUN useradd l2s_user
+RUN useradd l2s_user \
+ && chown -R l2s_user:l2s_user \home\l2s_user
 USER l2s_user
 
 

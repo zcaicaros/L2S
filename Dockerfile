@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.1.0-devel-ubuntu18.04
+FROM nvidia/cuda:11.1.1-devel-ubuntu18.04
 FROM python:3.8.10
 
 # Install some basic utilities

@@ -1,11 +1,11 @@
 FROM nvidia/cuda:11.1.1-devel-ubuntu18.04
 
-RUN useradd user_l2s
-USER user_l2s
-
 # nothing to do with this image
 
 FROM python:3.8.10
+
+RUN useradd user_l2s
+USER user_l2s
 
 # Install some basic utilities
 RUN apt-get update && apt-get install -y \

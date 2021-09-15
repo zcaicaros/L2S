@@ -11,13 +11,8 @@ RUN apt-get update && apt-get install -y \
     sudo \
  && rm -rf /var/lib/apt/lists/*
 
-RUN useradd user_l2s \
- && adduser user_l2s sudo
-USER user_l2s
-
-RUN /usr/local/bin/python -m pip install --upgrade pip --user
-
-RUN pip3 install --user \
+RUN pip install \
+    --upgrade pip
     torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html \
     torch-scatter -f https://data.pyg.org/whl/torch-1.9.0+cu111.html \
     torch-sparse -f https://data.pyg.org/whl/torch-1.9.0+cu111.html \

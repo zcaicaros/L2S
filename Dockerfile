@@ -1,6 +1,5 @@
-FROM python:3.8.10
 FROM nvidia/cuda:11.1.1-devel-ubuntu18.04
-
+FROM python:3.8.10
 
 # Install some basic utilities
 RUN apt-get update && apt-get install -y \
@@ -8,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     sudo \
  && rm -rf /var/lib/apt/lists/*
 
-RUN python3.8 -m pip install --upgrade pip
+RUN /usr/local/bin/python -m pip install --upgrade pip
 
 RUN pip3 install \
     torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html \

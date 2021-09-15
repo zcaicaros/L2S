@@ -19,7 +19,7 @@ docker build -t l2s_image <dir-to-dockerfile>
 ```
 To create a container named `l2s_container` with the image `l2s_image` and stay within it:
 ```
-docker run --gpus all --name l2s_container -it l2s_image
+docker run --gpus all --name l2s_container -it l2s_image bash
 ```
 To reproduce the result in the paper, first clone the whole repo:
 ```

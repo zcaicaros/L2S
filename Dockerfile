@@ -1,3 +1,6 @@
+RUN useradd user_l2s
+USER user_l2s
+
 FROM nvidia/cuda:11.1.1-devel-ubuntu18.04
 
 # nothing to do with this image

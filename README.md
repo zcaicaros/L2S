@@ -15,7 +15,7 @@ Matplotlib 3.4.3
 
 To create a docker image named `l2s_image` with all dependencies installed:
 ```
-docker build -t l2s_image <dir-to-dockerfile>
+docker build --rm -t l2s_image <dir-to-dockerfile>
 ```
 To create a container named `l2s_container` with the image `l2s_image` and stay within it:
 ```

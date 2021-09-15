@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     sudo \
  && rm -rf /var/lib/apt/lists/*
 
-RUN /usr/local/bin/python -m pip install --upgrade pip
+RUN /usr/local/bin/python -m pip3 install --upgrade pip3
 
 RUN pip3 install \
     torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html \

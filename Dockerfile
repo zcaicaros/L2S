@@ -10,10 +10,10 @@ RUN apt-get update && apt-get install -y \
     sudo \
  && rm -rf /var/lib/apt/lists/*
 
+RUN /usr/local/bin/python -m pip install --upgrade pip
+
 RUN useradd user_l2s
 USER user_l2s
-
-RUN /usr/local/bin/python -m pip install --upgrade pip
 
 RUN pip3 install --user \
     torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html \

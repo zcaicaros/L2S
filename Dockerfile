@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
  && rm -rf /var/lib/apt/lists/*
 
 
-RUN useradd -md /opt/l2s_user l2s_user \
+RUN useradd -md /home/l2s_user l2s_user \
  && chown -R l2s_user:l2s_user /home/l2s_user
 USER l2s_user
 

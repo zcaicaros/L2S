@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     git \
     sudo \
  && rm -rf /var/lib/apt/lists/* \
- # create a user and add to the sudo group of the container
+ # create a user with home dir
  && useradd -md /home/l2s l2s \
  && chown -R l2s:l2s /home/l2s \
  && echo l2s:l2s | chpasswd

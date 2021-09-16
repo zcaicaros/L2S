@@ -24,8 +24,7 @@ USER l2s
 
 
 # install dependencies
-RUN sudo -V \
-    echo l2s_passward | sudo -S pip install \
+RUN echo l2s_passward | sudo -S pip install \
     --upgrade pip \
     torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html \
     torch-scatter -f https://data.pyg.org/whl/torch-1.9.0+cu111.html \

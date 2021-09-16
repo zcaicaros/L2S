@@ -13,7 +13,7 @@ Matplotlib 3.4.3
 
 [Or-Tools](https://github.com/google/or-tools) 9.0.9048
 
-To create a docker image named `l2s_image` with `torch 1.7.0` and `CUDA` installed:
+To create a docker image named `l2s_image` with `python 3.8.3`, `torch 1.7.0`,  and `CUDA` installed:
 ```
 docker build --rm -t l2s_image <dir-to-dockerfile>
 ```

@@ -21,10 +21,6 @@ To create a container named `l2s_container` with the image `l2s_image` and stay 
 ```
 docker run --gpus all --name l2s_container -it l2s_image bash
 ```
-To reproduce the result in the paper, first clone the whole repo:
-```
-git clone https://github.com/zcaicaros/L2S.git
-```
 Then install dependencies:
 ```
 pip install --user --upgrade pip
@@ -35,4 +31,15 @@ pip install --user torch-spline-conv -f https://pytorch-geometric.com/whl/torch-
 pip install --user torch-geometric==1.7.2
 pip install --user matplotlib
 pip install --user ortools
+```
+
+## Reproducing
+To reproduce the result in the paper, first clone the whole repo:
+```
+cd /home/l2s
+git clone https://github.com/zcaicaros/L2S.git
+```
+Then run:
+```
+python3 test_learned.py
 ```

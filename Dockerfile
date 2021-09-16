@@ -13,6 +13,11 @@ RUN apt-get update && apt-get install -y \
  && rm -rf /var/lib/apt/lists/*
 
 
+RUN useradd -md /home/l2s l2s
+ # && chown -R l2s:l2s /home/l2s
+USER l2s_user
+
+
 
 # install dependencies
 RUN pip install \

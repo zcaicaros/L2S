@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     sudo \
  && rm -rf /var/lib/apt/lists/* \
  # create a user and add to the sudo group of the container
- && adduser -md /home/l2s -p l2s_passward l2s \
+ && useradd -md /home/l2s -p l2s_passward l2s \
  # && echo l2s_passward | passwd -S l2s \
  && sudo adduser l2s sudo
  # switch to user

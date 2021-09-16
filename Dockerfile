@@ -13,20 +13,18 @@ RUN apt-get update && apt-get install -y \
  && rm -rf /var/lib/apt/lists/* \
  # create a user and add to the sudo group of the container
  && useradd -md /home/l2s l2s \
- && echo l2s:l2s_passward | chpasswd \
- && adduser l2s sudo \
- && sudo -V
-
+ && chown -R l2s:l2s /home/l2s
+ && echo l2s:l2s | chpasswd
 
 # switch to user
 USER l2s
-
+ENV PATH="/home/l2s/.local/bin:${PATH}"
 
 
 # install dependencies
-RUN echo l2s_passward | sudo -S pip install \
+RUN pip install --user \
     --upgrade pip \
-    torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html \
+    torch==1.8.0+cu111 torchvision==0.9.0+cu111 torchaudio==0.8.0 -f https://download.pytorch.org/whl/torch_stable.html \
     torch-scatter -f https://data.pyg.org/whl/torch-1.9.0+cu111.html \
     torch-sparse -f https://data.pyg.org/whl/torch-1.9.0+cu111.html \
     torch-geometric==1.7.2 \

@@ -13,7 +13,7 @@ Matplotlib 3.4.3
 
 [Or-Tools](https://github.com/google/or-tools) 9.0.9048
 
-To create a docker image named `l2s_image` with all dependencies installed:
+To create a docker image named `l2s_image` with `torch 1.7.0` and `CUDA` installed:
 ```
 docker build --rm -t l2s_image <dir-to-dockerfile>
 ```
@@ -25,7 +25,14 @@ To reproduce the result in the paper, first clone the whole repo:
 ```
 git clone https://github.com/zcaicaros/L2S.git
 ```
-Then run:
+Then install dependencies:
 ```
-python3 test_learned.py
+pip install --user --upgrade pip
+pip install --user torch-scatter -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html
+pip install --user torch-sparse -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html
+pip install --user torch-cluster -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html
+pip install --user torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html
+pip install --user torch-geometric==1.7.2
+pip install --user matplotlib
+pip install --user ortools
 ```

@@ -18,10 +18,10 @@ ENV PATH="/home/l2s/.local/bin:${PATH}"
 
 # install dependencies
 RUN pip install --user --upgrade pip \
- && pip install --user --no-index torch-scatter -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html \
- && pip install --user --no-index torch-sparse -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html \
- && pip install --user --no-index torch-cluster -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html \
- && pip install --user --no-index torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html \
+ && pip install --user torch-scatter -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html \
+ && pip install --user torch-sparse -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html \
+ && pip install --user torch-cluster -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html \
+ && pip install --user torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html \
  && pip install --user matplotlib \
  && pip install --user ortools \
  && pip install --user --upgrade pip

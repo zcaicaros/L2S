@@ -23,6 +23,7 @@ docker run --gpus all --name l2s_container -it l2s_image bash
 ```
 Then install dependencies:
 ```
+cd ~
 pip install --user --upgrade pip
 pip install --user torch-scatter -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html
 pip install --user torch-sparse -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html
@@ -36,7 +37,7 @@ pip install --user ortools
 ## Reproducing
 To reproduce the result in the paper, first clone the whole repo:
 ```
-cd /home/l2s
+cd ~
 git clone https://github.com/zcaicaros/L2S.git
 ```
 Then run:

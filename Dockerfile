@@ -10,11 +10,11 @@ FROM python:3.8.10
 RUN apt-get update && apt-get install -y \
     git \
     sudo \
- && rm -rf /var/lib/apt/lists/*
-
-
-RUN useradd -md /home/l2s l2s
- # && chown -R l2s:l2s /home/l2s
+ && rm -rf /var/lib/apt/lists/* \
+ # create a user and add to the sudo group of the container
+ && useradd -md /home/l2s l2s \
+ && sudo adduser l2s
+ # switch to user
 USER l2s
 
 

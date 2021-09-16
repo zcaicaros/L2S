@@ -14,16 +14,3 @@ RUN apt-get update && apt-get install -y \
 # switch to user
 USER l2s
 ENV PATH="/home/l2s/.local/bin:${PATH}"
-
-
-# install dependencies
-RUN pip install --user --upgrade pip \
- && pip install --user --no-cache-dir torch-scatter -f https://data.pyg.org/whl/torch-1.7.0+cu110.html \
- && pip install --user --no-cache-dir torch-sparse -f https://data.pyg.org/whl/torch-1.7.0+cu110.html \
- && pip install --user --no-cache-dir torch-cluster -f https://data.pyg.org/whl/torch-1.7.0+cu110.html \
- && pip install --user --no-cache-dir torch-spline-conv -f https://data.pyg.org/whl/torch-1.7.0+cu110.html \
- && pip install --user --no-cache-dir torch-geometric==1.7.2 \
- && pip install --user matplotlib \
- && pip install --user ortools \
- && pip install --user --upgrade pip
-

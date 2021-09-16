@@ -13,14 +13,14 @@ RUN apt-get update && apt-get install -y \
  && rm -rf /var/lib/apt/lists/* \
  # create a user and add to the sudo group of the container
  && useradd -md /home/l2s l2s \
- && sudo adduser l2s
+ && sudo adduser l2s sudo
  # switch to user
 USER l2s
 
 
 
 # install dependencies
-RUN pip install \
+RUN sudo pip install \
     --upgrade pip \
     torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html \
     torch-scatter -f https://data.pyg.org/whl/torch-1.9.0+cu111.html \

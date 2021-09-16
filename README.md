@@ -1,7 +1,7 @@
 # Learning to Search for Job Shop Scheduling via Deep Reinforcement Learning
 
 ## Installation
-python 3.8.10
+python 3.8.3
 
 CUDA 11.0
 

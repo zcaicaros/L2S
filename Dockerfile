@@ -23,7 +23,6 @@ RUN pip install --user \
     --no-index torch-sparse -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html \
     --no-index torch-cluster -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html \
     --no-index torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html \
-    torch-geometric==1.7.2 \
     matplotlib \
     ortools \
     --upgrade pip

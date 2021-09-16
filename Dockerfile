@@ -1,9 +1,7 @@
 FROM pytorch/pytorch:1.9.0-cuda11.1-cudnn8-devel
 
 # nothing to do with this image
-
-
-FROM python:3.8.10
+# FROM python:3.8.10
 
 
 # Install some basic utilities

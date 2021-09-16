@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN useradd -md /home/l2s l2s
  # && chown -R l2s:l2s /home/l2s
-USER l2s_user
+USER l2s
 
 
 

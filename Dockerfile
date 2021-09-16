@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.1-cudnn8-devel-ubuntu18.04
+FROM pytorch/pytorch:1.7.0-cuda11.0-cudnn8-devel
 
 # nothing to do with this image
 FROM python:3.8.10

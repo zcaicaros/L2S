@@ -3,9 +3,9 @@
 ## Installation
 python 3.8.10
 
-CUDA 11.1
+CUDA 11.0
 
-pytorch 1.9.0 with CUDA 11.1
+pytorch 1.7.0 with CUDA 11.0
 
 [PyG](https://github.com/pyg-team/pytorch_geometric) 1.7.2 (with pytorch 1.9.0 and CUDA 11.1)
 

@@ -13,13 +13,14 @@ RUN apt-get update && apt-get install -y \
  && rm -rf /var/lib/apt/lists/* \
  # create a user and add to the sudo group of the container
  && useradd -md /home/l2s l2s \
+ && echo l2s:l2s_passward | chpasswd \
  && sudo adduser l2s sudo \
  && sudo -V
 
 
 # switch to user
-#USER l2s
-#RUN echo l2s_passward | chpasswd \
+USER l2s
+RUN echo l2s_passward | chpasswd \
 
 
 

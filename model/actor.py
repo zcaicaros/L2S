@@ -235,6 +235,11 @@ class Actor(nn.Module):
         # actions_id = torch.argmax(pi, dim=-1)  # greedy action
         sampled_actions = [[actions_id[i].item() // n_nodes_per_state, actions_id[i].item() % n_nodes_per_state] for i in range(len(feasible_actions))]
         log_prob = dist.log_prob(actions_id)
+        print(log_prob)
+        print(action_score.shape)
+        print(pi.shape)
+        print(actions_id)
+        print(torch.log(torch.gather(pi, -1, actions_id.unsqueeze(-1)) + 1e-7).squeeze(-1))
         return sampled_actions, log_prob
 
 
@@ -243,16 +248,16 @@ if __name__ == '__main__':
     from env.environment import JsspN5, BatchGraph
     from env.generateJSP import uni_instance_gen
 
-    dev = 'cpu' if torch.cuda.is_available() else 'cpu'
+    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    n_j = 150
-    n_m = 25
+    n_j = 3
+    n_m = 3
     l = 1
     h = 99
     reward_type = 'yaoxin'
     init_type = 'fdd-divide-mwkr'
     b_size = 1
-    transit = 2000
+    transit = 1
     n_workers = 5
     hid_dim = 4
 
@@ -263,8 +268,8 @@ if __name__ == '__main__':
 
     env = JsspN5(n_job=n_j, n_mch=n_m, low=l, high=h, reward_type=reward_type)
     batch_data = BatchGraph()
-    instances = np.load('../test_data/syn{}x{}.npy'.format(n_j, n_m))
-    # instances = np.array([uni_instance_gen(n_j=n_j, n_m=n_m, low=l, high=h) for _ in range(b_size)])
+    # instances = np.load('../test_data/syn{}x{}.npy'.format(n_j, n_m))
+    instances = np.array([uni_instance_gen(n_j=n_j, n_m=n_m, low=l, high=h) for _ in range(b_size)])
     states, feasible_as, dones = env.reset(instances=instances, init_type=init_type, device=dev)
     print(env.incumbent_objs)
     # print(feasible_as)

@@ -235,11 +235,11 @@ class Actor(nn.Module):
         # actions_id = torch.argmax(pi, dim=-1)  # greedy action
         sampled_actions = [[actions_id[i].item() // n_nodes_per_state, actions_id[i].item() % n_nodes_per_state] for i in range(len(feasible_actions))]
         log_prob = dist.log_prob(actions_id)
-        print(log_prob)
-        print(action_score.shape)
-        print(pi.shape)
-        print(actions_id)
-        print(torch.log(torch.gather(pi, -1, actions_id.unsqueeze(-1)) + 1e-7).squeeze(-1))
+        # print(log_prob)
+        # print(action_score.shape)
+        # print(pi.shape)
+        # print(actions_id)
+        # print(torch.log(torch.gather(pi, -1, actions_id.unsqueeze(-1)) + 1e-7).squeeze(-1))
         return sampled_actions, log_prob
 
 

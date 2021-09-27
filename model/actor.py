@@ -234,12 +234,8 @@ class Actor(nn.Module):
         actions_id = dist.sample()
         # actions_id = torch.argmax(pi, dim=-1)  # greedy action
         sampled_actions = [[actions_id[i].item() // n_nodes_per_state, actions_id[i].item() % n_nodes_per_state] for i in range(len(feasible_actions))]
-        log_prob = dist.log_prob(actions_id)
-        # print(log_prob)
-        # print(action_score.shape)
-        # print(pi.shape)
-        # print(actions_id)
-        # print(torch.log(torch.gather(pi, -1, actions_id.unsqueeze(-1)) + 1e-7).squeeze(-1))
+        # log_prob = dist.log_prob(actions_id)  # log_prob using Pytorch API, this will have a gradient shift, reference: https://github.com/pytorch/pytorch/issues/61727
+        log_prob = torch.log(torch.gather(pi, -1, actions_id.unsqueeze(-1)) + -1e-7).squeeze(-1)  # log_prob calculated manually, this will not have a gradient shift
         return sampled_actions, log_prob
 
 
@@ -256,7 +252,7 @@ if __name__ == '__main__':
     h = 99
     reward_type = 'yaoxin'
     init_type = 'fdd-divide-mwkr'
-    b_size = 1
+    b_size = 2
     transit = 1
     n_workers = 5
     hid_dim = 4

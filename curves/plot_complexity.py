@@ -7,7 +7,7 @@ methods = ['L2D', 'RL-GNN', 'Ours']
 x_labels = ['5', '10', '15', '20', '25', '30']
 steps = [500, 1000, 1500]
 
-fixed = 'j=30'  # 'j=30', 'm=5'
+fixed = 'm=5'  # 'j=30', 'm=5'
 
 
 times_for_plot = []
@@ -50,7 +50,7 @@ x = np.array(x_labels)
 plt.plot(x, obj2, color='tab:red', marker="s", label=methods[1])  # RL-GNN
 # plt.plot(x, obj3, color='tab:green', linestyle="", marker="d", label=methods[2])
 plt.plot(x, obj3_1, color='tab:blue', linestyle="--", marker="v", label=methods[2] + '-' + str(steps[0]))  # ours-500
-plt.plot(x, obj3_2, color='tab:blue', linestyle="--", marker="^", label=methods[2] + '-' + str(steps[1]))  # ours-1000
+# plt.plot(x, obj3_2, color='tab:blue', linestyle="--", marker="^", label=methods[2] + '-' + str(steps[1]))  # ours-1000
 # plt.plot(x, obj3_3, color='tab:blue', linestyle="--", marker="<", label=methods[2] + '-' + str(steps[2]))  # ours-1500
 # for i, (xe, ye) in enumerate(zip(x, obj3_1)):
 #     if i == 0:

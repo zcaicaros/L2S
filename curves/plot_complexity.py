@@ -43,15 +43,15 @@ if fixed == 'm=5':
     plt.xlabel('Number of jobs', {'size': x_label_scale})
 else:
     plt.xlabel('Number of machines', {'size': x_label_scale})
-plt.ylabel('Time (seconds)', {'size': y_label_scale})
+plt.ylabel('Seconds', {'size': y_label_scale})
 plt.grid()
 x = np.array(x_labels)
-plt.plot(x, obj1, color='tab:blue', marker="o", label=methods[0])
-plt.plot(x, obj2, color='tab:red', marker="s", label=methods[1])
+# plt.plot(x, obj1, color='tab:green', marker="o", label=methods[0])  # L2D
+plt.plot(x, obj2, color='tab:red', marker="s", label=methods[1])  # RL-GNN
 # plt.plot(x, obj3, color='tab:green', linestyle="", marker="d", label=methods[2])
-plt.plot(x, obj3_1, color='tab:green', linestyle="--", marker="v", label=methods[2] + '-' + str(steps[0]))
-plt.plot(x, obj3_2, color='tab:green', linestyle="--", marker="^", label=methods[2] + '-' + str(steps[1]))
-plt.plot(x, obj3_3, color='tab:green', linestyle="--", marker="<", label=methods[2] + '-' + str(steps[2]))
+plt.plot(x, obj3_1, color='tab:blue', linestyle="--", marker="v", label=methods[2] + '-' + str(steps[0]))  # ours-500
+plt.plot(x, obj3_2, color='tab:blue', linestyle="--", marker="^", label=methods[2] + '-' + str(steps[1]))  # ours-1000
+# plt.plot(x, obj3_3, color='tab:blue', linestyle="--", marker="<", label=methods[2] + '-' + str(steps[2]))  # ours-1500
 # for i, (xe, ye) in enumerate(zip(x, obj3_1)):
 #     if i == 0:
 #         plt.plot([xe] * len(ye), ye, '--', color='tab:green', marker="d", label=methods[2])

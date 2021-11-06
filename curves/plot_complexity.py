@@ -40,9 +40,9 @@ obj3_3 = times_for_plot[2][:, 2].reshape(-1)
 # plt.xlabel('Iteration(stride-{})'.format(plot_step_size_training), {'size': x_label_scale})
 # plt.title('Computation time of m=5', {'size': title_size})
 if fixed == 'm=5':
-    plt.xlabel('Number of jobs', {'size': x_label_scale})
+    plt.xlabel('Number of jobs {}'.format(r'$n$'), {'size': x_label_scale})
 else:
-    plt.xlabel('Number of machines', {'size': x_label_scale})
+    plt.xlabel('Number of machines {}'.format(r'$m$'), {'size': x_label_scale})
 plt.ylabel('Seconds', {'size': y_label_scale})
 plt.grid()
 x = np.array(x_labels)

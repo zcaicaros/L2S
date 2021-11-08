@@ -7,7 +7,7 @@ methods = ['L2D', 'RL-GNN', 'Ours']
 x_labels = ['5', '10', '15', '20', '25', '30']
 steps = [500, 1000, 1500]
 
-fixed = 'm=5'  # 'j=30', 'm=5'
+fixed = 'j=30'  # 'j=30', 'm=5'
 
 
 times_for_plot = []
@@ -39,7 +39,7 @@ obj3_3 = times_for_plot[2][:, 2].reshape(-1)
 # plotting...
 # plt.xlabel('Iteration(stride-{})'.format(plot_step_size_training), {'size': x_label_scale})
 # plt.title('Computation time of m=5', {'size': title_size})
-plt.figure(figsize=(4.5, 2))
+plt.figure(figsize=(5.3, 5))
 if fixed == 'm=5':
     plt.xlabel('Number of jobs {}'.format(r'$n$'), {'size': x_label_scale})
 else:

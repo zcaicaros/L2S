@@ -246,16 +246,15 @@ if __name__ == '__main__':
 
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    n_j = 3
-    n_m = 3
+    n_j = 10
+    n_m = 10
     l = 1
     h = 99
     reward_type = 'yaoxin'
     init_type = 'fdd-divide-mwkr'
     b_size = 2
     transit = 1
-    n_workers = 5
-    hid_dim = 4
+    hid_dim = 128
 
     torch.manual_seed(1)
     torch.cuda.manual_seed(1)
@@ -265,13 +264,13 @@ if __name__ == '__main__':
     env = JsspN5(n_job=n_j, n_mch=n_m, low=l, high=h, reward_type=reward_type)
     batch_data = BatchGraph()
     # instances = np.load('../test_data/syn{}x{}.npy'.format(n_j, n_m))
-    instances = np.array([uni_instance_gen(n_j=n_j, n_m=n_m, low=l, high=h) for _ in range(b_size)])
+    instances = np.load('../validation_data/validation_instance_{}x{}[{},{}].npy'.format(n_j, n_m, l, h))
+    # instances = np.array([uni_instance_gen(n_j=n_j, n_m=n_m, low=l, high=h) for _ in range(b_size)])
     states, feasible_as, dones = env.reset(instances=instances, init_type=init_type, device=dev)
-    print(env.incumbent_objs)
+    # print(env.incumbent_objs)
     # print(feasible_as)
-
-    actor = Actor(3, hid_dim, embedding_l=4, policy_l=4, embedding_type='gin+dghan').to(dev)
-    while env.itr < transit:
+    actor = Actor(3, hid_dim, embedding_l=4, policy_l=4, embedding_type='gin+dghan', heads=1, dropout=0.0).to(dev)
+    while env.itr < 500:
         batch_data.wrapper(*states)
         actions, log_ps = actor(batch_data, feasible_as)
         states, rewards, feasible_as, dones = env.step(actions, dev)
@@ -280,3 +279,10 @@ if __name__ == '__main__':
         # print(feasible_as)
 
     # grad = torch.autograd.grad(log_ps.sum(), [param for param in actor.parameters()])
+
+    # print(env.incumbent_objs)
+    # print(np.load('./validation_data/validation{}x{}_ortools_result.npy'.format(n_j, n_m)))
+
+    optimal = np.load('../validation_data/validation{}x{}_ortools_result.npy'.format(n_j, n_m))
+    gap = ((env.current_objs.view(-1).cpu().numpy() - optimal)/optimal).mean()
+    print(gap)

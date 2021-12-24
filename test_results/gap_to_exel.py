@@ -3,9 +3,11 @@ import numpy as np
 
 
 baseline = ['incumbent_10x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
-            'incumbent_10x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_2_0.0_5e-05_10_500_64_128000_10',
-            'incumbent_10x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin_NAN_5e-05_10_500_64_128000_10',
-            'incumbent_10x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_dghan_1_0.0_5e-05_10_500_64_128000_10']
+            'incumbent_15x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
+            'incumbent_15x15[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
+            'incumbent_20x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
+            'incumbent_20x15[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
+            'greedy', 'best-improvement', 'first-improvement']
 init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
 testing_type = ['syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
 syn_problem_j = [10, 15, 15, 20, 20, 100, 150]  # [10, 15, 15, 20, 20, 100, 200]

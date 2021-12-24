@@ -6,7 +6,8 @@ baseline = ['incumbent_10x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_
             'incumbent_15x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
             'incumbent_15x15[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
             'incumbent_20x10[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
-            'incumbent_20x15[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10']
+            'incumbent_20x15[1,99]_fdd-divide-mwkr_yaoxin_1_128_4_4_gin+dghan_1_0.0_5e-05_10_500_64_128000_10',
+            'greedy', 'best-improvement', 'first-improvement']
 init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
 testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
 syn_problem_j = [10, 15, 15, 20, 20, 100, 150]  # [10, 15, 15, 20, 20, 100, 200]
@@ -50,7 +51,7 @@ for method in baseline:
 
         for p_j, p_m in zip(problem_j, problem_m):  # select problem size
             for init in init_type:
-                if method in ['greedy', 'best-improvement', 'first-improvement',]:
+                if method in ['greedy', 'best-improvement', 'first-improvement']:
                     baseline_time = np.load('./conventional_results/{}-policy/{}{}x{}_{}_time.npy'.format(method, test_t, p_j, p_m, init))
                     mean_time_all_dataset.append(baseline_time.reshape(-1, 1))
                 else:

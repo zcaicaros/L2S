@@ -75,7 +75,7 @@ if log_type == 'training':
     # plotting...
     # plt.xlabel('Iteration(stride-{})'.format(plot_step_size_training), {'size': x_label_scale})
     plt.figure(figsize=(8, 5.5))
-    plt.xlabel('Number of iterations', {'size': x_label_scale})
+    plt.xlabel('Every {} batches.'.format(r'${}$'.format(plot_step_size_training)), {'size': x_label_scale})
     plt.ylabel('Makespan', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj1.shape[0])])
@@ -94,7 +94,7 @@ else:
     # plotting...
     # plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation), {'size': x_label_scale})
     plt.figure(figsize=(8, 5.5))
-    plt.xlabel('Number of iterations', {'size': x_label_scale})
+    plt.xlabel('Every {} batches.'.format(r'${}$'.format(plot_step_size_validation*10)), {'size': x_label_scale})
     plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj_incumbent1.shape[0])])
@@ -111,7 +111,7 @@ else:
     obj_last_step2 = log2[:log2.shape[0] // plot_step_size_validation * plot_step_size_validation, 1].reshape(log2.shape[0] // plot_step_size_validation, -1).mean(axis=1)
     # plotting...
     # plt.xlabel('iteration(stride-{})'.format(plot_step_size_validation), {'size': x_label_scale})
-    plt.xlabel('Number of iterations', {'size': x_label_scale})
+    plt.xlabel('Every {} batches.'.format(r'${}$'.format(plot_step_size_validation*10)), {'size': x_label_scale})
     plt.ylabel('make span', {'size': y_label_scale})
     plt.grid()
     x = np.array([i + 1 for i in range(obj_last_step1.shape[0])])

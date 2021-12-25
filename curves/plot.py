@@ -55,8 +55,8 @@ log1 = np.load('../log/'
                '{}_log_'
                .format(log_type)  # log type
                + file1 + '.npy')
-log1 = (log1 - np.load('../test_data/syn10x10_result.npy').mean())/np.load('../test_data/syn10x10_result.npy').mean()
-# log1 = (log1 - np.load('../validation_data/validation_10x10_ortools_result.npy').mean())/np.load('../test_data/syn10x10_result.npy').mean()
+# log1 = (log1 - np.load('../test_data/syn10x10_result.npy').mean())/np.load('../test_data/syn10x10_result.npy').mean()
+log1 = (log1 - np.load('../validation_data/validation10x10_ortools_result.npy').mean())/np.load('../test_data/syn10x10_result.npy').mean()
 
 # 15x10
 file2 = '{}x{}[{},{}]_{}_{}_{}_' \
@@ -69,8 +69,8 @@ log2 = np.load('../log/'
                '{}_log_'
                .format(log_type)  # log type
                + file2 + '.npy')
-log2 = (log2 - np.load('../test_data/syn15x10_result.npy').mean())/np.load('../test_data/syn15x10_result.npy').mean()
-# log2 = (log2 - np.load('../validation_data/validation_15x10_ortools_result.npy').mean())/np.load('../test_data/syn15x10_result.npy').mean()
+# log2 = (log2 - np.load('../test_data/syn15x10_result.npy').mean())/np.load('../test_data/syn15x10_result.npy').mean()
+log2 = (log2 - np.load('../validation_data/validation15x10_ortools_result.npy').mean())/np.load('../test_data/syn15x10_result.npy').mean()
 
 # 15x15
 file3 = '{}x{}[{},{}]_{}_{}_{}_' \
@@ -83,8 +83,8 @@ log3 = np.load('../log/'
                '{}_log_'
                .format(log_type)  # log type
                + file3 + '.npy')
-log3 = (log3 - np.load('../test_data/syn15x15_result.npy').mean())/np.load('../test_data/syn15x15_result.npy').mean()
-# log3 = (log3 - np.load('../validation_data/validation_15x15_ortools_result.npy').mean())/np.load('../test_data/syn15x15_result.npy').mean()
+# log3 = (log3 - np.load('../test_data/syn15x15_result.npy').mean())/np.load('../test_data/syn15x15_result.npy').mean()
+log3 = (log3 - np.load('../validation_data/validation15x15_ortools_result.npy').mean())/np.load('../test_data/syn15x15_result.npy').mean()
 
 # 20x10
 file4 = '{}x{}[{},{}]_{}_{}_{}_' \
@@ -97,8 +97,8 @@ log4 = np.load('../log/'
                '{}_log_'
                .format(log_type)  # log type
                + file4 + '.npy')
-log4 = (log4 - np.load('../test_data/syn20x10_result.npy').mean())/np.load('../test_data/syn20x10_result.npy').mean()
-# log4 = (log4 - np.load('../validation_data/validation_20x10_ortools_result.npy').mean())/np.load('../test_data/syn20x10_result.npy').mean()
+# log4 = (log4 - np.load('../test_data/syn20x10_result.npy').mean())/np.load('../test_data/syn20x10_result.npy').mean()
+log4 = (log4 - np.load('../validation_data/validation20x10_ortools_result.npy').mean())/np.load('../test_data/syn20x10_result.npy').mean()
 
 # 20x15
 file5 = '{}x{}[{},{}]_{}_{}_{}_' \

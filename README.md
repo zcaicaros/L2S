@@ -25,7 +25,7 @@ pip install --user --upgrade pip
 pip install --user torch-scatter==2.0.8 -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html
 pip install --user torch-sparse==0.6.12 -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html
 pip install --user torch-cluster==1.5.9 -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html
-pip install --user torch-spline-conv=1.2.1 -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html
+pip install --user torch-spline-conv==1.2.1 -f https://pytorch-geometric.com/whl/torch-1.7.0+cu110.html
 pip install --user torch-geometric==1.7.2
 pip install --user matplotlib==3.4.3
 pip install --user ortools==9.0.9048

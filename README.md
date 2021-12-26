@@ -10,12 +10,6 @@ pytorch 1.7.0+cu110 (torchvision 0.8.0, torchaudio 0.7.0)
 pip install torch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 -f https://download.pytorch.org/whl/cu110/torch_stable.html
 ```
 
-[PyG](https://github.com/pyg-team/pytorch_geometric) 1.7.2
-
-Matplotlib 3.4.3
-
-[Or-Tools](https://github.com/google/or-tools) 9.0.9048
-
 To create a docker image named `l2s_image` with `python 3.8.3`, `torch 1.7.0`,  and `CUDA` installed:
 ```
 docker build --rm -t l2s_image <dir-to-dockerfile>

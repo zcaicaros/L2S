@@ -15,8 +15,8 @@ def main():
     # torch.use_deterministic_algorithms(True)  # bug, refer to https://github.com/pytorch/pytorch/issues/61032
 
     show = False
-    # dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-    dev = 'cpu'
+    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+    # dev = 'cpu'
     print('\nusing {} to test...'.format(dev))
 
     p_l = 1
@@ -122,7 +122,7 @@ def main():
     # for fixed m
     # np.save('./complexity/L2S_complexity_fixed_m={}_{}.npy'.format(fixed_m, performance_milestones), times)
     # for various j and m
-    np.save('./complexity/L2S_complexity_j={}_m={}_{}.npy'.format(problem_j, problem_m, performance_milestones), times)
+    # np.save('./complexity/L2S_complexity_j={}_m={}_{}.npy'.format(problem_j, problem_m, performance_milestones), times)
 
 
 if __name__ == '__main__':

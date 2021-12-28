@@ -111,8 +111,8 @@ log5 = np.load('../log/'
                '{}_log_'
                .format(log_type)  # log type
                + file5 + '.npy')
-log5 = (log5 - np.load('../test_data/syn20x15_result.npy').mean())/np.load('../test_data/syn20x15_result.npy').mean()
-# log5 = (log5 - np.load('../validation_data/validation_20x15_ortools_result.npy').mean())/np.load('../test_data/syn20x15_result.npy').mean()
+# log5 = (log5 - np.load('../test_data/syn20x15_result.npy').mean())/np.load('../test_data/syn20x15_result.npy').mean()
+log5 = (log5 - np.load('../validation_data/validation20x15_ortools_result.npy').mean())/np.load('../test_data/syn20x15_result.npy').mean()
 
 
 if log_type == 'training':

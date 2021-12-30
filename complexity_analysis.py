@@ -32,10 +32,10 @@ def main():
     # problem_m = [fixed_m for _ in range(len(problem_j))]
 
     # various j and m
-    problem_j = [100]  # [15, 20, 20, 30, 30, 50, 50, 100]
-    problem_m = [20]  # [15, 15, 20, 15, 20, 15, 20, 20]
+    problem_j = [15]  # [15, 20, 20, 30, 30, 50, 50, 100]
+    problem_m = [15]  # [15, 15, 20, 15, 20, 15, 20, 20]
 
-    instance_batch_size = 2
+    instance_batch_size = 1
 
     # model config
     model_j = 10  # 10， 15， 15， 20， 20

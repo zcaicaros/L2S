@@ -68,7 +68,7 @@ def main():
     performance_milestones = [500]  # [500, 1000, 2000, 5000], [500, 1000, 1500]
     cap_horizon = max(performance_milestones)
     fea_norm_const = 1000
-    evaluator_type = 'CPM'  # 'message-passing', 'CPM'
+    evaluator_type = 'message-passing'  # 'message-passing', 'CPM'
 
 
     times = []

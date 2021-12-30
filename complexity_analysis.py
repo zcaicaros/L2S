@@ -32,10 +32,10 @@ def main():
     # problem_m = [fixed_m for _ in range(len(problem_j))]
 
     # various j and m
-    problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
-    problem_m = [15, 15, 20, 15, 20, 15, 20, 20]
+    problem_j = [15]  # [15, 20, 20, 30, 30, 50, 50, 100]
+    problem_m = [15]  # [15, 15, 20, 15, 20, 15, 20, 20]
 
-    instance_batch_size = 1
+    instance_batch_size = 2
 
     # model config
     model_j = 10  # 10， 15， 15， 20， 20
@@ -65,7 +65,7 @@ def main():
     dghan_param_for_saved_model = '{}_{}'.format(heads, drop_out)
 
     # MDP config
-    performance_milestones = [500, 1000, 2000, 5000]  # [500, 1000, 2000, 5000], [500, 1000, 1500]
+    performance_milestones = [500]  # [500, 1000, 2000, 5000], [500, 1000, 1500]
     cap_horizon = max(performance_milestones)
     fea_norm_const = 1000
 
@@ -78,7 +78,9 @@ def main():
         inst = np.array([uni_instance_gen(p_j, p_m, p_l, p_h) for _ in range(instance_batch_size)])
         print('\nStart testing {}x{}...'.format(p_j, p_m))
 
-        env = JsspN5(n_job=p_j, n_mch=p_m, low=p_l, high=p_h, reward_type='yaoxin', fea_norm_const=fea_norm_const)
+        env = JsspN5(n_job=p_j, n_mch=p_m, low=p_l, high=p_h,
+                     reward_type='yaoxin', fea_norm_const=fea_norm_const,
+                     evaluator_type='CPM')
 
         torch.manual_seed(seed)
 
@@ -126,5 +128,6 @@ def main():
 
 
 if __name__ == '__main__':
+    import cProfile
 
-    main()
+    cProfile.run('main()', filename='restats')

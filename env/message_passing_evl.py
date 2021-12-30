@@ -231,10 +231,13 @@ def processing_order_to_edge_index(order, instance):
     return torch.nonzero(torch.from_numpy(adj)).t().contiguous()
 
 
-def forward_pass(graph):  # graph is a nx.DiGraph;
+def forward_pass(graph, topological_order=None):  # graph is a nx.DiGraph;
     # assert (graph.in_degree(topological_order[0]) == 0)
     earliest_ST = dict.fromkeys(graph.nodes, -float('inf'))
-    topo_order = list(nx.topological_sort(graph))
+    if topological_order is None:
+        topo_order = list(nx.topological_sort(graph))
+    else:
+        topo_order = topological_order
     earliest_ST[topo_order[0]] = 0.
     for n in topo_order:
         for s in graph.successors(n):
@@ -242,6 +245,47 @@ def forward_pass(graph):  # graph is a nx.DiGraph;
                 earliest_ST[s] = earliest_ST[n] + graph.edges[n, s]['weight']
     # return is a dict where key is each node's ID, value is the length from source node s
     return earliest_ST
+
+
+def backward_pass(graph, makespan, topological_order=None):
+    if topological_order is None:
+        reverse_order = list(reversed(list(nx.topological_sort(graph))))
+    else:
+        reverse_order = list(reversed(topological_order))
+    latest_ST = dict.fromkeys(graph.nodes, float('inf'))
+    latest_ST[reverse_order[0]] = float(makespan)
+    for n in reverse_order:
+        for p in graph.predecessors(n):
+            if latest_ST[p] > latest_ST[n] - graph.edges[p, n]['weight']:
+                # assert latest_ST[n] - graph.edges[p, n]['weight'] >= 0, 'latest start times should is negative, BUG!'  # latest start times should be non-negative
+                latest_ST[p] = latest_ST[n] - graph.edges[p, n]['weight']
+    return latest_ST
+
+
+def forward_and_backward_pass(G):
+    # calculate topological order
+    topological_order = list(nx.topological_sort(G))
+    # forward and backward pass
+    est = np.fromiter(forward_pass(graph=G, topological_order=topological_order).values(), dtype=np.float32)
+    lst = np.fromiter(backward_pass(graph=G, topological_order=topological_order, makespan=est[-1]).values(), dtype=np.float32)
+    # assert np.where(est > lst)[0].shape[0] == 0, 'latest starting time is smaller than earliest starting time, bug!'  # latest starting time should be larger or equal to earliest starting time
+    return est, lst, est[-1]
+
+
+def CPM_batch_G(Gs, dev):
+    multi_est = []
+    multi_lst = []
+    multi_makespan = []
+    for G in Gs:
+        est, lst, makespan = forward_and_backward_pass(G)
+        multi_est.append(est)
+        multi_lst.append(lst)
+        multi_makespan.append([makespan])
+    multi_est = torch.from_numpy(np.concatenate(multi_est, axis=0)).view(-1, 1).to(dev)
+    multi_lst = torch.from_numpy(np.concatenate(multi_lst, axis=0)).view(-1, 1).to(dev)
+    multi_makespan = torch.tensor(multi_makespan, device=dev)
+    return multi_est, multi_lst, multi_makespan
+
 
 
 if __name__ == "__main__":
@@ -348,6 +392,13 @@ if __name__ == "__main__":
         mask_earliest_start_time = forward_passer(x=mask_earliest_start_time, edge_index=pyg_states.edge_index)
     t4 = time.time()
     print('Message-passing takes {} seconds to rollout {} {}x{} instances'.format(t4 - t3, batch_size, j, m))
+
+    t5 = time.time()
+    est, lst, makespan = CPM_batch_G(nx_Gs, dev)
+    print(time.time() - t5)
+    print(est.dtype)
+    print(lst)
+    print(makespan.dtype)
 
 
 

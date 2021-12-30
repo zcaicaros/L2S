@@ -9,7 +9,7 @@ import numpy as np
 import networkx as nx
 from env.generateJSP import uni_instance_gen
 from env.permissible_LS import permissibleLeftShift
-from env.message_passing_evl import Evaluator
+from env.message_passing_evl import Evaluator, CPM_batch_G
 import matplotlib.pyplot as plt
 import time
 import random
@@ -37,7 +37,7 @@ class BatchGraph:
 
 
 class JsspN5:
-    def __init__(self, n_job, n_mch, low, high, reward_type='yaoxin', fea_norm_const=1000):
+    def __init__(self, n_job, n_mch, low, high, reward_type='yaoxin', fea_norm_const=1000, evaluator_type='message-passing'):
 
         self.n_job = n_job
         self.n_mch = n_mch
@@ -54,7 +54,8 @@ class JsspN5:
         self.incumbent_objs = None
         self.reward_type = reward_type
         self.fea_norm_const = fea_norm_const
-        self.eva = Evaluator()
+        self.evaluator_type = evaluator_type
+        self.eva = Evaluator() if evaluator_type == 'message-passing' else CPM_batch_G
         self.adj_mat_pc = self._adj_mat_pc()
 
 
@@ -186,9 +187,12 @@ class JsspN5:
         edge_indices_mc = torch.cat(edge_indices_mc, dim=-1).to(device)
 
         durations = torch.cat(durations, dim=0).reshape(-1, 1)
-        est, lst, make_span = self.eva.forward(edge_index=torch.cat([edge_indices_pc, edge_indices_mc], dim=-1), duration=durations, n_j=self.n_job, n_m=self.n_mch)
+        if self.evaluator_type == 'message-passing':
+            est, lst, make_span = self.eva.forward(edge_index=torch.cat([edge_indices_pc, edge_indices_mc], dim=-1), duration=durations, n_j=self.n_job, n_m=self.n_mch)
+        else:
+            est, lst, make_span = self.eva(current_graphs, dev=device)
 
-        # prepare x
+            # prepare x
         x = torch.cat([durations / self.high, est / self.fea_norm_const, lst / self.fea_norm_const], dim=-1)
         # prepare batch
         batch = torch.from_numpy(np.repeat(np.arange(instances.shape[0], dtype=np.int64), repeats=self.n_job * self.n_mch + 2)).to(device)
@@ -272,7 +276,10 @@ class JsspN5:
         edge_indices_pc = torch.cat(edge_indices_pc, dim=-1).to(device)
         edge_indices_mc = torch.cat(edge_indices_mc, dim=-1).to(device)
         durations = torch.cat(durations, dim=0).reshape(-1, 1)
-        est, lst, make_span = self.eva.forward(edge_index=torch.cat([edge_indices_pc, edge_indices_mc], dim=-1), duration=durations, n_j=self.n_job, n_m=self.n_mch)
+        if self.evaluator_type == 'message-passing':
+            est, lst, make_span = self.eva.forward(edge_index=torch.cat([edge_indices_pc, edge_indices_mc], dim=-1), duration=durations, n_j=self.n_job, n_m=self.n_mch)
+        else:
+            est, lst, make_span = self.eva(current_graphs, dev=device)
 
         # prepare x
         x = torch.cat([durations / self.high, est / self.fea_norm_const, lst / self.fea_norm_const], dim=-1)
@@ -297,7 +304,10 @@ class JsspN5:
         edge_indices_pc = torch.cat(edge_indices_pc, dim=-1).to(device)
         edge_indices_mc = torch.cat(edge_indices_mc, dim=-1).to(device)
         durations = torch.from_numpy(np.concatenate(durations)).reshape(-1, 1).to(device)
-        est, lst, make_span = self.eva.forward(edge_index=torch.cat([edge_indices_pc, edge_indices_mc], dim=-1), duration=durations, n_j=n_jobs, n_m=n_machines)
+        if self.evaluator_type == 'message-passing':
+            est, lst, make_span = self.eva.forward(edge_index=torch.cat([edge_indices_pc, edge_indices_mc], dim=-1), duration=durations, n_j=self.n_job, n_m=self.n_mch)
+        else:
+            est, lst, make_span = self.eva(self.current_graphs, dev=device)
         # prepare x
         x = torch.cat([durations / self.high, est / self.fea_norm_const, lst / self.fea_norm_const], dim=-1)
         # prepare batch

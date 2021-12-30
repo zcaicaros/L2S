@@ -32,8 +32,8 @@ def main():
     # problem_m = [fixed_m for _ in range(len(problem_j))]
 
     # various j and m
-    problem_j = [15]  # [15, 20, 20, 30, 30, 50, 50, 100]
-    problem_m = [15]  # [15, 15, 20, 15, 20, 15, 20, 20]
+    problem_j = [100]  # [15, 20, 20, 30, 30, 50, 50, 100]
+    problem_m = [20]  # [15, 15, 20, 15, 20, 15, 20, 20]
 
     instance_batch_size = 2
 
@@ -68,6 +68,7 @@ def main():
     performance_milestones = [500]  # [500, 1000, 2000, 5000], [500, 1000, 1500]
     cap_horizon = max(performance_milestones)
     fea_norm_const = 1000
+    evaluator_type = 'CPM'  # 'message-passing', 'CPM'
 
 
     times = []
@@ -80,7 +81,7 @@ def main():
 
         env = JsspN5(n_job=p_j, n_mch=p_m, low=p_l, high=p_h,
                      reward_type='yaoxin', fea_norm_const=fea_norm_const,
-                     evaluator_type='CPM')
+                     evaluator_type=evaluator_type)
 
         torch.manual_seed(seed)
 

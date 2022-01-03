@@ -8,7 +8,7 @@ from model.actor import Actor
 from env.generateJSP import uni_instance_gen
 
 
-def main():
+def main(save=True):
     seed = 1
     random.seed(seed)
     np.random.seed(seed)
@@ -23,17 +23,28 @@ def main():
     p_h = 99
     init_type = 'fdd-divide-mwkr'
 
-    # fixed_j = 30
-    # problem_m = [5, 10, 15, 20, 25, 30]
-    # problem_j = [fixed_j for _ in range(len(problem_m))]
+    test_setting = 'free_for_all'  # 'fixed_job', 'fixed_machine', 'free_for_all'
 
-    # fixed_m = 5
-    # problem_j = [5, 10, 15, 20, 25, 30]
-    # problem_m = [fixed_m for _ in range(len(problem_j))]
-
-    # various j and m
-    problem_j = [100]  # [15, 20, 20, 30, 30, 50, 50, 100]
-    problem_m = [20]  # [15, 15, 20, 15, 20, 15, 20, 20]
+    if test_setting == 'fixed_job':
+        # for fixed number of jobs
+        fixed_j = 30
+        fixed_m = None
+        problem_m = [5, 10, 15, 20, 25, 30]
+        problem_j = [fixed_j for _ in range(len(problem_m))]
+    elif test_setting == 'fixed_machine':
+        # for fixed number of machines
+        fixed_m = 5
+        fixed_j = None
+        problem_j = [5, 10, 15, 20, 25, 30]
+        problem_m = [fixed_m for _ in range(len(problem_j))]
+    elif test_setting == 'free_for_all':
+        # various j and m
+        fixed_j, fixed_m = None, None
+        problem_j = [5]  # [15, 20, 20, 30, 30, 50, 50, 100]
+        problem_m = [5]  # [15, 15, 20, 15, 20, 15, 20, 20]
+    else:
+        problem_j, problem_m, fixed_j, fixed_m = None, None, None, None
+        RuntimeError, print('Invalid test setting, select from: "fixed_job", "fixed_machine", or "free_for_all".')
 
     instance_batch_size = 1
 
@@ -120,20 +131,27 @@ def main():
         times.append(times_each_size)
 
     times = np.array(times)
-    # for fixed j
-    # np.save('./complexity/L2S_complexity_fixed_j={}_{}.npy'.format(fixed_j, performance_milestones), times)
-    # for fixed m
-    # np.save('./complexity/L2S_complexity_fixed_m={}_{}.npy'.format(fixed_m, performance_milestones), times)
-    # for various j and m
-    # np.save('./complexity/L2S_complexity_j={}_m={}_{}.npy'.format(problem_j, problem_m, performance_milestones), times)
+    if save:
+        if test_setting == 'fixed_job':
+            # for fixed j
+            np.save('./complexity/L2S_complexity_fixed_j={}_{}.npy'.format(fixed_j, performance_milestones), times)
+        elif test_setting == 'fixed_machine':
+            # for fixed m
+            np.save('./complexity/L2S_complexity_fixed_m={}_{}.npy'.format(fixed_m, performance_milestones), times)
+        elif test_setting == 'free_for_all':
+            # for various j and m
+            np.save('./complexity/L2S_complexity_j={}_m={}_{}.npy'.format(problem_j, problem_m, performance_milestones),
+                    times)
+        else:
+            RuntimeError, print('Invalid test setting, select from: "fixed_job", "fixed_machine", or "free_for_all".')
 
 
 if __name__ == '__main__':
     import cProfile
 
-    log = False
+    profiling = False
 
-    if log:
+    if profiling:
         cProfile.run('main()', filename='restats')
     else:
         main()

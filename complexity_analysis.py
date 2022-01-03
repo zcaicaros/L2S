@@ -14,16 +14,7 @@ def main(save=True):
     np.random.seed(seed)
     # torch.use_deterministic_algorithms(True)  # bug, refer to https://github.com/pytorch/pytorch/issues/61032
 
-    show = False
-    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
-    # dev = 'cpu'
-    print('\nusing {} to test...'.format(dev))
-
-    p_l = 1
-    p_h = 99
-    init_type = 'fdd-divide-mwkr'
-
-    test_setting = 'free_for_all'  # 'fixed_job', 'fixed_machine', 'free_for_all'
+    test_setting = 'aaa'  # 'fixed_job', 'fixed_machine', 'free_for_all'
     assert test_setting in ['fixed_job', 'fixed_machine', 'free_for_all'], \
         'Invalid test setting, select from: "fixed_job", "fixed_machine", or "free_for_all".'
 
@@ -44,6 +35,15 @@ def main(save=True):
         fixed_j, fixed_m = None, None
         problem_j = [5]  # [15, 20, 20, 30, 30, 50, 50, 100]
         problem_m = [5]  # [15, 15, 20, 15, 20, 15, 20, 20]
+
+    show = False
+    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+    # dev = 'cpu'
+    print('\nusing {} to test...'.format(dev))
+
+    p_l = 1
+    p_h = 99
+    init_type = 'fdd-divide-mwkr'
 
     instance_batch_size = 1
 

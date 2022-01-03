@@ -146,7 +146,7 @@ def main(save):
 if __name__ == '__main__':
     import cProfile
 
-    profiling = True
+    profiling = False
     save = False
 
     if profiling:

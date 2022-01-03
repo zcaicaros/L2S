@@ -14,7 +14,7 @@ def main(save=True):
     np.random.seed(seed)
     # torch.use_deterministic_algorithms(True)  # bug, refer to https://github.com/pytorch/pytorch/issues/61032
 
-    test_setting = 'aaa'  # 'fixed_job', 'fixed_machine', 'free_for_all'
+    test_setting = 'free_for_all'  # 'fixed_job', 'fixed_machine', 'free_for_all'
     assert test_setting in ['fixed_job', 'fixed_machine', 'free_for_all'], \
         'Invalid test setting, select from: "fixed_job", "fixed_machine", or "free_for_all".'
 

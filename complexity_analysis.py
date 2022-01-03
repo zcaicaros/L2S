@@ -24,6 +24,8 @@ def main(save=True):
     init_type = 'fdd-divide-mwkr'
 
     test_setting = 'free_for_all'  # 'fixed_job', 'fixed_machine', 'free_for_all'
+    assert test_setting in ['fixed_job', 'fixed_machine', 'free_for_all'], \
+        'Invalid test setting, select from: "fixed_job", "fixed_machine", or "free_for_all".'
 
     if test_setting == 'fixed_job':
         # for fixed number of jobs
@@ -37,14 +39,11 @@ def main(save=True):
         fixed_j = None
         problem_j = [5, 10, 15, 20, 25, 30]
         problem_m = [fixed_m for _ in range(len(problem_j))]
-    elif test_setting == 'free_for_all':
+    else:
         # various j and m
         fixed_j, fixed_m = None, None
         problem_j = [5]  # [15, 20, 20, 30, 30, 50, 50, 100]
         problem_m = [5]  # [15, 15, 20, 15, 20, 15, 20, 20]
-    else:
-        problem_j, problem_m, fixed_j, fixed_m = None, None, None, None
-        RuntimeError, print('Invalid test setting, select from: "fixed_job", "fixed_machine", or "free_for_all".')
 
     instance_batch_size = 1
 
@@ -138,12 +137,10 @@ def main(save=True):
         elif test_setting == 'fixed_machine':
             # for fixed m
             np.save('./complexity/L2S_complexity_fixed_m={}_{}.npy'.format(fixed_m, performance_milestones), times)
-        elif test_setting == 'free_for_all':
+        else:
             # for various j and m
             np.save('./complexity/L2S_complexity_j={}_m={}_{}.npy'.format(problem_j, problem_m, performance_milestones),
                     times)
-        else:
-            RuntimeError, print('Invalid test setting, select from: "fixed_job", "fixed_machine", or "free_for_all".')
 
 
 if __name__ == '__main__':

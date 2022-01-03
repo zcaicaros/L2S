@@ -8,7 +8,7 @@ from model.actor import Actor
 from env.generateJSP import uni_instance_gen
 
 
-def main(save=True):
+def main(save):
     seed = 1
     random.seed(seed)
     np.random.seed(seed)
@@ -146,9 +146,10 @@ def main(save=True):
 if __name__ == '__main__':
     import cProfile
 
-    profiling = False
+    profiling = True
+    save = False
 
     if profiling:
-        cProfile.run('main()', filename='restats')
+        cProfile.run('main({})'.format(save), filename='restats')
     else:
-        main()
+        main(save)

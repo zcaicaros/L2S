@@ -153,7 +153,7 @@ if __name__ == '__main__':
     import cProfile
 
     profiling = False
-    save = True
+    save = False
 
     if profiling:
         cProfile.run('main({})'.format(save), filename='restats')

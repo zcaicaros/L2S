@@ -28,7 +28,7 @@ def main(save):
         # for fixed number of machines
         fixed_m = 5
         fixed_j = None
-        problem_j = [5] + [5, 10, 15, 20, 25, 30]  # [5] for warm up. otherwise, first size takes longer time
+        problem_j = [5] + [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]  # [5] for warm up. otherwise, first size takes longer time
         problem_m = [fixed_m for _ in range(len(problem_j))]
     else:
         # various j and m
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     import cProfile
 
     profiling = False
-    save = False
+    save = True
 
     if profiling:
         cProfile.run('main({})'.format(save), filename='restats')

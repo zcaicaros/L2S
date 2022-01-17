@@ -14,21 +14,21 @@ def main(save):
     np.random.seed(seed)
     # torch.use_deterministic_algorithms(True)  # bug, refer to https://github.com/pytorch/pytorch/issues/61032
 
-    test_setting = 'fixed_machine'  # 'fixed_job', 'fixed_machine', 'free_for_all'
+    test_setting = 'fixed_job'  # 'fixed_job', 'fixed_machine', 'free_for_all'
     assert test_setting in ['fixed_job', 'fixed_machine', 'free_for_all'], \
         'Invalid test setting, select from: "fixed_job", "fixed_machine", or "free_for_all".'
 
     if test_setting == 'fixed_job':
         # for fixed number of jobs
-        fixed_j = 30
+        fixed_j = 40
         fixed_m = None
-        problem_m = [5] + [5, 10, 15, 20, 25, 30]  # [5] for warm up. otherwise, first size takes longer time
+        problem_m = [5] + [10, 15, 20, 25, 30, 35, 40]  # [5] for warm up. otherwise, first size takes longer time
         problem_j = [fixed_j for _ in range(len(problem_m))]
     elif test_setting == 'fixed_machine':
         # for fixed number of machines
-        fixed_m = 5
+        fixed_m = 10
         fixed_j = None
-        problem_j = [5] + [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]  # [5] for warm up. otherwise, first size takes longer time
+        problem_j = [5] + [10, 15, 20, 25, 30, 35, 40]  # [5] for warm up. otherwise, first size takes longer time
         problem_m = [fixed_m for _ in range(len(problem_j))]
     else:
         # various j and m
@@ -139,10 +139,10 @@ def main(save):
     if save:
         if test_setting == 'fixed_job':
             # for fixed j
-            np.save('./complexity/L2S_complexity_fixed_j={}_{}.npy'.format(fixed_j, performance_milestones), times)
+            np.save('./complexity/L2S_complexity_j={}_{}.npy'.format(fixed_j, performance_milestones), times)
         elif test_setting == 'fixed_machine':
             # for fixed m
-            np.save('./complexity/L2S_complexity_fixed_m={}_{}.npy'.format(fixed_m, performance_milestones), times)
+            np.save('./complexity/L2S_complexity_m={}_{}.npy'.format(fixed_m, performance_milestones), times)
         else:
             # for various j and m
             np.save('./complexity/L2S_complexity_j={}_m={}_{}.npy'.format(problem_j, problem_m, performance_milestones),

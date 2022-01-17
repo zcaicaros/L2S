@@ -14,9 +14,9 @@ times_for_plot = []
 
 for method in methods:
     if method == 'Ours':
-        time = np.load('../complexity/L2S_complexity_fixed_{}_{}.npy'.format(fixed, steps))
+        time = np.load('../complexity/L2S_complexity_{}_{}.npy'.format(fixed, steps))[:6]
     else:
-        time = np.load('../complexity/{}_complexity_fixed_{}.npy'.format(method, fixed))
+        time = np.load('../complexity/{}_complexity_{}.npy'.format(method, fixed))[:6]
     times_for_plot.append(time)
 
 

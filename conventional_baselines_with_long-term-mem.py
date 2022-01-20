@@ -167,7 +167,8 @@ def Greedy_baselines(instances, search_horizon, log_step, dev, init_type='fdd-di
     tabu_size = 1
     tabu_lst = [[] for _ in range(instances.shape[0])]
 
-    x = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
+    x = torch.from_numpy(
+        np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
 
     Gs = get_initial_sols(instances=instances, low=low, high=high, init_type=init_type, dev=dev)
     pyg = Batch.from_data_list([from_networkx(G) for G in Gs])
@@ -188,9 +189,11 @@ def Greedy_baselines(instances, search_horizon, log_step, dev, init_type='fdd-di
             for a in fea_a:  # a: e.g. [1, 2]
                 Gs_all_instances.append(change_nxgraph_topology(a, G, ins))
         pyg_one_step_fwd = Batch.from_data_list([from_networkx(G) for G in Gs_all_instances])
-        _, _, make_span = eva.forward(pyg_one_step_fwd.edge_index.to(dev), duration=dur_for_find_move.to(dev), n_j=j, n_m=m)
+        _, _, make_span = eva.forward(pyg_one_step_fwd.edge_index.to(dev), duration=dur_for_find_move.to(dev), n_j=j,
+                                      n_m=m)
         make_span = make_span.cpu().numpy()
-        actions_idx = [np.argmin(make_span[start:end]) for start, end in zip(np.cumsum([0]+next_state_count[:-1]), np.cumsum(next_state_count))]
+        actions_idx = [np.argmin(make_span[start:end]) for start, end in
+                       zip(np.cumsum([0] + next_state_count[:-1]), np.cumsum(next_state_count))]
         selected_actions = [fea_a[idx] for fea_a, idx in zip(feasible_actions, actions_idx)]
 
         # move...
@@ -235,7 +238,8 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
     tabu_lst = [[] for _ in range(instances.shape[0])]
     batch_memory = [LongTermMem(mem_size=100) for _ in range(instances.shape[0])]
 
-    dur_for_move = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
+    dur_for_move = torch.from_numpy(
+        np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
 
     current_Gs = get_initial_sols(instances=instances, low=low, high=high, init_type=init_type, dev=dev)
     current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
@@ -252,7 +256,8 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
         Gs_for_find_move = [[] for _ in range(len(feasible_actions))]
         actions_for_find_move = [[] for _ in range(len(feasible_actions))]
         next_G_count = [len(fea_a) for fea_a in feasible_actions]
-        for i, (fea_a, G, t_l, ins) in enumerate(zip(feasible_actions, current_Gs, tabu_lst, instances)):  # fea_a: e.g. [[1, 2], [6, 8], ...]
+        for i, (fea_a, G, t_l, ins) in enumerate(
+                zip(feasible_actions, current_Gs, tabu_lst, instances)):  # fea_a: e.g. [[1, 2], [6, 8], ...]
             for a in fea_a:  # a: e.g. [1, 2]
                 actions_for_find_move[i].append(a)
                 if a != [0, 0]:
@@ -266,17 +271,25 @@ def BestImprovement_baseline(instances, search_horizon, log_step, dev, init_type
                 else:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
         # batching all next G
-        pyg_one_step_fwd = Batch.from_data_list([from_networkx(G) for i in range(len(feasible_actions)) for G in Gs_for_find_move[i]])
+        pyg_one_step_fwd = Batch.from_data_list(
+            [from_networkx(G) for i in range(len(feasible_actions)) for G in Gs_for_find_move[i]])
         # calculate dur for evaluator
         dur_for_find_move = np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0)
         dur_for_find_move = np.repeat(dur_for_find_move, next_G_count, axis=0).reshape(-1, 1)
         dur_for_find_move = torch.from_numpy(dur_for_find_move)
         # calculate make_span for all next G of all instances
-        _, _, make_span_for_find_moves = eva.forward(pyg_one_step_fwd.edge_index.to(dev), duration=dur_for_find_move.to(dev), n_j=j, n_m=m)
+        _, _, make_span_for_find_moves = eva.forward(pyg_one_step_fwd.edge_index.to(dev),
+                                                     duration=dur_for_find_move.to(dev), n_j=j, n_m=m)
         make_span_for_find_moves = make_span_for_find_moves.cpu().numpy()
-        min_make_span_idx_for_find_moves = [np.argmin(make_span_for_find_moves[start:end]) for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))]
-        min_make_span_for_find_moves = [ms[idx][0] for ms, idx in zip([make_span_for_find_moves[start:end] for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))], min_make_span_idx_for_find_moves)]
-        flag_need_restart = (incumbent_makespan < torch.tensor(min_make_span_for_find_moves, device=incumbent_makespan.device).reshape(-1, 1)).squeeze().cpu().numpy()
+        min_make_span_idx_for_find_moves = [np.argmin(make_span_for_find_moves[start:end]) for start, end in
+                                            zip(np.cumsum([0] + next_G_count[:-1]), np.cumsum(next_G_count))]
+        min_make_span_for_find_moves = [ms[idx][0] for ms, idx in
+                                        zip([make_span_for_find_moves[start:end] for start, end in
+                                             zip(np.cumsum([0] + next_G_count[:-1]), np.cumsum(next_G_count))],
+                                            min_make_span_idx_for_find_moves)]
+        flag_need_restart = (incumbent_makespan < torch.tensor(min_make_span_for_find_moves,
+                                                               device=incumbent_makespan.device).reshape(-1,
+                                                                                                         1)).squeeze().cpu().numpy()
         if flag_need_restart.size == 1:
             flag_need_restart = flag_need_restart.reshape(1)
         for i, (flag, min_idx) in enumerate(zip(flag_need_restart, min_make_span_idx_for_find_moves)):
@@ -323,7 +336,8 @@ def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_typ
     tabu_lst = [[] for _ in range(instances.shape[0])]
     batch_memory = [LongTermMem(mem_size=100) for _ in range(instances.shape[0])]
 
-    dur_for_move = torch.from_numpy(np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
+    dur_for_move = torch.from_numpy(
+        np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0).reshape(-1, 1))
 
     current_Gs = get_initial_sols(instances=instances, low=low, high=high, init_type=init_type, dev=dev)
     current_pyg = Batch.from_data_list([from_networkx(G) for G in current_Gs])
@@ -340,7 +354,8 @@ def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_typ
         Gs_for_find_move = [[] for _ in range(len(feasible_actions))]
         actions_for_find_move = [[] for _ in range(len(feasible_actions))]
         next_G_count = [len(fea_a) for fea_a in feasible_actions]
-        for i, (fea_a, G, t_l, ins) in enumerate(zip(feasible_actions, current_Gs, tabu_lst, instances)):  # fea_a: e.g. [[1, 2], [6, 8], ...]
+        for i, (fea_a, G, t_l, ins) in enumerate(
+                zip(feasible_actions, current_Gs, tabu_lst, instances)):  # fea_a: e.g. [[1, 2], [6, 8], ...]
             for a in fea_a:  # a: e.g. [1, 2]
                 actions_for_find_move[i].append(a)
                 if a != [0, 0]:
@@ -354,16 +369,20 @@ def FirstImprovement_baseline(instances, search_horizon, log_step, dev, init_typ
                 else:
                     Gs_for_find_move[i].append(change_nxgraph_topology(a, G, ins))
         # batching all next G
-        pyg_one_step_fwd = Batch.from_data_list([from_networkx(G) for i in range(len(feasible_actions)) for G in Gs_for_find_move[i]])
+        pyg_one_step_fwd = Batch.from_data_list(
+            [from_networkx(G) for i in range(len(feasible_actions)) for G in Gs_for_find_move[i]])
         # calculate dur for evaluator
         dur_for_find_move = np.pad(instances[:, 0].reshape(-1, n_op), ((0, 0), (1, 1)), 'constant', constant_values=0)
         dur_for_find_move = np.repeat(dur_for_find_move, next_G_count, axis=0).reshape(-1, 1)
         dur_for_find_move = torch.from_numpy(dur_for_find_move)
         # calculate make_span for all next G of all instances
-        _, _, make_span_for_find_moves = eva.forward(pyg_one_step_fwd.edge_index.to(dev), duration=dur_for_find_move.to(dev), n_j=j, n_m=m)
+        _, _, make_span_for_find_moves = eva.forward(pyg_one_step_fwd.edge_index.to(dev),
+                                                     duration=dur_for_find_move.to(dev), n_j=j, n_m=m)
         make_span_for_find_moves = make_span_for_find_moves.cpu().numpy().reshape(-1)
-        splited_make_span_for_find_moves = [make_span_for_find_moves[start:end] for start, end in zip(np.cumsum([0]+next_G_count[:-1]), np.cumsum(next_G_count))]
-        first_smaller_idx = [np.argmax(ms < target) for ms, target in zip(splited_make_span_for_find_moves, incumbent_makespan)]
+        splited_make_span_for_find_moves = [make_span_for_find_moves[start:end] for start, end in
+                                            zip(np.cumsum([0] + next_G_count[:-1]), np.cumsum(next_G_count))]
+        first_smaller_idx = [np.argmax(ms < target) for ms, target in
+                             zip(splited_make_span_for_find_moves, incumbent_makespan)]
         first_smaller_make_span = [ms[idx] for ms, idx in zip(splited_make_span_for_find_moves, first_smaller_idx)]
         flag_need_restart = incumbent_makespan < first_smaller_make_span
 
@@ -402,11 +421,15 @@ def main():
 
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+    save = False
+    force_run = True
+
     # benchmark config
     l = 1
     h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
-    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
+    testing_type = ['tai', 'abz', 'orb', 'yn', 'swv', 'la',
+                    'ft']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
     syn_problem_j = [10, 15, 15, 20, 20, 100, 150]  # [10, 15, 15, 20, 20, 100, 150]
     syn_problem_m = [10, 10, 15, 10, 15, 20, 25]  # [10, 10, 15, 10, 15, 20, 25]
     tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]  # [15, 20, 20, 30, 30, 50, 50, 100]
@@ -451,7 +474,7 @@ def main():
 
         for p_j, p_m in zip(problem_j, problem_m):  # select problem size
 
-            testing_instances = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))
+            testing_instances = np.load('./test_data/{}{}x{}.npy'.format(test_t, p_j, p_m))[[0], :, :, :]
             print('\nStart testing {}{}x{}...\n'.format(test_t, p_j, p_m))
 
             # read saved gap_against or use ortools to solve it.
@@ -481,48 +504,102 @@ def main():
 
                 from pathlib import Path
 
-
-                greedy_path_result = './test_results/conventional_results/greedy-policy/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, init)
-                greedy_path_time = './test_results/conventional_results/greedy-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init)
-                if not Path(greedy_path_result).is_file() or not Path(greedy_path_time).is_file():
+                greedy_path_result = './test_results/conventional_results/greedy-policy/{}{}x{}_{}_result.npy'.format(
+                    test_t, p_j, p_m, init)
+                greedy_path_time = './test_results/conventional_results/greedy-policy/{}{}x{}_{}_time.npy'.format(
+                    test_t, p_j, p_m, init)
+                if force_run:
                     print('Testing Greedy Policy...')
-                    greedy_makespan, greedy_time = Greedy_baselines(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
+                    greedy_makespan, greedy_time = Greedy_baselines(instances=testing_instances,
+                                                                    search_horizon=cap_horizon, log_step=transit,
+                                                                    dev=dev, init_type=init, low=l, high=h)
                     gap_greedy_policy = ((greedy_makespan - gap_against) / gap_against).mean(axis=-1)
                     print('Greedy policy gap for {} testing steps are: {}'.format(transit, gap_greedy_policy))
                     print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time))
-                    np.save(greedy_path_result, greedy_makespan)
-                    np.save(greedy_path_time, greedy_time)
+                    if save:
+                        np.save(greedy_path_result, greedy_makespan)
+                        np.save(greedy_path_time, greedy_time)
+                else:
+                    if not Path(greedy_path_result).is_file() or not Path(greedy_path_time).is_file():
+                        print('Testing Greedy Policy...')
+                        greedy_makespan, greedy_time = Greedy_baselines(instances=testing_instances,
+                                                                        search_horizon=cap_horizon, log_step=transit,
+                                                                        dev=dev, init_type=init, low=l, high=h)
+                        gap_greedy_policy = ((greedy_makespan - gap_against) / gap_against).mean(axis=-1)
+                        print('Greedy policy gap for {} testing steps are: {}'.format(transit, gap_greedy_policy))
+                        print('Greedy policy time for {} testing steps are: {}'.format(transit, greedy_time))
+                        if save:
+                            np.save(greedy_path_result, greedy_makespan)
+                            np.save(greedy_path_time, greedy_time)
 
-
-                best_improvement_path_result = './test_results/conventional_results/best-improvement-policy/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, init)
-                best_improvement_path_time = './test_results/conventional_results/best-improvement-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init)
-                if not Path(best_improvement_path_result).is_file() or not Path(best_improvement_path_time).is_file():
+                best_improvement_path_result = './test_results/conventional_results/best-improvement-policy/{}{}x{}_{}_result.npy'.format(
+                    test_t, p_j, p_m, init)
+                best_improvement_path_time = './test_results/conventional_results/best-improvement-policy/{}{}x{}_{}_time.npy'.format(
+                    test_t, p_j, p_m, init)
+                if force_run:
                     print('Testing Best-Improvement Policy...')
-                    best_improvement_makespan, best_improvement_time = BestImprovement_baseline(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
-                    gap_best_improvement_policy = ((best_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
-                    print('Best-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_best_improvement_policy))
-                    print('Best-Improvement policy time for {} testing steps are: {}'.format(transit, best_improvement_time))
-                    np.save(best_improvement_path_result, best_improvement_makespan)
-                    np.save(best_improvement_path_time, best_improvement_time)
+                    best_improvement_makespan, best_improvement_time = BestImprovement_baseline(
+                        instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev,
+                        init_type=init, low=l, high=h)
+                    gap_best_improvement_policy = ((best_improvement_makespan - gap_against) / gap_against).mean(
+                        axis=-1)
+                    print('Best-Improvement policy gap for {} testing steps are: {}'.format(transit,
+                                                                                            gap_best_improvement_policy))
+                    print('Best-Improvement policy time for {} testing steps are: {}'.format(transit,
+                                                                                             best_improvement_time))
+                    if save:
+                        np.save(best_improvement_path_result, best_improvement_makespan)
+                        np.save(best_improvement_path_time, best_improvement_time)
+                else:
+                    if not Path(best_improvement_path_result).is_file() or not Path(best_improvement_path_time).is_file():
+                        print('Testing Best-Improvement Policy...')
+                        best_improvement_makespan, best_improvement_time = BestImprovement_baseline(
+                            instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev,
+                            init_type=init, low=l, high=h)
+                        gap_best_improvement_policy = ((best_improvement_makespan - gap_against) / gap_against).mean(
+                            axis=-1)
+                        print('Best-Improvement policy gap for {} testing steps are: {}'.format(transit,
+                                                                                                gap_best_improvement_policy))
+                        print('Best-Improvement policy time for {} testing steps are: {}'.format(transit,
+                                                                                                 best_improvement_time))
+                        if save:
+                            np.save(best_improvement_path_result, best_improvement_makespan)
+                            np.save(best_improvement_path_time, best_improvement_time)
 
-
-                first_improvement_path_result = './test_results/conventional_results/first-improvement-policy/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, init)
-                first_improvement_path_time = './test_results/conventional_results/first-improvement-policy/{}{}x{}_{}_time.npy'.format(test_t, p_j, p_m, init)
-                if not Path(first_improvement_path_result).is_file() or not Path(first_improvement_path_time).is_file():
+                first_improvement_path_result = './test_results/conventional_results/first-improvement-policy/{}{}x{}_{}_result.npy'.format(
+                    test_t, p_j, p_m, init)
+                first_improvement_path_time = './test_results/conventional_results/first-improvement-policy/{}{}x{}_{}_time.npy'.format(
+                    test_t, p_j, p_m, init)
+                if force_run:
                     print('Testing First-Improvement Policy...')
-                    first_improvement_makespan, first_improvement_time = FirstImprovement_baseline(instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev, init_type=init, low=l, high=h)
-                    gap_first_improvement_policy = ((first_improvement_makespan - gap_against) / gap_against).mean(axis=-1)
-                    print('First-Improvement policy gap for {} testing steps are: {}'.format(transit, gap_first_improvement_policy))
-                    print('First-Improvement policy time for {} testing steps are: {}'.format(transit, first_improvement_time))
-                    np.save(first_improvement_path_result, first_improvement_makespan)
-                    np.save(first_improvement_path_time, first_improvement_time)
-
-
-
-
-
+                    first_improvement_makespan, first_improvement_time = FirstImprovement_baseline(
+                        instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev,
+                        init_type=init, low=l, high=h)
+                    gap_first_improvement_policy = ((first_improvement_makespan - gap_against) / gap_against).mean(
+                        axis=-1)
+                    print('First-Improvement policy gap for {} testing steps are: {}'.format(transit,
+                                                                                             gap_first_improvement_policy))
+                    print('First-Improvement policy time for {} testing steps are: {}'.format(transit,
+                                                                                              first_improvement_time))
+                    if save:
+                        np.save(first_improvement_path_result, first_improvement_makespan)
+                        np.save(first_improvement_path_time, first_improvement_time)
+                else:
+                    if not Path(first_improvement_path_result).is_file() or not Path(first_improvement_path_time).is_file():
+                        print('Testing First-Improvement Policy...')
+                        first_improvement_makespan, first_improvement_time = FirstImprovement_baseline(
+                            instances=testing_instances, search_horizon=cap_horizon, log_step=transit, dev=dev,
+                            init_type=init, low=l, high=h)
+                        gap_first_improvement_policy = ((first_improvement_makespan - gap_against) / gap_against).mean(
+                            axis=-1)
+                        print('First-Improvement policy gap for {} testing steps are: {}'.format(transit,
+                                                                                                 gap_first_improvement_policy))
+                        print('First-Improvement policy time for {} testing steps are: {}'.format(transit,
+                                                                                                  first_improvement_time))
+                        if save:
+                            np.save(first_improvement_path_result, first_improvement_makespan)
+                            np.save(first_improvement_path_time, first_improvement_time)
 
 
 if __name__ == "__main__":
-
     main()

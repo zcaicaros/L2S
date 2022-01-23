@@ -14,7 +14,7 @@ def main(save):
     np.random.seed(seed)
     # torch.use_deterministic_algorithms(True)  # bug, refer to https://github.com/pytorch/pytorch/issues/61032
 
-    test_setting = 'fixed_job'  # 'fixed_job', 'fixed_machine', 'free_for_all'
+    test_setting = 'free_for_all'  # 'fixed_job', 'fixed_machine', 'free_for_all'
     assert test_setting in ['fixed_job', 'fixed_machine', 'free_for_all'], \
         'Invalid test setting, select from: "fixed_job", "fixed_machine", or "free_for_all".'
 
@@ -34,8 +34,10 @@ def main(save):
         # various j and m
         fixed_j, fixed_m = None, None
         # [5] for warm up. otherwise, first size takes longer time
-        problem_j = [5] + [5]  # [15, 20, 20, 30, 30, 50, 50, 100]
-        problem_m = [5] + [5]  # [15, 15, 20, 15, 20, 15, 20, 20]
+        # problem_j = [5] + [15, 20, 20, 30, 30, 50, 50, 100, 10, 20, 6, 10, 20]
+        # problem_m = [5] + [15, 15, 20, 15, 20, 15, 20, 20, 10, 15, 6, 10, 5]
+        problem_j = [5] + [10, 15, 20, 10, 15, 20, 30, 15, 20, 20, 50, 10, 20]
+        problem_m = [5] + [5, 5, 5, 10, 10, 10, 10, 15, 10, 15, 10, 10, 20]
 
     show = False
     dev = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -76,7 +78,7 @@ def main(save):
     dghan_param_for_saved_model = '{}_{}'.format(heads, drop_out)
 
     # MDP config
-    performance_milestones = [500]  # [500, 1000, 2000, 5000], [500, 1000, 1500]
+    performance_milestones = [500, 1000, 2000, 5000]  # [500, 1000, 2000, 5000], [500, 1000, 1500]
     cap_horizon = max(performance_milestones)
     fea_norm_const = 1000
     evaluator_type = 'CPM'  # 'message-passing', 'CPM'
@@ -153,7 +155,7 @@ if __name__ == '__main__':
     import cProfile
 
     profiling = False
-    save = True
+    save = False
 
     if profiling:
         cProfile.run('main({})'.format(save), filename='restats')

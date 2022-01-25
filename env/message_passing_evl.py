@@ -331,11 +331,11 @@ if __name__ == "__main__":
     from environment import JsspN5
     from torch_geometric.utils import from_networkx
     from torch_geometric.data.batch import Batch
-    j = 50
+    j = 100
     m = 20
     l = 1
     h = 99
-    batch_size = 1
+    batch_size = 32
     dev = 'cpu'
     np.random.seed(1)
 
@@ -396,9 +396,6 @@ if __name__ == "__main__":
     t5 = time.time()
     est, lst, makespan = CPM_batch_G(nx_Gs, dev)
     print(time.time() - t5)
-    print(est.dtype)
-    print(lst)
-    print(makespan.dtype)
 
 
 

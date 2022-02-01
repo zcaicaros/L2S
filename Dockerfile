@@ -17,4 +17,4 @@ RUN apt-get update && apt-get install -y \
 
 # switch to user
 USER ${username}
-ENV PATH="/home/${username}/.local/bin:${PATH}"
+ENV PATH="/home/${project}/.local/bin:${PATH}"

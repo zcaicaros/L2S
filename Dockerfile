@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
  && useradd -md /home/${project} ${username} \
  && chown -R ${username} /home/${project} \
  && echo ${username}:${password} | chpasswd \
- && adduser ${username} sudo
+ && sudo adduser ${username} sudo
 
 # switch to user
 USER ${username}

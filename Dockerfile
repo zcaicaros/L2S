@@ -6,7 +6,7 @@ ARG username=czhang
 ARG password=czhang
 
 # Install some basic utilities
- update && apt-get install -y \
+RUN apt-get update && apt-get install -y \
     git \
     sudo \
  && rm -rf /var/lib/apt/lists/* \

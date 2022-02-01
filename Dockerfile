@@ -18,4 +18,3 @@ RUN apt-get update && apt-get install -y \
 # switch to user
 USER ${username}
 ENV PATH="/home/${project}/.local/bin:${PATH}"
-RUN cd ~

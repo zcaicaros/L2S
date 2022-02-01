@@ -1,9 +1,9 @@
 FROM pytorch/pytorch:1.7.0-cuda11.0-cudnn8-devel
 
 
-ARG project = l2s
-ARG username = czhang
-ARG password = czhang
+ARG project=l2s
+ARG username=czhang
+ARG password=czhang
 
 # Install some basic utilities
 RUN apt-get update && apt-get install -y \

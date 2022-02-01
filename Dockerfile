@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y \
  # create a user with home dir
  && useradd -md /home/${project} ${username} \
  && chown -R ${username} /home/${project} \
- && echo ${username}:${password} | chpasswd
+ && echo ${username}:${password} | chpasswd \
+ && adduser ${username} sudo
 
 # switch to user
 USER ${username}

@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     sudo \
  && rm -rf /var/lib/apt/lists/* \
  # create a user with home dir
- && adduser ${username} --home /home/${project}  \
+ && useradd -md /home/${project} ${username} \
  && chown -R ${username} /home/${project} \
  && echo ${username}:${password} | chpasswd \
  && sudo adduser ${username} sudo

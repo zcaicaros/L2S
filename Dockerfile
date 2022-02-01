@@ -7,6 +7,7 @@ ARG password=czhang
 
 # Install some basic utilities
 RUN apt-get update && apt-get install -y \
+    apt-utils\
     git \
     sudo \
  && rm -rf /var/lib/apt/lists/* \

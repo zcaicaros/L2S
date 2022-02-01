@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y \
     sudo \
  && rm -rf /var/lib/apt/lists/* \
  # create a user with home dir
- && useradd -md /home/${username} ${username} \
- && chown -R ${username}:${username} /home/${username} \
+ && useradd -md /home/${project} ${username} \
+ && chown -R ${username} /home/${project} \
  && echo ${username}:${password} | chpasswd
 
 # switch to user

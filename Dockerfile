@@ -6,7 +6,7 @@ ARG username=czhang
 ARG password=czhang
 
 # Install some basic utilities
-RUN apt-get update && apt-get install -y \
+ update && apt-get install -y \
     git \
     sudo \
  && rm -rf /var/lib/apt/lists/* \
@@ -18,3 +18,4 @@ RUN apt-get update && apt-get install -y \
 # switch to user
 USER ${username}
 ENV PATH="/home/${project}/.local/bin:${PATH}"
+RUN cd ~

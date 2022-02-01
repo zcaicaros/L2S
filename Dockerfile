@@ -11,10 +11,10 @@ RUN apt-get update && apt-get install -y \
     sudo \
  && rm -rf /var/lib/apt/lists/* \
  # create a user with home dir
- && useradd -md /home/username username \
- && chown -R username:username /home/username \
- && echo username:password | chpasswd
+ && useradd -md /home/${username} ${username} \
+ && chown -R ${username}:${username} /home/${username} \
+ && echo ${username}:${password} | chpasswd
 
 # switch to user
-USER username
-ENV PATH="/home/" + project + "/.local/bin:${PATH}"
+USER ${username}
+ENV PATH="/home/${username}/.local/bin:${PATH}"

@@ -2,7 +2,7 @@ FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
 
 # pay attention ARG "cuda_ver" should match base image above
 ARG cuda_ver=cu110
-ARG miniconda_ver=Miniconda3-py38_4.9.2-Linux-x86_64.sh
+ARG miniconda_ver=Miniconda3-py38_4.8.2-Linux-x86_64.sh
 ARG project=L2S
 ARG username=czhang
 ARG password=czhang
@@ -51,7 +51,7 @@ ENV CONDA_AUTO_UPDATE_CONDA=false \
     PATH=~/${project}-miniconda-environment/bin:$PATH
 RUN ~/${project}-miniconda-environment/bin/pip install \
     # install pytorch
-    torch==${torch_ver} torchvision==${torchvision_ver} torchaudio==${torchaudio_ver} -f https://download.pytorch.org/whl/cu110/torch_stable.html \
+    torch==${torch_ver} torchvision==${torchvision_ver} torchaudio==${torchaudio_ver} -f https://download.pytorch.org/whl/${cuda_ver}/torch_stable.html \
     # install pyg and its dependencies
     && ~/${project}-miniconda-environment/bin/pip install --upgrade pip \
     && ~/${project}-miniconda-environment/bin/pip install torch-scatter==${torch_scatter_ver} -f https://pytorch-geometric.com/whl/torch-${torch_ver}+${cuda_ver}.html \

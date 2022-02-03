@@ -3,7 +3,7 @@
 ## System Requirement
 Ubuntu 18.04.5 LTS 
 
-python 3.8.3
+python 3.8.1
 
 pytorch 1.7.0+cu110 (torchvision 0.8.0, torchaudio 0.7.0)
 ```commandline
@@ -12,11 +12,11 @@ pip install torch==1.7.0 torchvision==0.8.0 torchaudio==0.7.0 -f https://downloa
 
 To create a docker image named `l2s_image` with `python 3.8.3`, `torch 1.7.0`,  and `CUDA` installed:
 ```
-docker build --rm -t l2s_image <dir-to-dockerfile>
+sudo docker build --rm -t l2s_image <dir-to-dockerfile>
 ```
 To create a container named `l2s_container` with the image `l2s_image` and stay within it:
 ```
-docker run --gpus all --name l2s_container -it l2s_image bash
+sudo docker run --gpus all --name l2s_container -it l2s_image bash
 ```
 Then install dependencies:
 ```

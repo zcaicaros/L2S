@@ -19,7 +19,7 @@ pip install --user matplotlib==3.4.3
 pip install --user ortools==9.0.9048
 ```
 
-### Docker Setup
+### Docker Setup (preferred)
 Clone this repo and within the repo folder run the following command.
 
 Create image `l2s_image`:

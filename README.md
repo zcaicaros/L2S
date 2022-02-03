@@ -6,7 +6,7 @@ Ubuntu 18.04.5 LTS
 [Nvidia Docker](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
 
 
-python 3.8.1
+python 3.8.x
 
 pytorch 1.7.0+cu110 (torchvision 0.8.0, torchaudio 0.7.0)
 ```commandline

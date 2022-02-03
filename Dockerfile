@@ -2,7 +2,10 @@ FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
 
 # pay attention ARG "cuda_ver" should match base image above
 ARG cuda_ver=cu110
+
+# python 3.8.1
 ARG miniconda_ver=Miniconda3-py38_4.8.2-Linux-x86_64.sh
+
 ARG project=L2S
 ARG username=czhang
 ARG password=czhang

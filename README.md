@@ -31,6 +31,19 @@ pip install --user matplotlib==3.4.3
 pip install --user ortools==9.0.9048
 ```
 
+### Docker Setup
+Clone this repo and within the repo folder run the following command.
+
+Create image `l2s_image`:
+```commandline
+sudo docker build -t l2s_image .
+```
+
+Create container `l2s_container` from `l2s_image`, and activate it:
+```commandline
+sudo docker run --gpus all --name l2s_container -it l2s_image
+```
+
 ## Reproducing
 To reproduce the result in the paper, first clone the whole repo:
 ```

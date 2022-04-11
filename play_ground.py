@@ -10,3 +10,5 @@ onlineDRL = np.array([2208, 2168, 2086, 2261, 2227, 2349, 2101, 2267, 2154, 2216
 print(((onlineDRL - b)/b).mean())
 print(((a - b)/b).mean())
 print(a)
+
+print(np.random.randint(1, 101))

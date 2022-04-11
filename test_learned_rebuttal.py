@@ -18,31 +18,37 @@ def permute_rows(x):
     return x[ix_i, ix_j]
 
 
-def taillard_instance_gen(n_j, n_m, low=1, high=99):
+def taillard_instance_gen(n_j, n_m, low, high):
     times = np.random.randint(low=low, high=high, size=(n_j, n_m))
     machines = np.expand_dims(np.arange(1, n_m+1), axis=0).repeat(repeats=n_j, axis=0)
     machines = permute_rows(machines)
     return times, machines
 
 
-def lpt_instance_gen(n_j, n_m, low=1, high=150):
+def lpt_instance_gen(n_j, n_m, low, high):
     times = np.random.randint(low=low, high=high, size=(n_j, n_m))
     machines = np.expand_dims(np.arange(1, n_m+1), axis=0).repeat(repeats=n_j, axis=0)
     machines = permute_rows(machines)
     return times, machines
 
 
-def pc_shuffle_instance_gen(n_j, n_m, low=1, high=99):
+def flow_shop_instance_gen(n_j, n_m, low, high):
     times = np.random.randint(low=low, high=high, size=(n_j, n_m))
-    machines = np.expand_dims(np.arange(1, n_m+1), axis=0).repeat(repeats=n_j, axis=0)
+    shared_precedent_constrain = np.arange(1, n_m + 1)
+    np.random.shuffle(shared_precedent_constrain)
+    machines = np.expand_dims(shared_precedent_constrain, axis=0).repeat(repeats=n_j, axis=0)
     # machines = permute_rows(machines)
     return times, machines
 
 
-def ptr_and_pc_shuffle_instance_gen(n_j, n_m, low=1, high=150):
-    times = np.random.randint(low=low, high=high, size=(n_j, n_m))
-    machines = np.expand_dims(np.arange(1, n_m+1), axis=0).repeat(repeats=n_j, axis=0)
-    # machines = permute_rows(machines)
+def gaussian_pt_instance_gen(n_j, n_m, mu, sigma):
+    times = np.random.normal(mu, sigma, size=(n_j, n_m))
+    times = np.around(times).astype(int)
+    # clip
+    times = np.where(times <= 99, times, 99)
+    times = np.where(times >= 1, times, 1)
+    machines = np.expand_dims(np.arange(1, n_m + 1), axis=0).repeat(repeats=n_j, axis=0)
+    machines = permute_rows(machines)
     return times, machines
 
 
@@ -63,7 +69,7 @@ def main():
     p_h = 99
     init_type = ['fdd-divide-mwkr']  # ['fdd-divide-mwkr', 'spt']
     testing_type = ['syn']  # ['tai', 'abz', 'orb', 'yn', 'swv', 'la', 'ft', 'syn']
-    dists_type = ['taillard', 'lpt', 'pc_shuffle', 'both']
+    dists_type = ['taillard', 'lpt', 'gaussian_pt', 'flow_shop']  # ['taillard', 'lpt', 'gaussian_pt', 'flow_shop']
     syn_problem_j = [10]  # [10, 15, 15, 20, 20, 100, 150]
     syn_problem_m = [10]  # [10, 10, 15, 10, 15, 20, 25]
     tai_problem_j = [15, 20, 20, 30, 30, 50, 50, 100]
@@ -141,18 +147,9 @@ def main():
                 'Problem type must be in testing_type = ["tai", "abz", "orb", "yn", "swv", "la", "ft", "syn"].')
 
         for p_j, p_m in zip(problem_j, problem_m):  # select problem size
-            inst = None
             for dist in dists_type:
-                if dist == 'taillard':
-                    inst = np.array([taillard_instance_gen(n_j=p_j, n_m=p_m, low=1, high=99) for _ in range(100)])
-                elif dist == 'lpt':
-                    inst = np.array([taillard_instance_gen(n_j=p_j, n_m=p_m, low=1, high=150) for _ in range(100)])
-                elif dist == 'pc_shuffle':
-                    inst = np.array([taillard_instance_gen(n_j=p_j, n_m=p_m, low=1, high=99) for _ in range(100)])
-                elif dist == 'both':
-                    inst = np.array([taillard_instance_gen(n_j=p_j, n_m=p_m, low=1, high=150) for _ in range(100)])
-                else:
-                    raise Exception('Problem type must be in testing_type = ["taillard", "ptr", "pc_shuffle", "both"].')
+
+                inst = np.load('./test_data/{}{}x{}_{}.npy'.format(test_t, p_j, p_m, dist))
 
                 print('\nStart testing {}{}x{}_{}...'.format(test_t, p_j, p_m, dist))
 
@@ -164,7 +161,7 @@ def main():
                     from pathlib import Path
                     ortools_path = Path('./test_data/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, dist))
                     if ortools_path.is_file():
-                        gap_against = np.load('./test_data/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, dist))
+                        gap_against = np.load('./test_data/{}{}x{}_{}_result.npy'.format(test_t, p_j, p_m, dist))[:, 1]
                     else:
                         ortools_results = []
                         print('Starting Ortools...')
@@ -287,6 +284,7 @@ def main():
                                     # t1 = time.time()
                                     batch_data.wrapper(*states)
                                     actions, _ = policy(batch_data, feasible_actions)
+                                    # actions = [random.choice(a) for a in feasible_actions]
                                     states, _, feasible_actions, _ = env.step(actions, dev, plot=show)
                                     # t2 = time.time()
                                     for log_horizon in performance_milestones:

@@ -16,6 +16,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'tai', 20, 15
@@ -33,6 +36,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'tai', 20, 20
@@ -50,6 +56,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'tai', 30, 15
@@ -67,6 +76,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'tai', 30, 20
@@ -84,6 +96,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'tai', 50, 15
@@ -101,6 +116,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'tai', 50, 20
@@ -118,6 +136,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'tai', 100, 20
@@ -135,6 +156,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'abz', 10, 10
@@ -152,6 +176,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'abz', 20, 15
@@ -169,6 +196,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 
@@ -187,6 +217,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'ft', 10, 10
@@ -204,6 +237,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'ft', 20, 5
@@ -221,6 +257,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'la', 10, 5
@@ -238,6 +277,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/(gap_L2D + 1e-20)).mean()))  # L2D get one optimal solution
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'la', 15, 5
@@ -255,6 +297,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/(gap_L2D + 1e-20)).mean()))  # L2D get one optimal solution for last 2 instance
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'la', 20, 5
@@ -272,6 +317,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/(gap_L2D + 1e-20)).mean()))  # L2D get one optimal solution for forth instance
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'la', 10, 10
@@ -289,6 +337,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'la', 15, 10
@@ -306,6 +357,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'la', 20, 10
@@ -323,6 +377,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'la', 30, 10
@@ -340,6 +397,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'la', 15, 15
@@ -357,6 +417,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'swv', 20, 10
@@ -374,6 +437,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'swv', 20, 15
@@ -391,6 +457,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'swv', 50, 10
@@ -408,6 +477,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'orb', 10, 10
@@ -425,6 +497,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 problem, j, m = 'yn', 20, 20
@@ -442,6 +517,9 @@ print('ScheduleNet mean gap for {}{}x{}:'.format(problem, j, m), gap_ScheduleNet
 print('L2D mean gap for {}{}x{}:'.format(problem, j, m), gap_L2D.mean())
 print('L2S mean gap for {}{}x{}:'.format(problem, j, m), gap_L2S.mean())
 print('L2S is better than L2D by {} in terms of optimality gap.'.format(((gap_L2D - gap_L2S)/gap_L2D).mean()))
+Ortools_result = np.load('../ortools_result/ortools_{}{}x{}_result.npy'.format(problem, j, m))[:, 1]
+gap_ortools = (Ortools_result - gap_against)/gap_against
+print('Ortools mean gap for {}{}x{}:'.format(problem, j, m), gap_ortools.mean())
 print()
 
 

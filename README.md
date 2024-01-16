@@ -1,5 +1,7 @@
 # Deep Reinforcement Learning Guided Improvement Heuristic for Job Shop Scheduling
 
+Paper: https://openreview.net/forum?id=jsWCmrsHHs
+
 ## System Requirement
 Ubuntu 18.04.5 LTS 
 

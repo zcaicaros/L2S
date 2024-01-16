@@ -1,4 +1,4 @@
-# Learning to Search for Job Shop Scheduling via Deep Reinforcement Learning
+# Deep Reinforcement Learning Guided Improvement Heuristic for Job Shop Scheduling
 
 ## System Requirement
 Ubuntu 18.04.5 LTS 

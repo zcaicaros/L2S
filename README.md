@@ -2,6 +2,18 @@
 
 Paper: https://openreview.net/forum?id=jsWCmrsHHs
 
+If you make use of the code/experiment or L2S algorithm in your work, please cite our paper (Bibtex below).
+```
+@inproceedings{
+zhang2024Deep,
+title={Deep Reinforcement Learning Guided Improvement Heuristic for Job Shop Scheduling},
+author={Zhang, Cong and Cao, Zhiguang and Song, Wen and Wu, Yaoxin and Zhang, Jie},
+booktitle={The Twelfth International Conference on Learning Representations },
+year={2024},
+url={https://openreview.net/forum?id=jsWCmrsHHs}
+}
+```
+
 ## System Requirement
 Ubuntu 18.04.5 LTS 
 

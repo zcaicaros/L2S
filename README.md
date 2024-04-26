@@ -14,6 +14,8 @@ url={https://openreview.net/forum?id=jsWCmrsHHs}
 }
 ```
 
+We have a better version of L2S in [TBGAT](https://github.com/zcaicaros/TBGAT), published in UAI-2024
+
 ## System Requirement
 Ubuntu 18.04.5 LTS 
 

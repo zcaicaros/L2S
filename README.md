@@ -7,7 +7,7 @@ If you make use of the code/experiment or L2S algorithm in your work, please cit
 @InProceedings{
 zhang2024deep,
 title={Deep Reinforcement Learning Guided Improvement Heuristic for Job Shop Scheduling},
-author={Zhang, Cong and Cao, Zhiguang and Wu, Yaoxin and Song, Wen and Zhang, Jie},
+author={Zhang, Cong and Cao, Zhiguang and Song, Wen and Wu, Yaoxin and Zhang, Jie},
 booktitle={The Twelfth International Conference on Learning Representations},
 year={2024}
 }

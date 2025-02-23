@@ -4,13 +4,12 @@ Paper: https://openreview.net/forum?id=jsWCmrsHHs
 
 If you make use of the code/experiment or L2S algorithm in your work, please cite our paper (Bibtex below).
 ```
-@inproceedings{
+@InProceedings{
 zhang2024deep,
 title={Deep Reinforcement Learning Guided Improvement Heuristic for Job Shop Scheduling},
-author={Cong Zhang and Zhiguang Cao and Wen Song and Yaoxin Wu and Jie Zhang},
+author={Zhang, Cong and Cao, Zhiguang and Wu, Yaoxin and Song, Wen and Zhang, Jie},
 booktitle={The Twelfth International Conference on Learning Representations},
-year={2024},
-url={https://openreview.net/forum?id=jsWCmrsHHs}
+year={2024}
 }
 ```
 
